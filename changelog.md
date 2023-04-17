@@ -62,3 +62,17 @@ to [Semantic Versioning](http://semver.org/).
 - Noted:
 
 ---
+
+## Changelog: 2023.04.17 v.0.0.1.001
+
+### Noted: ADR001: Switched IDE to Pycharm, not VSCod* variants, for Python.
+
+### Added:
+
+- Added: Readme.md template
+- Added: Changelog.md template
+- Added: Done.md template (boilerplate)
+- Added: .gitignore
+- Added: .dcignore (not sure what this is for)
+
+---
