@@ -5,13 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and adheres
 to [Semantic Versioning](http://semver.org/).
 
-> - Modified, by incrementing and counting the index of commits on a daily basis
+> - Modified by incrementing and counting, the index of commits on a daily basis
 > - (Major.Minor.Patch.CommitIndex) (By CJ)
 > - Header Formatting & Intents as below
 
 ---
 
-> ## Changelog: v.major.minor.patch.commitcount 20yy.mm.dd
+> ## Changelog: v.major.minor.patch.commit-count 20yy.mm.dd
+>
+> ### `Bumped`  for new increments in SemVer/Changelog
 >
 > ### `Added`  for new features
 >
@@ -25,11 +27,11 @@ to [Semantic Versioning](http://semver.org/).
 >
 > ### `ToDo`: Project Outstanding items of note
 >
-> ### `Noted`: Project Logging, Journalling. Comments
+> ### `Noted`: Project Logging, Journaling. Comments
 
 ---
 
-# Changelog: Project Terni-Lapilli--Toe
+# Changelog: Project PyCriteria
 
 > **Template**
 
@@ -69,9 +71,9 @@ to [Semantic Versioning](http://semver.org/).
 
 ### Added:
 
-- Added: Readme.md template
-- Added: Changelog.md template
-- Added: Done.md template (boilerplate)
+- Added: `Readme.md` template
+- Added: `Changelog.md` template
+- Added: `Done.md` template (boilerplate)
 - Added: .gitignore
 - Added: .dcignore (not sure what this is for)
 
