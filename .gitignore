@@ -1,22 +1,24 @@
-/codealike.json
-/venv/
-/Writerside/
-/.idea/copyright/BSD2___Simplified.xml
-/.idea/copyright/BSD3___Revised.xml
-/.idea/copyright/Code_Institue.xml
-/.idea/copyright/MIT.xml
-/.idea/copyright/Unlicensed__Validate_.xml
-/.idea/inspectionProfiles/profiles_settings.xml
-/.idea/runConfigurations/main.xml
-/.idea/whitesource/PyCharmUsageMetrics.txt
-/.idea/codestream.xml
-/.idea/CustomInspectionsConfig.xml
-/.idea/jsonCatalog.xml
-/.idea/markdown.xml
-/.idea/misc.xml
-/.idea/modules.xml
-/.idea/PyCriteria.iml
-/.idea/pycrunch-vars-window-jetbrains.xml
-/.idea/ruff.xml
-/.idea/snyk.project.settings.xml
-/.idea/vcs.xml
+# =================================================================
+# Gitpod
+core.Microsoft*
+core.mongo*
+core.python*
+env.py
+__pycache__/
+*.py[cod]
+# =================================================================
+# Project Locals
+/.github/workflows/*
+venv/*
+node_modules/
+# =================================================================
+# Creds/Secret
+creds.json
+.env
+# =================================================================
+# Extensions/Plugin
+/.write/
+/pycriteria/__init__.py
+/pycriteria/__main__.py
+/pycriteria/settings.py
+/app-requirements.txt
