@@ -22,3 +22,7 @@ creds.json
 /pycriteria/__main__.py
 /pycriteria/settings.py
 /app-requirements.txt
+/messages.csv
+/dev-requirements.txt
+/test-requirememts.txt
+/profile.ps1
