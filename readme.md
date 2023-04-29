@@ -67,7 +67,7 @@
 - PyLint
 - PyCrunch
 - Sourcery
-- Gherkin, Cumcumber+
+- Gherkin, Cucumber+
 - TODO
 - Toolset
 
@@ -95,6 +95,80 @@
 ### 6.1 [Testing & Validation](#testing)
 
 ### 6.3 [Static Analysis](#static)
+
+### 6.3.1 [Code Quality](#quality)
+
+#### 6.3.1.1 Ruff
+
+> See `.pyproject.toml` for configuration and evaluation of configuration.
+
+- **Summary**
+    - `ruff check .` when in the root of the project,
+    - run via the terminal and after `venv/Scripts/activate.ps1` is activared
+    - Ruff mirrors Flake8's rule code system, in which each rule code consists of a one-to-three letter prefix, followed
+      by
+      three digits
+
+- **Possible Linters**: [Ruff Rule](https://beta.ruff.rs/docs/rules/)
+  `ruff linter` from the terminal in the root of the project.
+  > Ruff supports over 500 lint rules, many of which are inspired by popular
+  > ... tools like Flake8, isort, pyupgrade, and others. Regardless of the rule's origin,
+  > ... Ruff re-implements every rule in Rust as a first-party feature.
+
+ ````
+  PS D:\Code\Code Institute\PyCriteria> ruff linter          
+   F Pyflakes   
+ E/W pycodestyle
+ C90 mccabe
+   I isort
+   N pep8-naming
+   D pydocstyle
+  UP pyupgrade
+ YTT flake8-2020
+ ANN flake8-annotations
+   S flake8-bandit
+ BLE flake8-blind-except
+ FBT flake8-boolean-trap
+   B flake8-bugbear
+   A flake8-builtins
+ COM flake8-commas
+  C4 flake8-comprehensions
+ DTZ flake8-datetimez
+ T10 flake8-debugger
+  DJ flake8-django
+  EM flake8-errmsg
+ EXE flake8-executable
+ ISC flake8-implicit-str-concat
+ ICN flake8-import-conventions
+   G flake8-logging-format
+ INP flake8-no-pep420
+ PIE flake8-pie
+ T20 flake8-print
+ PYI flake8-pyi
+  PT flake8-pytest-style
+   Q flake8-quotes
+ RSE flake8-raise
+ RET flake8-return
+ SLF flake8-self
+ SIM flake8-simplify
+ TID flake8-tidy-imports
+ TCH flake8-type-checking
+ INT flake8-gettext
+ ARG flake8-unused-arguments
+ PTH flake8-use-pathlib
+ ERA eradicate
+  PD pandas-vet
+ PGH pygrep-hooks
+  PL Pylint
+ TRY tryceratops
+ NPY NumPy-specific rules
+ RUF Ruff-specific rules
+
+ ````
+
+#### 6.3.1.2 Pylint
+
+> Native into PyCharm so this is the defact problem matcher for the IDE.
 
 ## 7.0 [Deploy](#deploy)
 

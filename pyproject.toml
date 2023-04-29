@@ -1,0 +1,161 @@
+[tool.ruff]
+# Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
+select = ["E", "F", "I", "D", "YTT", "PL", "T20", "RSE", "RET", "SIM", "TID",
+    "TCH", "ARG", "PTH", "S", "ANN", "B"]
+ignore = []
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = ["A", "B", "C", "D", "E", "F", "G", "I", "N", "Q", "S", "T", "W", "ANN", "ARG", "BLE", "COM", "DJ", "DTZ", "EM", "ERA", "EXE", "FBT", "ICN", "INP", "ISC", "NPY", "PD", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "RET", "RSE", "RUF", "SIM", "SLF", "TCH", "TID", "TRY", "UP", "YTT"]
+unfixable = []
+fix-only = true
+show-fixes = true
+show-source = true
+#fix = true
+format = "grouped"
+
+# Tags
+task-tags = ["TODO", "FIXME", "todo", "fixme"]
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pycache__",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+# Per File
+
+# Same as Black.
+line-length = 100
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Assume Python 3.10.
+target-version = "py311"
+
+[tool.ruff.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 15
+
+[tool.ruff.per-file-ignores]
+
+[tool.ruff.flake8-annotations]
+allow-star-arg-any = false
+ignore-fully-untyped = true
+mypy-init-return = false
+suppress-dummy-args = false
+suppress-none-returning = false
+[tool.ruff.flake8-bandit]
+check-typed-exception = false
+#hardcoded-tmp-directory = []
+#extend-hardcoded-tmp-directory = [""]
+[tool.ruff.flake8-bugbear]
+#extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
+[tool.ruff.flake8-builtins]
+#builtins-ignorelist = [""]
+[tool.ruff.flake8-comprehensions]
+allow-dict-calls-with-keyword-arguments = true
+[tool.ruff.flake8-errmsg]
+max-string-length = 20
+[tool.ruff.flake8-gettext]
+#extend-function-names = ["ugettetxt"]
+#function-names = ["_", "gettext", "ngettext", "ugettetxt"]
+[tool.ruff.flake8-implicit-str-concat]
+#setting allow-multiline = false should
+#typically be coupled with disabling explicit-string-concatenation
+allow-multiline = true
+[tool.ruff.flake8-import-conventions]
+[tool.ruff.flake8-import-conventions.aliases]
+# Declare the default aliases.
+# Declare the banned aliases.
+# Declare the banned `from` imports.
+# Declare a custom alias for the `matplotlib` module
+[tool.ruff.flake8-pytest-style]
+#fixture-parentheses = true
+#mark-parentheses = true
+#parametrize-names-type = "list"
+#parametrize-values-row-type = "list"
+#parametrize-values-type = "list"
+#raises-extend-require-match-for = ["requests.RequestException"]
+#raises-require-match-for = ["requests.RequestException"]
+
+[tool.ruff.flake8-quotes]
+avoid-escape = false
+docstring-quotes = "double"
+inline-quotes = "single"
+multiline-quotes = "single"
+[tool.ruff.flake8-self]
+#ignore-names = ["_new"]
+[tool.ruff.flake8-tidy-imports]
+#ban-relative-imports = "all"
+[tool.ruff.flake8-tidy-imports.banned-api]
+[tool.ruff.flake8-type-checking]
+#exempt-modules = ["typing", "typing_extensions"]
+#runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+#runtime-evaluated-decorators = ["attrs.define", "attrs.frozen"]
+strict = false
+[tool.ruff.flake8-unused-arguments]
+ignore-variadic-names = true
+[tool.ruff.isort]
+#classes = ["SVC"]
+#constants = ["constant"]
+#variables = ["VAR"]
+#extra-standard-library = ["path"]
+force-single-line = true
+force-sort-within-sections = true
+#force-to-top = ["src"]
+#forced-separate = ["tests"]
+force-wrap-aliases = true
+combine-as-imports = true
+known-first-party = ["src"]
+#known-local-folder = ["src"]
+#known-third-party = ["src"] # TODO: Add all third-party packages for packages.
+#lines-after-imports = 1
+lines-between-types = 1
+#no-lines-before = ["future", "standard-library","third-party","first-party","local-folder","str"]
+order-by-type = true
+#relative-imports-order = "closest-to-furthest
+#required-imports = ["from __future__ import annotations"]
+#section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+#single-line-exclusions = ["os", "json"]
+#split-on-trailing-comma = false
+#[tool.ruff.isort.sections]
+# Group all * imports into a/own/separate section.
+[tool.ruff.pep8-naming]
+#classmethod-decorators = ["pydantic.validator"]
+#ignore-names = [""]
+#staticmethod-decorators = ["stcmthd"]
+[tool.ruff.pycodestyle]
+ignore-overlong-task-comments = true
+max-doc-length = 100
+[tool.ruff.pydocstyle]
+convention = "google"
+#ignore-decorators = ["typing.overload"]
+#property-decorators = ["gi.repository.GObject.Property"]
+[tool.ruff.pylint]
+#allow-magic-value-types = ["int"]
+#Type: list["str" | "bytes" | "complex" | "float" | "int" | "tuple"]
+max-args = 6
+max-branches = 12
+max-returns = 6
+max-statements = 50
+[tool.ruff.pyupgrade]
+keep-runtime-typing = true
