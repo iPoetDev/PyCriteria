@@ -18,7 +18,7 @@ from settings import Settings
 # pylint: disable=[no-member]
 @logcatcher.catch(onerror=lambda _: sys.exit(1))
 def main():
-    """ Main function to run the app."""
+    """Main function to run the app."""
     print(Settings.WELCOME)
     LOGRS.info(Settings.WELCOME)
     LOGRS.info("Starting...")

@@ -2,7 +2,7 @@ blank_issues_enabled: true
 contact_links:
   - name: Repository Discussions
     url: https://github.com/iPoetDev/terni-lapilli--toe/discussions
-    about: Open forum and contact point for this Javascript educational repositorty
+    about: Open forum and contact point for this Javascript educational repository
   - name: Code Institute Student Handbook
     url: http://4060571.hs-sites.com/student-experience-handbook-2022/2023
     about: View Code Institute's policies and procedures in this comprehensive handbook.

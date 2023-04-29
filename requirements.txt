@@ -1,26 +1,14 @@
 ### LoveSandwiches ###
 ## Python 3.11
 # Feedbacj
-loguru
+loguru>=0.7.0
 ## Google API
-google
-gspread # Google Spreadsheet and set a value to a cell:
-google-auth # Google's various server-to-server authentication - access Google APIs.
-google-auth-oauthlib #  oauthlib integration with google-auth.
+google>=3.0.0
+gspread>=5.8.0
 # Environment
-python-dotenv #  get and set values in your .env file
-pygments>=2.15.1 # Bug: https://github.com/pygments/pygments/issues/2418
+python-dotenv>=1.0.0
 # Dependency Injection Framework for Python
 # Secure
-certifi>=2022.12.7
 ## URL & OAuth
-oauthlib # OAuth request-signing logic
-requests>=2.29.0 # simple, yet elegant, HTTP library.
-requests-oauthlib #  first-class OAuth library support for Requests
-urllib3==1.26.15 #powerful, user-friendly HTTP client for Python
-httpx>=0.24.0
-yarl>=1.9.2 # URL class for URL parsing and changing
 # Aysnc asyncio # Asynchronous I/O, event loop, coroutines and tasks.
 ## TUI/CLI
-click>=8.1.3
-fire>=0.5.0

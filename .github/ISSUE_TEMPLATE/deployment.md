@@ -1,5 +1,5 @@
 ---
-name: Herouko Deployment Steps
+name: Heroku Deployment Steps
 about: SOP: Deployment to Heroku and Troubleshooting
 title: "[HEROKU]: [DEPLOY]"
 labels:
@@ -32,8 +32,8 @@ assignees: ipoetdev
     - [ ] ConfigVars: Checked the Dashboard, for Python?
     - [ ] ConfigVars: Is encrypted/correct authorisation?
     - [ ] ConfigVars: Is `PORT` correctly set correctly to `8000`?
-    - [ ] ConfigVars: If credentails, then:
-        - [ ] Config: `CREDS`  configvar?
+    - [ ] ConfigVars: If credentials, then:
+        - [ ] Config: `CREDS`  config var?
         - [ ] Config: Add JSON to value field
 - [ ] Heroku BuildPacks: Are these enabled, in the following order?
     - [ ] .1. `Heroku/python`

@@ -104,7 +104,7 @@ Please provide a browser console/terminal stderr output
 4. Tutors will teach you how to resolve your issues, rather than fixing them for you.
 
 - Please do not enter a tutoring session with the expectation of an easy fix -
-- Expecte the learning process can be long and difficult, but will be worth it in the end.
+- Expect the learning process can be long and difficult, but will be worth it in the end.
 
 5. With that in mind, tutors will frequently ask students to carry out various tasks.
 

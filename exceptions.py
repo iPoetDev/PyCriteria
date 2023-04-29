@@ -1,6 +1,6 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
-"""Module Connection Management."""
+"""Module Exception Status and Graceful recovery."""
 
 # 0.1 Core Imports
 import sys
@@ -12,19 +12,18 @@ from settings import Settings
 
 # pylint: disable=too-few-public-methods
 class ManagingExceptions:
-    """
-    Managing Exceptions Gracefully.
+    """Managing Exceptions Gracefully.
     :method: env_notfound_status: @staticmethod
     :method: exiting_exception: @staticmethod
     :method: input_correction: @staticmethod
-    :method: creds_correction: @staticmethod
+    :method: creds_correction: @staticmethod.
     """
     
     @staticmethod
     def env_notfound_status(notfound: ModuleNotFoundError,
                             module: str = 'dotenv',
                             setting: str = Settings.ENV):
-        """dotenv exception handler."""
+        """Dotenv exception handler."""
         error_context: str = f'{str(notfound)}: {module}'
         issue_message: str = f'Could not load {setting} file.'
         guidance_message: str = \
@@ -33,11 +32,11 @@ class ManagingExceptions:
         output: str = f'{error_context}: {issue_message} - {guidance_message}'
         LOGRS.error(output)
         print(output)
+        sys.exit(1)
     
     @staticmethod
     def exiting_status(error: Exception, message: str):
-        """
-        Make an exiting exception.
+        """Make an exiting exception.
         1. Log the error
         2. Print the error
         3. Exit the program
@@ -49,7 +48,7 @@ class ManagingExceptions:
             :type: str
         Returns
         ----------
-            :return: None
+            :return: None.
         """
         _error_context: str = f'{str(error).title}'
         _output: str = f'{_error_context}: {error}: {message}'
@@ -59,8 +58,7 @@ class ManagingExceptions:
     
     @staticmethod
     def input_correction(error: Exception, message: str, kind: str):
-        """
-        Gracefully allow a user to recover from a *NotFound exception.
+        """Gracefully allow a user to recover from a *NotFound exception.
         Parameters
         ----------
             :param error: Exception
@@ -72,7 +70,7 @@ class ManagingExceptions:
         Returns
         ----------
             :return: value_str - Returns a string for a file|tab name
-            :rtype: str
+            :rtype: str.
         """
         # Log the error and print it
         _error_context: str = f'{str(error).title}'
@@ -97,21 +95,21 @@ class ManagingExceptions:
     
     @staticmethod
     def creds_correction(credentials: str, file_type: str, message: str):
-        """
-            Gracefully allow a user to recover from a *NotFound exception.
-            Seek a new credentials' filename from the user by prompting them.
+        """Gracefully allow a user to recover from a *NotFound exception.
+        Seek a new credentials' filename from the user by prompting them.
             
-            Parameters
-            ----------
-                :param credentials: str: Credentials file name
-                :param file_type: str: Credentials file's extension is json
-                :param message: str: File or Tab
+        Parameters
+        ----------
+        :param credentials: str: Credentials file name
+        :param file_type: str: Credentials file's extension is json
+        :param message: str: File or Tab
                 
-            Returns
-            ----------
-                :returns: value_str: str:  Returns a string for a file|tab name
+
+        Returns:
+        ----------
+        :returns: value_str: str:  Returns a string for a file|tab name
                 
-            """
+        """
         # Log the error and print it
         _assert_context: str = 'Assert: Credentials File'
         _output: str = f'1: {_assert_context}: \n '
@@ -137,22 +135,23 @@ class ManagingExceptions:
     
     @staticmethod
     def validate_input(value_str: str):
-        """
-        Validate the input.
+        """Validate the input.
         1: Asserting of string type
-        2: Checking for length is 0
+        2: Checking for length is 0.
         
         Parameters
         ----------
             :param value_str: string input to validate
             :type: str
             
-        Returns
+
+        Returns:
         ----------
             :return: True if valid else False
             :rtype: bool
             
-        Raises
+
+        Raises:
         ----------
             :raises ValueError: if not string or length is 0
         """
@@ -171,3 +170,6 @@ class ManagingExceptions:
             return False
         
         return True
+
+
+ManagedExceptions: ManagingExceptions = ManagingExceptions()

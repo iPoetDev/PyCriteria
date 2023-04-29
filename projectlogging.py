@@ -11,15 +11,17 @@ from typing import TextIO
 # 0.2 Third Party Imports
 from loguru import logger as LOGR
 
+import settings
 # 0.3 Local Imports
-from settings import Settings
+from settings import Settings as SettingsConfig
+
+SettingConfig: settings.Settings = settings.Settings
 
 
 # Logging
 # pylint: disable=too-few-public-methods
 class LogValues:
-    """
-    Log Values. This is a dataclass that holds the values for the loggers.
+    """Log Values. This is a dataclass that holds the values for the loggers.
     Add methods to this class to configure the loggers later.
     Usage: Used in Loggers.configure_loguru() as a parameter.
     """
@@ -36,29 +38,27 @@ class LogValues:
 
 # Config = Optional[Dict[str, List[Dict[str, Union[TextIO, str, bool]]]]]
 class LOGGERS:
-    """ Loggers."""
+    """Loggers."""
     
     @staticmethod
     def configure_logging(logname: str, doeswarn: bool = True):
-        """
-        Classic logging & warnings configuration/filters.
+        """Classic logging & warnings configuration/filters.
         :param logname: Name of the log file.
         :type: str
         :param doeswarn: Enable warnings.
-        :type: bool
+        :type: bool.
         """
         logging.basicConfig(filename=logname, level=logging.DEBUG)
         logging.captureWarnings(doeswarn)
-        logging.info('Running on %s on port %d', Settings.HOST, Settings.HTTPS)
+        logging.info('Running on %s on port %d', SettingsConfig.HOST, SettingsConfig.HTTPS)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
     
     @staticmethod
     def configure_loguru(values: LogValues):
-        """
-        Configure loguru logger.
+        """Configure loguru logger.
         1: System Error
         2: Error Logging
-        3: Project Logging
+        3: Project Logging.
         """
         config = {
                 "handlers": [
@@ -97,6 +97,6 @@ class LOGGERS:
 
 LogValues: LogValues = LogValues()
 
-LOGGERS.configure_logging(Settings.LOGS)
+LOGGERS.configure_logging(SettingsConfig.LOGS)
 
 LOGRS = LOGGERS.configure_loguru(LogValues)

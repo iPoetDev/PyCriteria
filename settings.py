@@ -1,6 +1,8 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
 """Module App Settings and Environmental Vars."""
+import dataclasses
+from importlib import util as findlib
 # 0.2 Core Modules
 from pathlib import Path
 
@@ -11,35 +13,37 @@ from projectlogging import LOGRS
 
 
 # Global String/Int Resources
+# pylint: disable=R0902, too-many-instance-attributes
+@dataclasses.dataclass
 class Settings:
-    """ Settings."""
-    DOMAINHOST: str = 'www.google.com'
-    HOST: str = 'www.googleapis.com'
-    APIHOST: str = 'www.googleapis.com'
-    HTTPS: int = 443
-    LOGS: str = 'goggle-py.log'
-    ENV: str = '.env'
-    ENCODE: str = 'UTF-8'
+    """Settings."""
+    # Disable (C0103)
+    # plylint: disable=C0301
+    # https://pylint.readthedocs.io/en/latest/user_guide/messages/convention/invalid-name.html
+    DOMAINHOST: str = 'www.google.com'  # pylint: disable=C0103
+    HOST: str = 'www.googleapis.com'  # pylint: disable=C0103
+    APIHOST: str = 'www.googleapis.com'  # pylint: disable=C0103
+    HTTPS: int = 443  # pylint: disable=C0103
+    LOGS: str = 'goggle-py.log'  # pylint: disable=C0103
+    ENV: str = '.env'  # pylint: disable=C0103
+    ENCODE: str = 'UTF-8'  # pylint: disable=C0103
     # Data String/Int Resources
-    CRED_FILE: str = 'creds.json'
-    TITLE: str = 'Love Sandwiches'
-    PURPOSE: str = 'Data Automation'
-    WELCOME: str = f'Welcome to {TITLE} {PURPOSE} App.'
+    CRED_FILE: str = 'creds.json'  # pylint: disable=C0103
+    TITLE: str = 'PyCriteria'  # pylint: disable=C0103
+    PURPOSE: str = 'CLI to managing Project Criteria'  # pylint: disable=C0103
+    WELCOME: str = f'Welcome to {TITLE} {PURPOSE} App.'  # pylint: disable=C0103
     # Data String/Int Resources
-    FILENAME: str = 'LoveSandwiches'
-    TAB_SALES: str = 'sales'
-    TAB_STOCK: str = 'stock'
-    TAB_SURPLUS: str = 'surplus'
+    FILENAME: str = 'PyCriteria'  # pylint: disable=C0103
+    TAB_START: str = 'overview'  # pylint: disable=C0103
     SCOPE = [
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive.file",
             "https://www.googleapis.com/auth/drive"
-            ]
+            ]  # pylint: disable=C0103
 
 
 class EnvirnomentalVars:
-    """
-    EnvirnomentalVars.
+    """EnvirnomentalVars.
     Load .env file to develop with env vars early.
     
     :method: load_env: @staticmethod
@@ -47,28 +51,26 @@ class EnvirnomentalVars:
     """
     
     @staticmethod
-    def load_env():
-        """
-        Load .env file to develop with env vars early.
-        """
-        try:
-            from dotenv import load_dotenv
-        except ModuleNotFoundError as modulenotfound:
-            Graceful.env_notfound_status(modulenotfound)
+    def load_env(library: str = 'dotenv'):
+        """Load .env file to develop with env vars early."""
+        if findlib.find_spec(library) is None:
+            message: str = f'Module: {library} not found.'
+            Graceful.env_notfound_status(
+                    ModuleNotFoundError(message))
         else:
             EnvirnomentalVars.does_env_load(Settings.ENV)
     
     @staticmethod
     def does_env_load(filename: str, encode: str = Settings.ENCODE) -> bool:
-        """
-        Checks if the .ENV file loads.
-        Usage: Used when dotenv module is successfully loaded
+        """Checks if the .ENV file loads.
+        Usage: Used when dotenv module is successfully loaded.
         
         Parameters:
         ----------
             :param filename: str,
             :param encode: str = Settings.ENCODE
             
+
         Returns:
         ----------
             :return: bool - If the .ENV loads: True or False
