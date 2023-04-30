@@ -1,5 +1,6 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
+# mypy: ignore-missing-imports=True
 """Module Run GSheet."""
 
 # 0.1 Core Imports
@@ -7,15 +8,16 @@ import logging
 import sys
 import warnings
 from typing import TextIO
+from typing import Type
 
 # 0.2 Third Party Imports
-from loguru import logger as LOGR
+from loguru import logger as LOGR  # type: ignore
 
-import settings
 # 0.3 Local Imports
-from settings import Settings as SettingsConfig
+from settings import Settings
 
-SettingConfig: settings.Settings = settings.Settings
+SettingsConfig = Type[Settings]
+Setting: SettingsConfig = Settings
 
 
 # Logging
@@ -50,7 +52,7 @@ class LOGGERS:
         """
         logging.basicConfig(filename=logname, level=logging.DEBUG)
         logging.captureWarnings(doeswarn)
-        logging.info('Running on %s on port %d', SettingsConfig.HOST, SettingsConfig.HTTPS)
+        logging.info('Running on %s on port %d', Setting.HOST, Setting.HTTPS)
         warnings.filterwarnings("ignore", category=DeprecationWarning)
     
     @staticmethod
@@ -95,8 +97,8 @@ class LOGGERS:
         return LOGR
 
 
-LogValues: LogValues = LogValues()
+logvalues: LogValues = LogValues()
 
-LOGGERS.configure_logging(SettingsConfig.LOGS)
+LOGGERS.configure_logging(Setting.LOGS)
 
-LOGRS = LOGGERS.configure_loguru(LogValues)
+LOGRS = LOGGERS.configure_loguru(logvalues)

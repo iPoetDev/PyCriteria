@@ -1,13 +1,20 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
 """Module App Settings and Environmental Vars."""
+# 0.1 Standard Imports
 import dataclasses
+
+
+# 0.1.2 Targeted Imports
 from importlib import util as findlib
-# 0.2 Core Modules
 from pathlib import Path
+from typing import NoReturn
+from typing import Union
 
-import dotenv as dotenv_loader
+# 0.2 Third Party Modules
+import dotenv as dotenv_loader  # type: ignore
 
+# 0.3 Local/Own Imports
 from exceptions import ManagingExceptions as Graceful
 from projectlogging import LOGRS
 
@@ -51,14 +58,26 @@ class EnvirnomentalVars:
     """
     
     @staticmethod
-    def load_env(library: str = 'dotenv'):
-        """Load .env file to develop with env vars early."""
+    def load_env(library: str = 'dotenv') -> Union[bool, NoReturn]:
+        """Load .env file to develop with env vars early.
+        Parameters
+        ----------
+            :param library: str = 'dotenv' as default, err mandatory library.
+
+        Return:
+        ----------
+            - If module is found, then .ENV loads: True or False
+            - If module is not found, then NoReturn for a system exit.
+            :return: Union[bool, NoReturns].
+            
+        """
         if findlib.find_spec(library) is None:
             message: str = f'Module: {library} not found.'
-            Graceful.env_notfound_status(
+            sysexit: NoReturn = Graceful.env_notfound_status(
                     ModuleNotFoundError(message))
-        else:
-            EnvirnomentalVars.does_env_load(Settings.ENV)
+            return sysexit
+        
+        return bool(EnvirnomentalVars.does_env_load(Settings.ENV))
     
     @staticmethod
     def does_env_load(filename: str, encode: str = Settings.ENCODE) -> bool:
@@ -83,10 +102,10 @@ class EnvirnomentalVars:
         with dotenv_path.open(encoding=encode):
             print(success_message)
             LOGRS.debug(success_message)
-            return dotenv_loader.load_dotenv(dotenv_path=dotenv_path)
-
-
-# Module Global Object Resources for Export
-# pylint: disable=trailing-whitespace
-Settings: Settings = Settings()
-EnvirnomentalVars: EnvirnomentalVars = EnvirnomentalVars()  # pylint: disable=trailing-whitespace
+            if dotenv_loader.load_dotenv(dotenv_path=dotenv_path,
+                                         verbose=True,
+                                         override=True,
+                                         encoding=encode):
+                return True
+        
+        return False

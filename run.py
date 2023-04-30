@@ -6,7 +6,7 @@
 import sys
 
 # 0.2 ThirdPartyLibraries
-import loguru as logcatcher
+import loguru as logcatcher  # type: ignore
 
 # 0.3 LocalLibraries & Settings
 from projectlogging import LOGRS
@@ -27,5 +27,5 @@ def main():
     print("Done!")
 
 
-if __name__ == '__main__':
+if __name__ == '__run__':
     main()

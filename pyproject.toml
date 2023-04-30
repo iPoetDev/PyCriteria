@@ -159,3 +159,111 @@ max-returns = 6
 max-statements = 50
 [tool.ruff.pyupgrade]
 keep-runtime-typing = true
+
+# @todo: Add support for `mypy` static typing configuration.
+[tool.mypy]
+#Examples
+##Imports
+#mypy_path = ["src"] # https://mypy.readthedocs.io/en/stable/config_file.html#confval-mypy_path
+#files = ["src"]
+#modules = ["src"]
+#packages = ["src"]
+#exclude
+namespace_packages = true
+#current directory, or a member of the MYPYPATH environment variable or mypy_path config
+explicit_package_bases = false
+ignore_missing_imports = false
+follow_imports = "skip"
+#follow_imports_for_stubs = true
+#python_executable = "python3.11"
+no_site_packages = false
+no_silence_site_packages = false
+## Platform Configuration
+python_version = "3.11"
+#platform = "linux"
+#always_true = ["tests"]
+#always_false = ["tests"]
+##Dynamic Typing
+disallow_any_unimported = false
+disallow_any_expr = false
+disallow_any_decorated = false
+disallow_any_explicit = false
+disallow_any_generics = false
+disallow_subclassing_any = false
+#Untyped
+disallow_untyped_calls = false
+disallow_incomplete_defs = false
+check_untyped_defs = false
+disallow_untyped_decorators = false
+## None/Optionals - Flip values
+implicit_optional = true
+strict_optional = false
+## Warnings
+warn_redundant_casts = true
+warn_unused_ignores = true
+#warn_no_return = true #
+#warn_return_any = true
+warn_unreachable = true
+ignore_errors = false
+#Miscellaneous strictness
+allow_untyped_globals = false
+allow_redefinition = false
+#local_partial_types = false
+#enable_error_code = ["",""]
+#disable_error_code = ["",""]
+implicit_reexport = true
+strict_concatenate = false
+strict_equality = false
+strict = false
+## Config Error Messages
+show_error_context = true
+show_column_numbers = true
+hide_error_codes = false
+pretty = true
+color_output = true
+error_summary = true
+show_absolute_path = false
+## Incremental Mode
+incremental = true
+cache_dir = "~/.cache/mypy_cache"
+sqlite_cache = true
+cache_fine_grained = false
+skip_version_check = false
+#plugins = [""]
+pdb = false
+show_traceback = true
+raise_exceptions = true
+## Report generation
+#Generating reports disables incremental mode and can significantly slow down your workflo
+#any_exprs_report = ""
+#html_report = ""
+#linecount_report = ""
+#lineprecision_report = ""
+##Miscellaneous
+#scripts_are_modules = true
+warn_return_any = true
+warn_unused_configs = true
+verbosity = 2
+#MyPy permodule
+[[tool.mypy.overrides]]
+module = ["google.oauth2.service_account"]
+ignore_missing_imports = true
+follow_imports_for_stubs = true
+[[tool.mypy.overrides]]
+module = ["gspread"]
+ignore_missing_imports = true
+follow_imports_for_stubs = true
+[[tool.mypy.overrides]]
+module = ["loguru"]
+ignore_missing_imports = true
+follow_imports_for_stubs = true
+[[tool.mypy.overrides]]
+module = ["dotenv"]
+ignore_missing_imports = true
+follow_imports_for_stubs = true
+[[tool.mypy.overrides]]
+[mypy-venv.Scripts]
+file = ["venv\\Scripts\\activate_this.py"]
+ignore_errors = true
+exclude = ["venv\\Scripts\\activate_this.py"]
+[[tool.mypy.overrides]]

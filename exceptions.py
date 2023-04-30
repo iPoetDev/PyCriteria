@@ -4,6 +4,7 @@
 
 # 0.1 Core Imports
 import sys
+from typing import NoReturn
 
 # 0.2 Local Imports
 from projectlogging import LOGRS
@@ -32,7 +33,7 @@ class ManagingExceptions:
         output: str = f'{error_context}: {issue_message} - {guidance_message}'
         LOGRS.error(output)
         print(output)
-        sys.exit(1)
+        return NoReturn
     
     @staticmethod
     def exiting_status(error: Exception, message: str):
@@ -97,18 +98,18 @@ class ManagingExceptions:
     def creds_correction(credentials: str, file_type: str, message: str):
         """Gracefully allow a user to recover from a *NotFound exception.
         Seek a new credentials' filename from the user by prompting them.
-            
+        
         Parameters
         ----------
         :param credentials: str: Credentials file name
         :param file_type: str: Credentials file's extension is json
         :param message: str: File or Tab
-                
+        
 
         Returns:
         ----------
         :returns: value_str: str:  Returns a string for a file|tab name
-                
+        
         """
         # Log the error and print it
         _assert_context: str = 'Assert: Credentials File'

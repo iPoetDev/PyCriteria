@@ -6,13 +6,11 @@
 import dataclasses
 import socket
 import ssl
-
 from typing import Tuple
 
-from google.oauth2.service_account import Credentials
-
 # 0.2 Core Modules
-import gspread
+import gspread  # type: ignore
+from google.oauth2.service_account import Credentials  # type: ignore
 
 # 0.3 Project Logging
 # 0.3 Local/Own Modules/Library
@@ -87,7 +85,6 @@ class GoogleConnector:
         # Authorise current client
         notimplmessage: str = 'Credentials must be scoped correctly.'
         credentials: str = credential_file
-        kind: str = "api"
         _creds = Credentials.from_service_account_file(credentials)
         # assert isinstance(_creds.with_scopes, SCOPE)
         try:
@@ -95,8 +92,8 @@ class GoogleConnector:
                 raise NotImplementedError(notimplmessage)
         
         except NotImplementedError as _notimplemented:
-            _output: str = GoogleConnector.notfound_prompt(
-                    _notimplemented, credential_file, kind)
+            _output = GoogleConnector.notfound_prompt(
+                    _notimplemented, credential_file)
             Graceful.exiting_status(_notimplemented, _output)
         
         return _creds.with_scopes(Settings.SCOPE)
@@ -119,15 +116,15 @@ class GoogleConnector:
             :raises: gspread.exceptions.SpreadsheetNotFound.
         """
         # Authorise current client
+        kind: str = "file"
         _gsheet: gspread.Client = gspread.authorize(credentials)
-        _kind: str = "file"
         try:
             # Tests if existing sheet is the same aśa the configured filename
             return _gsheet.open(file_name)
         except ConnectExceptions.SPEADSHEETERROR as _notfound:
-            _output: str = GoogleConnector.notfound_prompt(_notfound, file_name, _kind)
+            _output: str = GoogleConnector.notfound_prompt(_notfound, file_name)
             # Gracefully handle this error by asking user to enter a correct file name
-            newtitle = Graceful.input_correction(_notfound, _output, _kind)
+            newtitle = Graceful.input_correction(_notfound, _output, kind)
             return _gsheet.open(newtitle)
     
     @staticmethod
@@ -184,23 +181,18 @@ class GoogleConnector:
             Exits the program
             :raises: Exception
         """
-        kind: str = "tab"
         try:
             return sheet.get_all_values()
         except ConnectExceptions.GSPREADERROR as _error:
-            _output: str = GoogleConnector.notfound_prompt(_error, sheet.title, kind)
+            _output: str = GoogleConnector.notfound_prompt(_error, sheet.title)
             Graceful.exiting_status(_error, _output)
             return None
     
     @staticmethod
     # pylint: disable=line-too-long
     def notfound_prompt(
-            notfound: (gspread.exceptions.GSpreadException,
-                       gspread.exceptions.WorksheetNotFound,
-                       gspread.exceptions.SpreadsheetNotFound,
-                       NotImplementedError),
-            name: str,
-            kind: str) -> str:  # pylint: disable=line-too-long
+            notfound,
+            name: str) -> str:  # pylint: disable=line-too-long
         """Builds a prompt the correct file name or tab name based on error type.
 
         Parameters
@@ -212,16 +204,13 @@ class GoogleConnector:
                NotImplementedError
         :param name: The name of the file or tab
         :type name: str
-        :param kind: The type of the missing resource (file or tab)
-        :type kind: str
-
         Returns:
         ----------
         :return: str
         :rtype: str
         """
         toggle: Tuple[str, str, str, str, str] = ("api", "file", "tab", "data", "json")
-        if isinstance(notfound, NotImplementedError) and toggle[0] == kind.lower():
+        if isinstance(notfound, NotImplementedError):
             output = f"API Issue: Not Implemented Error: {notfound}\\n"
             output += "Check your connection or the Google Sheets API.\\n"
             output += "Alternatively check the credential filename"
@@ -229,18 +218,15 @@ class GoogleConnector:
             output += "Or check the scopes for the right scopes (.json).\\n"
             output += "Please enter the correct credential file name +"
             output += f" .\"{toggle[4]}\". Previous: {name}"
-        elif isinstance(notfound, gspread.exceptions.SpreadsheetNotFound) \
-                and toggle[1] == kind.lower():
+        elif isinstance(notfound, gspread.exceptions.SpreadsheetNotFound):
             output = f"Spreadsheet Exception: {notfound}\\n"
             output += "Go to the Google Sheet or Google Drive and copy the file name.\\n"
             output += f"Please enter the correct file name. Previous: {name}"
-        elif isinstance(notfound, gspread.exceptions.WorksheetNotFound) \
-                and toggle[2] == kind.lower():
+        elif isinstance(notfound, gspread.exceptions.WorksheetNotFound):
             output = f"Worksheet Exception: {notfound}\\n"
             output += "Go to the Google Sheet and copy the tab name.\\n"
             output += f"Please enter the correct tab name. Previous: {name}"
-        elif isinstance(notfound, gspread.exceptions.GSpreadException) \
-                and toggle[3] == kind.lower():
+        elif isinstance(notfound, gspread.exceptions.GSpreadException):
             output = f"Worksheet Data Exception: {notfound}\\n"
             output += "Can not retrieve sheet data\\n"
             output += f"Please check your settings and the sheet data. Previous: {name}"
@@ -256,7 +242,7 @@ class SSLManager:
     :method close_ssl_connection: Closes secure connects to outside network.
     """
     
-    sslsock: ssl.SSLSocket = None
+    sslsock: ssl.SSLSocket = ssl.SSLSocket()
     
     @staticmethod
     def open_ssl_connection():
