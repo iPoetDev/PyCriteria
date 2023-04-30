@@ -3,8 +3,6 @@
 """Module App Settings and Environmental Vars."""
 # 0.1 Standard Imports
 import dataclasses
-
-
 # 0.1.2 Targeted Imports
 from importlib import util as findlib
 from pathlib import Path

@@ -22,7 +22,6 @@ def main():
     print(Settings.WELCOME)
     LOGRS.info(Settings.WELCOME)
     LOGRS.info("Starting...")
-    # TODO: Add your code here
     LOGRS.info("Done!")
     print("Done!")
 
