@@ -1,0 +1,34 @@
+[user]
+name = Charlie J Fowler
+email = charlesjfowler@outlook.com
+[author]
+name = iPoetDev
+email = 51715025+iPoetDev@users.noreply.github.com
+[committer]
+name = iPoetDev
+email = 51715025+iPoetDev@users.noreply.github.com
+[help]
+autoCorrect = prompt
+format = web
+browser = chrome
+[core]
+eol = native
+autocrlf = true
+fscache = true
+symlinks = true
+precomposeUnicode = true
+[init]
+defaultBranch = main
+[status]
+submoduleSummary = true
+showStash = true
+showUntrackedFiles = normal
+renames = true
+[protocol]
+version = 2
+
+[filter "lfs"]
+process = git-lfs filter-process
+required = true
+clean = git-lfs clean -- %f
+smudge = git-lfs smudge -- %f
