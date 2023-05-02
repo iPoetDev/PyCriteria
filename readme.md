@@ -182,6 +182,8 @@
 
 ### 7.3 [Deployment](#deployment)
 
+#### 7.3.1 [Heroku Create App](#heroku)
+
 - 1: Login to Heroku, and verify and MFA authenticate
 - 2: Create a new app.
   ![](.docs/deployment/create-heroku-app.png)
@@ -203,7 +205,48 @@
 - 6: Deploy to Heroku
   ![](.docs/deployment/deploy-auto-heroku.png)
 
-#### 7.3.1 Repository Service
+#### 7.3.2 Heroku Branch Deployment
+
+1. Pull Request from ``main`` to ``heroku`` branch for deployment
+2. Protect ``heroku`` branch from changes or having anything pushed
+3. Merge from ``main`` to ``heroku`` branch for each release
+4. From `raw/new code` -> `linted code` -> `manually tested` -> `locally running` -> `PR#1` -> `Merge to Heroku` ->
+   `Heroku Automated`
+
+**A1: Heroku Release Flow**
+
+```mermaid
+flowchart LR
+	A[Raw Code] --> B[Linted Code]
+	B --> C[Manually Tested]
+	C --> D[Locally running]
+	D --> E[PR#1: Pull Request to Heroku]
+	E --> F[Merge to Heroku]
+	F --> G[Heroku Automated]
+```
+
+**A2: Heroku Commit Flow**
+
+```mermaid
+gitGraph:
+	commit id: "Raw Code"
+	commit id: "Linted Code"
+	commit id: "Manually Tested"
+	commit id: "Locally running"
+	commit id: "#2 Create PR#1"
+	commit id: "#1 Merge to Heroku"
+	branch heroku-1
+	commit id: "#1 Heroku automated"
+	checkout main
+	commit id: "New raw Code"
+	commit id: "..."
+	commit id: "#2 Create PR#2"
+	commit id: "#2 Merge to Herokus"
+	branch heroku-2
+	commit id: "#2 Heroku Automated"
+```
+
+#### 7.3.3 Repository Service
 
 - [GitHub.com](https://www.github.com) is the chosen remote code repository service being used.
   
