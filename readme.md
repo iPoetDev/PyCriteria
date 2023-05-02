@@ -182,6 +182,17 @@
 
 ### 7.3 [Deployment](#deployment)
 
+### 7.3.0 Build and Deploy Status Log
+
+PR | Year | Date | Time | Build | Time | Deploy | Overall Status | Method | Pipeline | Name
+----:|:----:|:-----:|:---:|:-----:|:---:|:---:|:------:|:----:|:----|:----:|:----
+#1 -v3| 2023| 05-02 | 10:50 | Passing | 10:51 | v3 Failing | Not Ok | Automated | Staging | deploy-auto
+#2 | 2023| 05-0x | - | --- | - | --- | Ok | Manual/Automated | - | -
+
+> #2 | 2023| 05-0x | --- | --- | Ok | Manual/Automated
+
+#### 7.3.1 [Heroku Create App](#heroku)
+
 - 1: Login to Heroku, and verify and MFA authenticate
 - 2: Create a new app.
   ![](.docs/deployment/create-heroku-app.png)
@@ -203,16 +214,73 @@
 - 6: Deploy to Heroku
   ![](.docs/deployment/deploy-auto-heroku.png)
 
-#### 7.3.1 Repository Service
+#### 7.3.1.1 App Information
+
+Name | Region | Stack | Framework | Slug Size | ConfigVars | Buildpacks | SSL Certs | Repo | Local Git
+
+------------:|:-------|:----------|:----------|:-----------|:-----------|:--------------|:----------|:--------------------|:--------
+py-criteria | Europe | heroku-22 | Python | 30/500 MiB | In Use | heroku/python | None |
+iPoetDev/PyCriteria |https://git.heroku.com/py-criteria.git
+
+#### 7.3.2 Heroku Branch Deployment
+
+1. Pull Request from ``main`` to ``heroku`` branch for deployment
+2. Protect ``heroku`` branch from changes or having anything pushed
+3. Merge from ``main`` to ``heroku`` branch for each release
+4. From `raw/new code` -> `linted code` -> `manually tested` -> `locally running` -> `PR#1` -> `Merge to Heroku` ->
+   `Heroku Automated`
+
+**A1: Heroku Release Flow**
+
+```mermaid
+flowchart LR
+	A[Raw Code] --> B[Linted Code]
+	B --> C[Manually Tested]
+	C --> D[Locally running]
+	D --> E[PR#1: Pull Request to Heroku]
+	E --> F[Merge to Heroku]
+	F --> G[Heroku Automated]
+```
+
+**A2: Heroku Commit Flow**
+
+```mermaid
+gitGraph:
+	commit id: "Raw Code"
+	commit id: "Linted Code"
+	commit id: "Manually Tested"
+	commit id: "Locally running"
+	commit id: "#2 Create PR#1"
+	commit id: "#1 Merge to Heroku"
+	branch heroku-1
+	commit id: "#1 Heroku automated"
+	checkout main
+	commit id: "New raw Code"
+	commit id: "..."
+	commit id: "#2 Create PR#2"
+	commit id: "#2 Merge to Herokus"
+	branch heroku-2
+	commit id: "#2 Heroku Automated"
+```
+
+#### 7.3.2.1 Heroku CLI Logs
+
+> CLI Documentation: [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
+
+```bash
+heroku logs --tail
+```
+
+#### 7.3.3 Repository Service
 
 - [GitHub.com](https://www.github.com) is the chosen remote code repository service being used.
-  
-      User | Profile | Repo | Link | Visibility | Issues
 
-----------:| :--- | :--- | :--- |:--- |:---
-@iPoetDev | @iPoetDev | PyCriteria |   https://github.com/iPoetDev/terni-lapilli--toe  | Public | Issues
+      User | Profile | Repo | Link                                   | Visibility | Issues
 
-#### 7.3.2 Local Git Service / IDE
+----------:| :--- | :--- |:---------------------------------------|:--- |:---
+@iPoetDev | @iPoetDev | PyCriteria | https://github.com/iPoetDev/PyCriteria | Public | Issues
+
+#### 7.3.5 Local Git Service / IDE ✅
 
 - PyCharm configured with GitHub account for Local development environment.
 - Utilised a modified/reduced Changelog format to document the changes, a-la, Keep a Changelog.
@@ -221,15 +289,17 @@
 - Mostly adhered to Semantic Versioning approach.
     - Minor adjustment was to put a double-digit index for each separate commit if several occurred on one day.
 
-#### 7.3.3 Deployment Environment
+#### 7.3.6 Deployment Environment ✅
 
 - Heroku is the cloud environment to deploy too:
 - Deploy a static web page off every commit.
 - Once the commit is built, then deploy the new website and pushes to hosted domain URI.
 - Heroku is the hosted domain URI and service.
 - The final URI is
-  
-  ``` ```
+    - Plain Text:
+      ``` https://py-criteria.herokuapp.com/ ```
+    - Link: [https://py-criteria.herokuapp.com/](https://py-criteria.herokuapp.com/ "PyCriteria: https://py-criteria.
+      herokuapp.com/")
 
 ## 8.0 [Assessment](#assessment)
 
