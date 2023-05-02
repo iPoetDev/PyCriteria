@@ -26,7 +26,6 @@ showUntrackedFiles = normal
 renames = true
 [protocol]
 version = 2
-
 [filter "lfs"]
 process = git-lfs filter-process
 required = true
