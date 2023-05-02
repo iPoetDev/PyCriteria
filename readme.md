@@ -211,8 +211,14 @@ PR | Year | Date | Time | Build | Time | Deploy | Overall Status | Method | Pipe
         - Deloyment is automated via Heroku's app deployment
         - By not having automated deployment on ```main```, there is no failed deployment
           noise on ``main`` branch and in the logs.
-- 6: Deploy to Heroku
+- 6: Add Buildpacks in correct order, as order sensitive, for good first run
+    - Use built-in buildpacks for Node.js and Python
+        - 1st: heroku/nodejs
+        - 2nd: heroku/python
+- 7: Config Vars
+- 8: Deploy to Heroku by PullRequest
   ![](.docs/deployment/deploy-auto-heroku.png)
+- 9:
 
 #### 7.3.1.1 App Information
 
@@ -263,12 +269,31 @@ gitGraph:
 	commit id: "#2 Heroku Automated"
 ```
 
-#### 7.3.2.1 Heroku CLI Logs
+#### 7.3.2.1 Heroku Deployments
+
+- Must have buildpacks installed in correct order
+    1. heroku/nodejs
+    2. heroku/python
+- The heroku CLI `remove` buildpack option, along with the immediate re-install, needs further investifation as it
+  failed
+  > - Maybe due to `git push heroku main` not being invoked.
+  > - Not sure which main it was referring to:
+      >
+  - Was it a main branch on @ipoetdev...pycriteria.git
+  >   - Or the remote heroku git.)
+
+#### 7.3.2.2 Heroku CLI Logs
 
 > CLI Documentation: [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
 
 ```bash
-heroku logs --tail
+heroku logs --app=py-criteria --tail
+```
+
+Other useful runners
+
+```bash
+heroku option --app=py-criteria arguement
 ```
 
 #### 7.3.3 Repository Service
