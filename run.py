@@ -8,9 +8,9 @@ import sys
 # 0.2 ThirdPartyLibraries
 import loguru as logcatcher  # type: ignore
 
+
 # 0.3 LocalLibraries & Settings
-from projectlogging import LOGRS
-from settings import Settings
+# from projectlogging import LOGRS
 
 
 # ---
@@ -18,12 +18,15 @@ from settings import Settings
 # pylint: disable=[no-member]
 @logcatcher.catch(onerror=lambda _: sys.exit(1))
 def main():
-    """Main function to run the app."""
-    print(Settings.WELCOME)
-    LOGRS.info(Settings.WELCOME)
-    LOGRS.info("Starting...")
-    LOGRS.info("Done!")
-    print("Done!")
+    """
+    The main function is the entry point of the program.
+    It prints a welcome message and starts the app.
+
+    :return: Nothing
+    :doc-author: Trelent
+"""
+    # print(Settings.WELCOME)
+    print("Hello World!")
 
 
 if __name__ == '__run__':

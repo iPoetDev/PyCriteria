@@ -2,8 +2,15 @@
 ## Python 3.11
 # Feedbacj
 loguru>=0.7.0
+typer>=0.8.0
+rich>=13.3.5
+colorama>=0.4.4
+shellingham>=1.4.0
+pygments>=2.15.1
 ## Google API
 google>=3.0.0
+google-auth>=2.3.0
+google-auth-oauthlib>=0.4.6
 gspread>=5.8.0
 # Environment
 python-dotenv>=1.0.0

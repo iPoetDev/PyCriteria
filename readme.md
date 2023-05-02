@@ -168,7 +168,9 @@
 
 #### 6.3.1.2 Pylint
 
-> Native into PyCharm so this is the defact problem matcher for the IDE.
+> Integrated into PyCharm, so this is the defacto problem matcher for the IDE.
+
+#### 6.3.1.3 MyPy
 
 ## 7.0 [Deploy](#deploy)
 
@@ -180,14 +182,30 @@
 
 ### 7.3 [Deployment](#deployment)
 
-- .
-- .
-- .
-- .
+- 1: Login to Heroku, and verify and MFA authenticate
+- 2: Create a new app.
+  ![](.docs/deployment/create-heroku-app.png)
+- 3: Choose a deployment method. ``GitHub``
+  ![](.docs/deployment/choose-deployment-method.png)
+- 4: Connect to GitHub and search for the repository: ``PyCriteria``
+  ![](.docs/deployment/connect-to-github.png)
+- 5: Connect to chosen Repository and verify
+  ![](.docs/deployment/connect-to-github-2.png)
+  ![](.docs/deployment/select-app-repository.png)
+- NOTE: ___ADR Decision___: Decide the selection of the branch to deploy to:
+    - Decision: ``heroku``, as a protected branch
+        - Use **Trunk based development** from the ``main`` branch to ``heroku`` branch
+        - Commmit Style: Push to ``main`` for development codebase.
+        - Tag Code ready for deployment: Push to ``heroku``
+        - Deloyment is automated via Heroku's app deployment
+        - By not having automated deployment on ```main```, there is no failed deployment
+          noise on ``main`` branch and in the logs.
+- 6: Deploy to Heroku
+  ![](.docs/deployment/deploy-auto-heroku.png)
 
 #### 7.3.1 Repository Service
 
-- [Github.com](https://www.github.com) is the chosen remote code repository service being used.
+- [GitHub.com](https://www.github.com) is the chosen remote code repository service being used.
   
       User | Profile | Repo | Link | Visibility | Issues
 
@@ -196,25 +214,22 @@
 
 #### 7.3.2 Local Git Service / IDE
 
-- VSCode configured with Github account for Local development environment.
-- VSCode extension: Gitlens installed and enabled for local development and deployment.
-- Utilized a Changelog format to document the changes, a la, Keep a Changelog.
-    - Intent here was to catalogue in longer more human readable format a more contextual change history.
-    - Greater than the 50 chars of a commit 1st line.
-    - Additionally, utilized the changelog as a summation effort to shorted and be precise on the commit description.
+- PyCharm configured with GitHub account for Local development environment.
+- Utilised a modified/reduced Changelog format to document the changes, a-la, Keep a Changelog.
+    - Directly in the commit messages.
+    - Reduced efforts by not maintaining the ``changelog.md``, which is abandoned.
 - Mostly adhered to Semantic Versioning approach.
-    - Minor adjustment was to put a double digit index for each separate commit if several occurred on one day.
+    - Minor adjustment was to put a double-digit index for each separate commit if several occurred on one day.
 
 #### 7.3.3 Deployment Environment
 
 - Heroku is the cloud environment to deploy too:
 - Deploy a static web page off every commit.
 - Once the commit is built, then deploy the new website and pushes to hosted domain URI.
--
 - Heroku is the hosted domain URI and service.
 - The final URI is
   
-  ```
+  ``` ```
 
 ## 8.0 [Assessment](#assessment)
 
