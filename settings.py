@@ -3,9 +3,12 @@
 """Module App Settings and Environmental Vars."""
 # 0.1 Standard Imports
 import dataclasses
+
+
 # 0.1.2 Targeted Imports
 from importlib import util as findlib
 from pathlib import Path
+from typing import Dict
 from typing import NoReturn
 from typing import Union
 
@@ -14,11 +17,10 @@ import dotenv as dotenv_loader  # type: ignore
 
 # 0.3 Local/Own Imports
 from exceptions import ManagingExceptions as Graceful
-from projectlogging import LOGRS
 
 
 # Global String/Int Resources
-# pylint: disable=R0902, too-many-instance-attributes
+# pylint: disable=too-few-public-methods, too-many-instance-attributes
 @dataclasses.dataclass
 class Settings:
     """Settings."""
@@ -34,17 +36,46 @@ class Settings:
     ENCODE: str = 'UTF-8'  # pylint: disable=C0103
     # Data String/Int Resources
     CRED_FILE: str = 'creds.json'  # pylint: disable=C0103
+    SHEET_NAME: str = 'PyCriteria'  # pylint: disable=C0103
+    TAB_NAME: str = 'Data'  # pylint: disable=C0103
     TITLE: str = 'PyCriteria'  # pylint: disable=C0103
     PURPOSE: str = 'CLI to managing Project Criteria'  # pylint: disable=C0103
     WELCOME: str = f'Welcome to {TITLE} {PURPOSE} App.'  # pylint: disable=C0103
     # Data String/Int Resources
     FILENAME: str = 'PyCriteria'  # pylint: disable=C0103
-    TAB_START: str = 'overview'  # pylint: disable=C0103
     SCOPE = [
             "https://www.googleapis.com/auth/spreadsheets",
             "https://www.googleapis.com/auth/drive.file",
             "https://www.googleapis.com/auth/drive"
             ]  # pylint: disable=C0103
+
+
+# pylint: disable=too-few-public-methods, too-many-instance-attributes
+class TableSettings:
+    """TableSettings."""
+    CRITERIA_FILTER: Dict[str, str] = \
+        {"H1": "CriteriaGroup",
+         "I1": "CriteriaTopic",
+         "J1": "CriteriaRef",
+         "K1": "Criteria",
+         "L1": "Progress",
+         "M1": "ToDoFlag",
+         "N1": "Notes"}
+    METADATA_FILTER: Dict[str, str] = \
+        {"A1": "RowID",
+         "B1": "Position",
+         "C1": "Tier",
+         "D1": "TierPrefix",
+         "E1": "TierDepth",
+         "F1": "DoD",
+         "G1": "Performance",
+         }
+    HEADERS_RANGE: str = 'A1:O1'
+    COLUMN_RANGE: str = 'A:O'
+    ROW_START_POS: str = '1'
+    ROW_END_POS: str = '71'
+    DATA_RANGE: str = 'A2:071'
+    TOTAL_RANGE: str = 'A1:071'
 
 
 class EnvirnomentalVars:
@@ -99,7 +130,7 @@ class EnvirnomentalVars:
         # Open the .env file and then load/close the .env file if a file exists
         with dotenv_path.open(encoding=encode):
             print(success_message)
-            LOGRS.debug(success_message)
+            # LOGRS.debug(success_message)
             if dotenv_loader.load_dotenv(dotenv_path=dotenv_path,
                                          verbose=True,
                                          override=True,

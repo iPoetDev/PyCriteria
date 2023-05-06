@@ -6,11 +6,13 @@
 import dataclasses
 import socket
 import ssl
+
 from typing import Tuple
+
+from google.oauth2.service_account import Credentials  # type: ignore
 
 # 0.2 Core Modules
 import gspread  # type: ignore
-from google.oauth2.service_account import Credentials  # type: ignore
 
 # 0.3 Project Logging
 # 0.3 Local/Own Modules/Library
@@ -28,7 +30,7 @@ class ConnectExceptions:
     # API Error
     APIERROR: gspread.exceptions.APIError = \
         gspread.exceptions.APIError  # pylint: disable=C0103
-    # Trying to open non-existent or inaccessible worksheet. worksheet(title
+    # Trying to open a non-existent or inaccessible worksheet
     WORKSHEETERROR: gspread.exceptions.WorksheetNotFound = \
         gspread.exceptions.WorksheetNotFound  # pylint: disable=C0103
     # Trying to open non-existent or inaccessible spreadsheet.
@@ -86,7 +88,6 @@ class GoogleConnector:
         notimplmessage: str = 'Credentials must be scoped correctly.'
         credentials: str = credential_file
         _creds = Credentials.from_service_account_file(credentials)
-        # assert isinstance(_creds.with_scopes, SCOPE)
         try:
             if not _creds.requires_scopes:
                 raise NotImplementedError(notimplmessage)
@@ -99,12 +100,11 @@ class GoogleConnector:
         return _creds.with_scopes(Settings.SCOPE)
     
     @staticmethod
-    def get_source(credentials: Credentials, file_name: str) -> gspread.Spreadsheet:
+    def get_source(credentials, file_name: str) -> gspread.Spreadsheet:
         """Connects/opens to a Google Sheet synchronously else exit for now
         Parameters
         ----------
             :param credentials: Google sheet scoped credentials
-            :type: google.auth.service_account.Credentials
             :param file_name: Google sheet file name
             :type: str
         Returns
@@ -161,7 +161,7 @@ class GoogleConnector:
             return file.worksheet(newtab)
     
     @staticmethod
-    def fetch_data(sheet: gspread.Worksheet):
+    def fetch_data(sheet: gspread.Worksheet) -> list[str] | None:
         """Fetch the data from the Google sheet.
         
         Parameters
@@ -179,14 +179,14 @@ class GoogleConnector:
         Raises:
         ----------
             Exits the program
-            :raises: Exception
+            :raise: gspread.exceptions.GSpreadException: General Spreadsheet Exception
         """
         try:
             return sheet.get_all_values()
         except ConnectExceptions.GSPREADERROR as _error:
             _output: str = GoogleConnector.notfound_prompt(_error, sheet.title)
-            Graceful.exiting_status(_error, _output)
-            return None
+            nofetch: None = Graceful.exiting_status(_error, _output)
+            return nofetch
     
     @staticmethod
     # pylint: disable=line-too-long
@@ -241,8 +241,10 @@ class SSLManager:
     :method open_ssl_connection: Opens secure connects to outside network
     :method close_ssl_connection: Closes secure connects to outside network.
     """
+    sslsock: ssl.SSLSocket
     
-    sslsock: ssl.SSLSocket = ssl.SSLSocket()
+    def __init__(self):
+        self.sslsock: ssl.SSLSocket = SSLManager.open_ssl_connection()
     
     @staticmethod
     def open_ssl_connection():
@@ -250,9 +252,9 @@ class SSLManager:
         :return: _ssl
         :rtype: SSLSocket.
         """
-        _connection = ssl.create_default_context()
+        _connection: ssl.SSLContext = ssl.create_default_context()
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        _ssl = _connection.wrap_socket(_socket, server_hostname=Settings.DOMAINHOST)
+        _ssl: ssl.SSLSocket = _connection.wrap_socket(_socket, server_hostname=Settings.DOMAINHOST)
         _ssl.connect((Settings.DOMAINHOST, Settings.HTTPS))
         return _ssl
     
