@@ -1,16 +1,20 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
-"""Module Terminal/Console App."""
+"""Module: Controller for the Terminal App."""
 import typing
+
+from typing import Optional
 import warnings
 
 import gspread  # type: ignore
 
-from rich import pretty as rpretty  # type: ignore; type: ignore
-from rich import print as rprint  # type: ignore; type: ignore
-from rich.console import Console  # type: ignore; type: ignore; type: ignore
-from rich.console import ConsoleDimensions  # type: ignore; type: ignore; type: ignore
-from rich.console import ConsoleOptions  # type: ignore; type: ignore; type: ignore
+from rich import pretty as rpretty
+from rich import print as rprint
+from rich.console import Console
+from rich.console import ConsoleDimensions
+from rich.console import ConsoleOptions
+
+# ignore; type: ignore; type: ignore
 from rich.prompt import Prompt  # type: ignore
 import rich.style  # type: ignore
 from rich.table import Table  # type: ignore
@@ -30,33 +34,88 @@ transformer: DataTransform = DataTransform()
 
 # 2. Read the data from the sheet by the controller
 
+# plylint: disable=line-too-long
 class Controller:
-    """Controller for the work/effort of loading the data, fetching it, tranforming it."""
+    """Controller for the effort of loading the data, fetching it, managing it.
     
+    Links the connector to the app:
+    
+    CRUD engine + filter, find/search, show/hide
+    ---------------------------------------------
+    A: READ/FETCH: Loads the data from the sheet to the:
+     - DataModel - NYI
+     - App - WIP
+     - Display - WIP
+    B: CREATE: Inserts new data into the sheet: per item, per row, not per batch
+    C: UPDATE: Updates data in the sheet: per item, per row, not per batch
+       (matching cells, yet)
+    D: DELETE: Deletes data from the sheet: per item, per row, not per batch
+    E: READ/FILTER: Filters the data: per row, column
+       --> Affirmative: "Given me a subset to ETL"
+    F: READ/EXCLUDE: Hides the data: per row, column
+       --> Non-Affirmative: "Hide what I do not want to see"
+    G: SORT: Not doing sorting, thought, APIs have refernece to it.
+    
+    Controller is the hub of app tasks/actions; whereas:
+    -----------------------------------------------
+    1. The App handles TUI command logic (Typer) and bundles controller logic
+       into one entry point.
+    2. The WebConsole handles the console display/logics.
+    3. The DataTransformer handles any Extract, Transform,
+       Load (ETL) logic (load_* tasks are shared with controller)
+    4. The DataModel handles the in memory data structure and
+       data logics (maybe move Topics, Entry to DataModel)
+    5. The Display handles the TUI output display rendering logics
+       using the console.
+    6. The Connector handles the connection to the remote data source
+       (Google Sheets).
+    7. The Settings handle the configurations of the app/local packages for
+       strings, etc.
+    
+
+    Methods:
+    -------
+    :method: refresh: Refreshed entired connection, sheet, worksheet, and data.
+    :method: load_data: Loads the worksheet.
+    :method: load_data: Loads the data from the sheet.
+    :method: insert_newrow: Inserts a new row into the worksheet.
+    :method: insert_newitem: Inserts a new item into the worksheet.
+    :method: update_row: Updates a row in the worksheet.
+    :method: update_item: Updates an item in the worksheet.
+    :method: update_items: Updates matching item in the worksheet.
+    :method: delete_row: Deletes a row in the worksheet.
+    :method: delete_item: Deletes an item in the worksheet.
+    :method: filter_rows: Filters the worksheet by row(s).
+    :method: filter_columns: Filters the worksheet by column(s).
+    :method: hide_rows: Hides the worksheet by row(s) --> Display Class?
+    :method: hide_columns: Hides the worksheet by column(s) --> Display Class?
+    """
+    
+    # 1. Loading Actions/Methods: Bulk: Connecting, Worhsheet, Entire Dataset
     @staticmethod
-    def load_criteria() -> list[str]:
-        """Loads the criteria from the sheet."""
-        # 2.1: Connect to the sheet
+    def refresh() -> list[str]:
+        """Refreshed google sheet connection, returns the refreshed data."""
+        # 1.1: Connect to the sheet
         # -> Move to Instance once the data is
         # loaded is tested and working on heroku
         creds: gspread.Client = connector.connect_to_remote(
                 configuration.CRED_FILE)
         # rich.print(creds)
-        # 2.2: Read the data from the sheet
+        # 1.2: Read the data from the sheet
         # -> Move to Instance once the data is loaded, working on heroku
         spread: gspread.Spreadsheet = \
             connector.get_source(creds,
                                  configuration.SHEET_NAME)
         # rich.print(spread)
-        # 2.3: Return the data from the sheet
+        # 1.3: Return the data from the sheet
         # -> Move to Instance once the data is loaded is tested and working on
         # heroku
         tabs: gspread.Worksheet = \
             connector.open_sheet(spread, configuration.TAB_NAME)
         # rich.print(tabs)
-        # 2.4 Fetch the Data and a.1 Return/Print it,
-        # 2.4 a2 Return it and load it into a dataclass
-        # 2.4 b1: transform it into a datamodel reference
+        # 1.4 Fetch the Data and a.1 Return/Print it,
+        # 1.5 Return it and load it into a dataclass
+        # 1.6 transform it into a datamodel reference
         return connector.fetch_data(tabs)
     
     @staticmethod
@@ -64,18 +123,18 @@ class Controller:
         """Loads a worksheet.
         :return: gspread.Worksheet: The current worksheet to extract the data.
         """
-        # 2.1: Connect to the sheet
+        # 1.1: Connect to the sheet
         # -> Move to Instance once the data is loaded is tested and working on heroku
         creds: gspread.Client = \
             connector.connect_to_remote(configuration.CRED_FILE)
         # rich.print(creds)
-        # 2.2: Read the data from the sheet
+        # 1.2: Read the data from the sheet
         # -> Move to Instance once the data is loaded is tested and working on heroku
         spread: gspread.Spreadsheet = \
             connector.get_source(creds,
                                  configuration.SHEET_NAME)
         # rich.print(spread)
-        # 2.3: Return the data from the sheet
+        # 1.3: Return the data from the sheet
         # -> Move to Instance once the data is loaded is tested and working on
         # heroku
         return connector.open_sheet(spread, configuration.TAB_NAME)
@@ -83,11 +142,182 @@ class Controller:
     @staticmethod
     def load_data() -> list[str]:
         """Loads the data."""
-        # 2.1: Connect to the sheet
-        # 2.2: Read the data from the sheet
-        # 2.3: Return the data from the sheet
+        # 1.1: Connect to the sheet
+        # 1.2: Read the data from the sheet
+        # 1.3: Return the data from the sheet
         wsheet: gspread.Worksheet = Controller.load_wsheet()
         return transformer.get_data(wsheet, "H2:010")
+    
+    # Loading a set of cells/cells items/a cell items from a range/row
+    # plylint: disable=line-too-long
+    # 2. FINDING: Search Actions/Methods: Individual item, all matching items, row but not batch
+    # https://docs.gspread.org/en/v5.4.0/user-guide.html#finding-a-cell # plylint: disable=line-too-long
+    # A1 Notation: https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet.acell #
+    # plylint: disable=line-too-long,C0301
+    # Row:Column: int: https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet.cell
+    # plylint: disable=line-too-long,C0301
+    # Find 1st: https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet.find #
+    # plylint: disable=line-too-long,C0301
+    # Find all: https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet.findall #
+    # plylint: disable=line-too-long,C0301
+    
+    # 3. CREATE: Insert Actions/Methods: Individual items, row but not batch insert
+    # https://docs.gspread.org/en/v5.4.0/user-guide.html#getting-all-values-from-a-row-or-a-column
+    # https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet.append_row
+    
+    @staticmethod  # Development Order: CREATE3.2
+    def insert_newrow(rowdata: list[str] = None,
+                      position: int = 1,
+                      lastrow: bool = False,
+                      editheader: bool = False,
+                      defaultvalue: str = ""):
+        """App Command: Inserts a new row into the sheet."""
+        # 3.1: Connect to the sheet/loads data ☑️
+        # 3.2: Find a row position, and cell position. 👔🚧
+        # 3.3: Reload new dataset from the sheet with new item highlighted 👔
+    
+    # https://docs.gspread.org/en/v5.4.0/user-guide.html#getting-a-cell-value
+    @staticmethod  # Development Order: CREATE3.3
+    def insert_item(itemdata: str, position: int = 1,
+                    cell_reference: Optional[str] = None,
+                    editheader: bool = False):
+        """App Command: Inserts an item into the sheet."""
+        # 3.1: Connect to the sheet/loads data ☑️
+        # 3.2: Find a row position, and cell position.👔🚧
+        # 3.3: Appends data the cell at end:
+        # 3.3:  either clearing and appending to cell contents 🚧
+        # 3.3:  by overwrighting within new Cell Object 🚧
+        # 3.5: Confirmed user with intermediate display (not commit/saved) 👔🚧
+        # 3.6: Sends data to the sheet 🚧
+        # 3.7: Reloads new dataset from the sheet, with new item displayed/highlighted 👔🚧
+    
+    # 4. DELETE: Remove Actions/Methods: Individual items, row but not batch delete/clear
+    # Note: https://developers.google.com/sheets/api/guides/values
+    # Note: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values
+    # Note: Batch Clear: https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet
+    # Note: Delete Rows: https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet
+    
+    @staticmethod
+    def delete_row(position: int = 1,
+                   lastrow: bool = False,
+                   valuesonly: bool = True,
+                   editheader: bool = False):
+        """App Command: Delete a row into the sheet."""
+        # 4.1: Connect to the sheet/loads data ☑️
+        # 4.2: Removes/Clears the end row, i.e. 👔🚧
+        # 4.2: i.e. undo last append 🎬🔲
+        # 4.2: i.e. undo last insert 🎬🔲
+        # 4.2: i.e. removeś last row (last row id) 🎬🔲
+        # 4.3: Confirmed user with intermediate display (not commit/saved) 👔🚧
+        # 4.4: Sends data to the sheet 🚧🔲
+        # 4.5: Refreshes new dataset from the sheet, new API call, 🎬 🔲
+        # 4.6:   with new item displayed/highlighted 👔🚧
+    
+    @staticmethod
+    def delete_item(itemdata: str,
+                    position: int = 1,
+                    editheader: bool = False,
+                    defaultvalue: str = ""):
+        """App Command: Delete a row into the sheet."""
+        # 4.1: Connect to the sheet/loads data ☑️
+        # 4.2: Finds the first item in a row by a row id, and column id: RC1:RC2 or A1 Notation 👔🚧
+        # 4.2: Stores the item coordinates/Ai Notation to a ... 🎬🔲
+        # 4.3: Deletes an item in a row by a row id, and column id: RC1:RC2 or A1 Notation 🎬🔲
+        # 4.4: Confirmed user with intermediate display (not commit/saved) 👔🚧
+        # 4.2: Deletes an item in a row by a row id, and column id: RC1:RC2 or A1 Notation 🎬🔲
+        # 4.3: Reloads/refreshed new dataset from the sheet, refreshes the data 👔🚧
+    
+    # 5. UPDATE: Modify Actions/Methods: Individual items, row but not batch update
+    # https://docs.gspread.org/en/v5.4.0/user-guide.html#updating-cells
+    @staticmethod
+    def update_item(itemdata: str,
+                    position: int = 1,
+                    coordinate: Optional[str] = None,
+                    namerange: Optional[str] = None,
+                    editheader: bool = False,
+                    defaultvalue: str = ""):
+        """App Command: Update an item into the sheet."""
+        # 5.1: Connect to the sheet/loads data
+        # 5.2: Finds the first item in a row by a row id, and column id: RC1:RC2 or A1 Notation
+        # 5.3: Stored the items coordinates/Ai Notation to a datamodel
+        # 5.4: Displays item and item context (row data, position, column)
+        # 5.5: Updates an item in a row by stored coordinate
+        # 5.6: Confirms to user with intermediate display (not commit/saved)
+        # 5.7: Sends data to the sheet on confirmation.
+        # 5.8: Reloads/refreshed new dataset from the sheet, refreshes the data
+        # 5.9: Displays the newly refreshed data, highlighted
+    
+    # Batch Update: or Matching all Cells verses a query string
+    @staticmethod
+    def update_items(itemdata: str,
+                     searching: str,
+                     coordinate: Optional[str] = None,
+                     namerange: Optional[str] = None,
+                     editheader: bool = False):
+        """App Command: Update an item into the sheet."""
+        # 5.1: Connect to the sheet/loads data
+        # 5.2: Finds the first item in a row by a row id, and column id: RC1:RC2 or A1 Notation
+        # 5.3: Stored the items coordinates/Ai Notation to a datamodel
+        # 5.4: Displays item and item context (row data, position, column)
+        # 5.5: Updates an item in a row by stored coordinate
+        # 5.6: Confirms to user with intermediate display (not commit/saved)
+        # 5.7: Sends data to the sheet on confirmation.
+        # 5.8: Reloads/refreshed new dataset from the sheet, refreshes the data
+        # 5.9: Displays the newly refreshed data, highlighted
+    
+    @staticmethod
+    def update_row(rowdata: list[str] = None,
+                   position: int = 1,
+                   coordinate: Optional[str] = None,
+                   namerange: Optional[str] = None,
+                   editheader: bool = False):
+        """App Command: Update a row into the sheet."""
+        # 5.1: Connect to the sheet/loads data
+        # 5.2: Updates a row by id - Required
+        # 5.2: Updates a row by id and, optionally, a coordinate
+        # 5.2: Updates a row by id and, optionally, a named range
+        # 5.3: If by id, Returns the items coordinates/Ai Notation to a datamodel/locally
+        # 5.3: If by id: updates the entire rowdata
+        # 5.4: If by coordinate: updates the row with rowdata (whole or subset)
+        # 5.5: If by nameranged: updates the row with rowdata (whole or subset)
+        # 5.6: Confirms to user with intermediate display (not commit/saved)
+        # 5.7: Reloads/refreshed new dataset from the sheet, refreshes the data
+        # 5.9: Displays the newly refreshed data, highlighted (User Feedback)
+    
+    # 6. FILTER: Reduction of DataSet: by row, column, cell, value, range, etc.
+    # https://docs.gspread.org/en/v5.4.0/user-guide.html#filtering
+    
+    @staticmethod
+    def filter_rows(dataset: list[str] = None,
+                    selection: str = None,
+                    wrapping: Optional[str] = None,
+                    showheaders: bool = True,
+                    removefilter: bool = False):
+        """App Command: Filter a row or contigious rows from the sheet."""
+    
+    @staticmethod
+    def filter_columns(dataset: list[str] = None,
+                       selection: str = None,
+                       wrapping: str = None,
+                       showheader: bool = True,
+                       removefilter: bool = False):
+        """App Command: Filter a column or contigious rows from the sheet."""
+    
+    @staticmethod
+    def hide_rows(dataset: list[str] = None,
+                  selection: str = None,
+                  showheaders: bool = True,
+                  unhide: bool = False):
+        """App Command: Filter a row or contigious rows from the sheet."""
+        # Maybe better in Display Class
+    
+    @staticmethod
+    def hide_columns(dataset: list[str] = None,
+                     selection: str = None,
+                     showheaders: bool = True,
+                     unhide: bool = False):
+        """App Command: Show/Hide a column or contigious columns from the display/dataset."""
+        # Maybe better in Display Class
 
 
 class Display:
