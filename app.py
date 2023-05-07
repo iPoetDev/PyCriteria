@@ -24,7 +24,7 @@ Delete: typer.Typer = typer.Typer()
 # Own Modules/Objects
 Actions: controller.Controller = controller.Controller()
 Display: controller.Display = controller.Display()
-Webconsole: controller.WebConsole = controller.WebConsole()
+Webconsole: controller.WebConsole = controller.WebConsole(80, 24)
 Entry: controller.Entry = controller.Entry()
 
 
@@ -309,3 +309,14 @@ def deleteitem():
 @Delete.command(AppValues.Delete.rows)
 def deleterow():
     """Delete row(s)."""
+
+
+def main():
+    """Main."""
+    # typer.run(App)
+    tui = CriteriaApp()
+    typer.run(tui.app)
+
+
+if __name__ == "__main__":
+    main()
