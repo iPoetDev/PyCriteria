@@ -63,38 +63,39 @@ class LOGGERS:
         2: Error Logging
         3: Project Logging.
         """
-        config = {
-                "handlers": [
-                        {
-                                "sink": values.SINK_CONSOLE,
-                                "colorize": values.ENABLED,
-                                "format": values.FORMAT,
-                                "level": "ERROR",
-                                "enqueue": values.DISABLED,
-                                "backtrace": values.ENABLED,
-                                "diagnose": values.ENABLED,
-                                },
-                        {
-                                "sink": values.SINK_ERROR,
-                                "colorize": values.DISABLED,
-                                "level": values.LEVEL,
-                                "enqueue": values.ENABLED,
-                                "format": values.FORMAT,
-                                "backtrace": values.ENABLED,
-                                "diagnose": values.ENABLED,
-                                },
-                        {
-                                "sink": values.SINK_PROJECT,
-                                "colorize": values.DISABLED,
-                                "level": "INFO",
-                                "enqueue": values.DISABLED,
-                                "format": values.FORMAT,
-                                "backtrace": values.ENABLED,
-                                "diagnose": values.ENABLED,
-                                },
-                        ]
-                }
-        LOGR.configure(**config)
+        # : list[dict[str, Union[TextIO, str, bool]]]
+        config = \
+            [
+                    {
+                            "sink": values.SINK_CONSOLE,
+                            "colorize": values.ENABLED,
+                            "format": values.FORMAT,
+                            "level": "ERROR",
+                            "enqueue": values.DISABLED,
+                            "backtrace": values.ENABLED,
+                            "diagnose": values.ENABLED,
+                            },
+                    {
+                            "sink": values.SINK_ERROR,
+                            "colorize": values.DISABLED,
+                            "level": values.LEVEL,
+                            "enqueue": values.ENABLED,
+                            "format": values.FORMAT,
+                            "backtrace": values.ENABLED,
+                            "diagnose": values.ENABLED,
+                            },
+                    {
+                            "sink": values.SINK_PROJECT,
+                            "colorize": values.DISABLED,
+                            "level": "INFO",
+                            "enqueue": values.DISABLED,
+                            "format": values.FORMAT,
+                            "backtrace": values.ENABLED,
+                            "diagnose": values.ENABLED,
+                            },
+                    ]
+        
+        LOGR.configure(handlers=config)
         return LOGR
 
 

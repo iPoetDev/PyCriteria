@@ -1,33 +1,32 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
-"""Module Run GSheet."""
+"""Module: Run.py.
 
-# 0.1 CoreLibraries
-import sys
+Web Terminal: Entry point.
+"""
+# 1. StdLib
+import warnings
 
-# 0.2 ThirdPartyLibraries
-import loguru as logcatcher  # type: ignore
-
-
-# 0.3 LocalLibraries & Settings
-# from projectlogging import LOGRS
-
+# 2.
+# 3.
+import controller
 
 # ---
 # Execute the main function as User Input entry point
-# pylint: disable=[no-member]
-@logcatcher.catch(onerror=lambda _: sys.exit(1))
-def main():
-    """
-    The main function is the entry point of the program.
+
+
+def run():
+    """The main function is the entry point of the program.
     It prints a welcome message and starts the app.
 
     :return: Nothing
-    :doc-author: Trelent
-"""
+    """
     # print(Settings.WELCOME)
     print("Hello World!")
+    controller.main()
+    # controller.Controller.load_criteria()
 
 
 if __name__ == '__run__':
-    main()
+    warnings.filterwarnings("ignore", message=".*deprecated.*", category=DeprecationWarning)
+    run()

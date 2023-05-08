@@ -1,0 +1,11 @@
+datatransform.py:7: error: Skipping analyzing "gspread": module is installed, but missing library stubs or py.typed marker  [import]
+datatransform.py:7: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+datatransform.py:8: error: Import of "rich" ignored  [misc]
+datatransform.py:8: note: (Using --follow-imports=error, module not passed on command line)
+datatransform.py:110: error: Incompatible return value type (got "<typing special form>", expected "Union[List[str], NoReturn]")  [return-value]
+projectlogging.py:97: error: Argument 1 to "configure" of "Logger" has incompatible type "**Dict[str, List[Dict[str, object]]]"; expected "Optional[Sequence[LevelConfig]]"  [arg-type]
+projectlogging.py:97: error: Argument 1 to "configure" of "Logger" has incompatible type "**Dict[str, List[Dict[str, object]]]"; expected "Optional[Dict[Any, Any]]"  [arg-type]
+projectlogging.py:97: error: Argument 1 to "configure" of "Logger" has incompatible type "**Dict[str, List[Dict[str, object]]]"; expected "Optional[Callable[[Record], None]]"  [arg-type]
+projectlogging.py:97: error: Argument 1 to "configure" of "Logger" has incompatible type "**Dict[str, List[Dict[str, object]]]"; expected "Optional[Sequence[Tuple[Optional[str], bool]]]"  [arg-type]
+run.py:40: error: Return statement in function which does not return  [misc]
+settings.py:73: error: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]

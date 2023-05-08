@@ -169,8 +169,47 @@
 #### 6.3.1.2 Pylint
 
 > Integrated into PyCharm, so this is the defacto problem matcher for the IDE.
+> Disabled: `pylint: disable=` in the codebas hint at non-criticla or intentional hotspots
 
-#### 6.3.1.3 MyPy
+*File* |   Date   |       LN       |        Issue        | Code  |  State   | Note
+-----:|:--------:|:--------------:|:-------------------:|:-----:|:--------:|:-----
+All | OnGoing  |       2        | trailing-whitespace | C0303 | disabled | Non Critical
+controller.py | 23-05-05 | 90,104,228,234 |  unnecessary-pass   | C0114 | disabled | Temporary
+settings.py | 23-05-05 |     26-42      |    invalid-name     | C0103 | disabled | Using custom convention <br> Using upper case to flag program variables<br> Setting CONSTANTS
+settings.py | 23-05-05 |     19,49      |    too-few-public-methods     | R0903 | disabled | Setting Classes
+settings.py | 23-05-05 |     19,49      |    too-many-instance-attributes     | R0902 | disabled | Setting Classes
+connection.py | 23-05-05 |     26-36      |    invalid-name     | C0103  | disabled | as per settings.py, CONSTANTS
+
+#### 6.3.1.3 SonarLint
+
+> Integrated into PyCharm, by 3rd Party Plugin
+
+*File* |   Date    |    LN    |          Issue          |     Code     |   State    | Note
+-----:|:---------:|:--------:|:-----------------------:|:------------:|:----------:|:-----
+datatransform.py | 2023-0505 |    83    |     unused variable     | python:S1481 | code-smell | WIP, Implementing
+datatransform.py | 2023-0505 | 221, 229 | grouping regex patterns | python:S1481 | major-bug  | FixMe
+
+Remove the unused local variable "maxrow".
+
+#### 6.3.1.4 MyPy
+
+***Status***
+
+Date |  Status 
+-----:|:---------: 
+2023.05.05 | Passing
+
+> Integrated into PyCharm, by 3rd Party Plugin:
+> Invoke: ``dmypy run -- --check-untyped-defs --follow-imports=error --exclude /venv/ .``
+
+File |   Date    | LN | Issue | Fix   |  State  | Note
+-----------------:|:---------:|:--:|:-----:|:-----:|:-------:|:---
+`datatransform.py` | 23-05-05  | 7 | import | added: ignore | Passing | https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+`datatransform.py` | 23-05-05  | 8 | import | added: ignore | Passing | (Using --follow-imports=error, module not passed on command line)
+`datatransform.py` | 23-05-05  | 110 | return-value | added typing._SpecialForm | Passing | --
+`projectlogging.py` | 23-05-05  | 97 | return-value | changed datastructure type | Passing | --
+`run.py` | 23-05-05  | 40 | misc | removed implict/wrong return | Passing | --
+`settings.pg` | 23-05-05  | 1 | assignment | changed type assign | Passing | --
 
 ## 7.0 [Deploy](#deploy)
 
@@ -213,8 +252,8 @@ PR | Year | Date | Time | Build | Time | Deploy | Overall Status | Method | Pipe
           noise on ``main`` branch and in the logs.
 - 6: Add Buildpacks in correct order, as order sensitive, for good first run
     - Use built-in buildpacks for Node.js and Python
-        - 1st: heroku/nodejs
-        - 2nd: heroku/python
+        - 1st: `heroku/nodejs`
+        - 2nd: `heroku/python`
 - 7: Config Vars
 - 8: Deploy to Heroku by PullRequest
   ![](.docs/deployment/deploy-auto-heroku.png)
@@ -223,7 +262,6 @@ PR | Year | Date | Time | Build | Time | Deploy | Overall Status | Method | Pipe
 #### 7.3.1.1 App Information
 
 Name | Region | Stack | Framework | Slug Size | ConfigVars | Buildpacks | SSL Certs | Repo | Local Git
-
 ------------:|:-------|:----------|:----------|:-----------|:-----------|:--------------|:----------|:--------------------|:--------
 py-criteria | Europe | heroku-22 | Python | 30/500 MiB | In Use | heroku/python | None |
 iPoetDev/PyCriteria |https://git.heroku.com/py-criteria.git
@@ -272,15 +310,15 @@ gitGraph:
 #### 7.3.2.1 Heroku Deployments
 
 - Must have buildpacks installed in correct order
-    1. heroku/nodejs
-    2. heroku/python
+    1. `heroku/nodejs`
+    2. `heroku/python`
 - The heroku CLI `remove` buildpack option, along with the immediate re-install, needs further investifation as it
   failed
   > - Maybe due to `git push heroku main` not being invoked.
   > - Not sure which main it was referring to:
       >
-  - Was it a main branch on @ipoetdev...pycriteria.git
-  >   - Or the remote heroku git.)
+    - Was it a main branch on @ipoetdev...pycriteria.git
+  > - Or the remote heroku git.)
 
 #### 7.3.2.2 Heroku CLI Logs
 
@@ -300,8 +338,7 @@ heroku option --app=py-criteria arguement
 
 - [GitHub.com](https://www.github.com) is the chosen remote code repository service being used.
 
-      User | Profile | Repo | Link                                   | Visibility | Issues
-
+User | Profile | Repo | Link                                   | Visibility | Issues
 ----------:| :--- | :--- |:---------------------------------------|:--- |:---
 @iPoetDev | @iPoetDev | PyCriteria | https://github.com/iPoetDev/PyCriteria | Public | Issues
 

@@ -2,7 +2,8 @@
 ## Python 3.11
 # Feedbacj
 loguru>=0.7.0
-typer>=0.8.0
+typer>=0.9.0
+typer-cli
 rich>=13.3.5
 colorama>=0.4.4
 shellingham>=1.4.0

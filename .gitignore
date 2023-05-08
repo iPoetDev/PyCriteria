@@ -18,11 +18,29 @@ creds.json
 # =================================================================
 # Extensions/Plugin
 /.write/
-/pycriteria/__init__.py
-/pycriteria/__main__.py
-/pycriteria/settings.py
+# =================================================================
+# Requirements
 /app-requirements.txt
 /messages.csv
 /dev-requirements.txt
 /test-requirememts.txt
-/profile.ps1
+# =================================================================
+# Git
+/.committemplate
+# =================================================================
+# IDE
+/.idea*
+/.idea/*
+/.idea/inspectionProfiles/Default.xml
+/.idea/.name
+/.idea/jsLibraryMappings.xml
+/.idea/sonarlint.xml
+/.idea/webResources.xml
+/.docs/credentials/*
+/.data/*
+/.idea/git_toolbox_prj.xml
+/.idea/sonarlint/*
+/.idea/sonarlint/issuestore/*
+/.idea/sonarlint/securityhotspotstore/*
+# =================================================================
+*-v1.py
