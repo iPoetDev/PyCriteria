@@ -13,8 +13,6 @@ from rich import print as rprint
 from rich.console import Console
 from rich.console import ConsoleDimensions
 from rich.console import ConsoleOptions
-
-# ignore; type: ignore; type: ignore
 from rich.prompt import Prompt  # type: ignore
 import rich.style  # type: ignore
 from rich.table import Table  # type: ignore
@@ -415,6 +413,13 @@ class WebConsole:
                                     markup=_on)
         return _console
     
+    @staticmethod
+    def layout_configure():
+        """Configures the Rich layout.
+        
+        Sets a bounding box for the console.
+        """
+    
     @staticmethod  #
     def page_data(dataset: list[str]):
         """Displays the data."""
@@ -551,7 +556,6 @@ def main():
     # 0.1: Load the data
     data: list[str] = Controller.load_data()
     # 0.2: Display the data
-    Display.display_data(data)
     Display.display_table(data,
                           mainconsole,
                           maintable)

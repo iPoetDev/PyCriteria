@@ -138,7 +138,7 @@ class CriteriaApp:
     """PyCriteria Terminal App."""
     
     app: typer.Typer
-    Load: typer.Typer
+    load: typer.Typer
     info: str
     name: str = "PyCriteria Terminal App."
     
@@ -188,14 +188,14 @@ def load():
     """Load."""
 
 
-@Load.command(AppValues.Load.criterias)
-def criteria():
-    """Load criteria."""
-
-
 @Load.command(AppValues.Load.projects)
 def project():
     """Load project (metadata)."""
+
+
+@Load.command(AppValues.Load.criterias)
+def criteria():
+    """Load criteria."""
 
 
 @Load.command(AppValues.Load.references)

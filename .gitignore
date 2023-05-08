@@ -42,3 +42,5 @@ creds.json
 /.idea/sonarlint/*
 /.idea/sonarlint/issuestore/*
 /.idea/sonarlint/securityhotspotstore/*
+# =================================================================
+*-v1.py
