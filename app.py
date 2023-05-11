@@ -2,321 +2,378 @@
 # pylint: disable=trailing-whitespace
 """Module: PyCriteria Terminal App."""
 # 1. Std Lib
-import dataclasses
+import typing
 
 # 2. 3rd Party
-import typer
+import click
+import pandas as pd
+from prompt_toolkit import PromptSession
 
 # 3. Local
-import controller
+from commands import AboutUsage, Commands, pass_dataframe_context
+from controller import (Controller, DataController, Display, WebConsole,
+                        Entry, rprint, configuration, )
+from sidecar import AppValues, ProgramUtils
 
-# 3rd Party: Commands: typer.Typer()
-App: typer.Typer = typer.Typer()  # Parent Instance
-# Sub Instances --> Sub Commands
-Load: typer.Typer = typer.Typer()
-Views: typer.Typer = typer.Typer()
-Find: typer.Typer = typer.Typer()
-Select: typer.Typer = typer.Typer()
-Add: typer.Typer = typer.Typer()
-Update: typer.Typer = typer.Typer()
-Delete: typer.Typer = typer.Typer()
-
-# Own Modules/Objects
-Actions: controller.Controller = controller.Controller()
-Display: controller.Display = controller.Display()
-Webconsole: controller.WebConsole = controller.WebConsole(80, 24)
-Entry: controller.Entry = controller.Entry()
-
-
-@dataclasses.dataclass
-class AppValues:
-    """App Values."""
-    name: str = "PyCriteria"
-    version: str = "0.1.1"
-    lastmodified: str = "2023-05-07"
-    epilogue: str = "PyCriteria Terminal App. (c) 2023, 2024, 2025. All rights reserved. @iPoetDev"
-    richpanel: bool = True
-    deprecated: bool = False
-    
-    @dataclasses.dataclass
-    class Load:
-        """Load Settings.
-        :property: intro:str: typer panel/intro.
-        :property: help:str: typer help.
-        :property: quik:str: typer short_help.
-        """
-        cmd: str = "load"
-        projects: str = "projects"
-        criterias: str = "criteria"
-        references: str = "reference"
-        intro: str = "Load Settings."
-        help: str = "Load Settings."
-        quik: str = "Load Settings."
-    
-    @dataclasses.dataclass
-    class Views:
-        """Choose a View."""
-        cmd: str = "views"
-        allname: str = "all"
-        list: str = "list"
-        table: str = "table"
-        columns: str = "columns"
-        intro: str = "Select which view: List, Table, Columns."
-        help: str = "Load Settings."
-        quik: str = "Load Settings."
-    
-    @dataclasses.dataclass
-    class Find:
-        """Find Settings."""
-        cmd: str = "find"
-        items: str = "items"
-        rows: str = "rows"
-        columns: str = "columns"
-        intro: str = "Find an items. By single item, rows, columns."
-        help: str = "Find Settings."
-        quik: str = "Find Settings."
-    
-    @dataclasses.dataclass
-    class Select:
-        """Add Settings."""
-        cmd: str = "select"
-        items: str = "items"
-        rows: str = "rows"
-        columns: str = "columns"
-        intro: str = "Select to filter items. By single item, rows, columns"
-        help: str = "Select Settings."
-        quik: str = "Select Settings."
-    
-    @dataclasses.dataclass
-    class Add:
-        """Add Settings."""
-        cmd: str = "add"
-        items: str = "items"
-        rows: str = "rows"
-        intro: str = "Add a new record: by cell or a single row."
-        help: str = "Add Settings."
-        quik: str = "Add Settings."
-    
-    @dataclasses.dataclass
-    class Update:
-        """Select (filterr) Settings."""
-        cmd: str = "update"
-        items: str = "items"
-        rows: str = "rows"
-        intro: str = "Update an existing record: by cell or a single row."
-        help: str = "Update Settings."
-        quik: str = "Update Settings."
-    
-    @dataclasses.dataclass
-    class Delete:
-        """Select (filterr) Settings."""
-        cmd: str = "delete"
-        items: str = "items"
-        rows: str = "rows"
-        intro: str = "Delete an existing record: by cell/item or a single row."
-        help: str = "Delete Settings."
-        quik: str = "Delete Settings."
-    
-    @dataclasses.dataclass
-    class Close:
-        """Close Settings."""
-        cmd: str = "close"
-        intro: str = "Close the remote connection."
-        help: str = "Close Settings."
-        quik: str = "Close Settings."
-    
-    @dataclasses.dataclass
-    class Exit:
-        """Exit Settings."""
-        cmd: str = "exit"
-        intro: str = "Exit the terminal (and close the connection)."
-        help: str = "Exit Settings."
-        quik: str = "Exit Settings."
+# Global Modules/Objects
+About: AboutUsage = AboutUsage()
+Commands: Commands = Commands()
+Actions: Controller = Controller()
+AppValues: AppValues = AppValues()
+DataControl: DataController = DataController(Actions.load_wsheet())
+Display: Display = Display()
+Entry: Entry = Entry()
+Webconsole: WebConsole = WebConsole(configuration.Console.WIDTH,
+                                    configuration.Console.HEIGHT)
 
 
 class CriteriaApp:
     """PyCriteria Terminal App."""
     
-    app: typer.Typer
-    load: typer.Typer
-    info: str
-    name: str = "PyCriteria Terminal App."
+    values: AppValues
     
     def __init__(self):
         """Initialize."""
-        self.app = App
-        self.configure_subcommands()
-        self.info = str(self.app.info)
+        self.values = AppValues()
+
+
+@click.group(name=AppValues.Start.cmd)
+def start() -> None:
+    """Main. Starts a local CLI REPL"""
+    click.echo(message=AppValues.Start.welcome)
+    session: PromptSession = PromptSession(completer=Commands.nest_auto)
     
-    @staticmethod
-    def configure_subcommands():
-        """Configure commands."""
-        # GET Commands
-        App.add_typer(Load, name=AppValues.Load.projects)
-        App.add_typer(Load, name=AppValues.Load.criterias)
-        App.add_typer(Load, name=AppValues.Load.references)
-        # READ Commands: Views, Find, Select/Filter
-        App.add_typer(Views, name=AppValues.Views.allname)
-        App.add_typer(Views, name=AppValues.Views.list)
-        App.add_typer(Views, name=AppValues.Views.table)
-        App.add_typer(Views, name=AppValues.Views.columns)
-        App.add_typer(Find, name=AppValues.Find.items)
-        App.add_typer(Find, name=AppValues.Find.rows)
-        App.add_typer(Find, name=AppValues.Find.columns)
-        App.add_typer(Select, name=AppValues.Select.items)
-        App.add_typer(Select, name=AppValues.Select.rows)
-        App.add_typer(Select, name=AppValues.Select.columns)
-        # CREATE Commands
-        App.add_typer(Add, name=AppValues.Add.items)
-        App.add_typer(Add, name=AppValues.Add.rows)
-        # UPDATE Commands
-        App.add_typer(Update, name=AppValues.Update.items)
-        App.add_typer(Update, name=AppValues.Update.rows)
-        # DELETE Commands
-        App.add_typer(Delete, name=AppValues.Delete.items)
-        App.add_typer(Delete, name=AppValues.Delete.rows)
+    while True:
+        try:
+            text = session.prompt('PyCriteria >  ')
+        except KeyboardInterrupt:
+            continue
+        except EOFError:
+            break
+        else:
+            print('You entered:', text)
+    print('GoodBye!')
+
+
+@start.group(name=AppValues.Run.cmd)
+@click.pass_context
+def run(ctx: click.Context) -> None:
+    """Level: Run. Type: about to learn to use this CLI.
     
-    @staticmethod
-    def loadconfigure():
-        """Load Configure."""
-        Load.rich_help_panel = True
+    Enter: $python app.py about
+    This CLI has a multi-level command structure.
+    https://mauricebrg.com/article/2020/08/advanced_cli_structures_with_python_and_click.html
+    """
+    click.echo(message=ctx.info_name)
+
+
+@run.group(name="about")
+def about() -> None:
+    """About."""
+    AboutUsage.describe_usage()
+    rprint("========================================")
+    AboutUsage.example_usage()
+    rprint("========================================")
+    AboutUsage.loadmodel_usage()
+    AboutUsage.findmodel_usage()
+    AboutUsage.selectmodel_usage()
+    rprint("========================================")
+    AboutUsage.addmodel_usage()
+    AboutUsage.updatemodel_usage()
+    AboutUsage.deletemodel_usage()
 
 
 # 1. Load Data: Have the user load the data: by project, by criteria, by reference
-@App.command(AppValues.Load.cmd)
-def load():
+@run.group(name=AppValues.Load.cmd)
+@pass_dataframe_context
+def load(ctx: click.Context) -> None:
     """Load."""
+    click.echo(message=ctx.parent.info_name)
+    click.echo(message=ctx.info_name)
+    ProgramUtils.inspectcontext(ctx)
+    Display.display_frame(dataframe=ctx.obj.dataframe,
+                          consoleholder=Webconsole.console,
+                          consoletable=Webconsole.table)
 
 
-@Load.command(AppValues.Load.projects)
-def project():
+@load.command(name=AppValues.Load.projects)
+@pass_dataframe_context
+def project(ctx) -> None:
     """Load project (metadata)."""
+    click.echo(message=ctx.parent.info_name)
+    click.echo(message=ctx.info_name)
+    ProgramUtils.inspectcontext(ctx)
+    Display.display_frame(dataframe=ctx.obj.dataframe,
+                          consoleholder=Webconsole.console,
+                          consoletable=Webconsole.table)
 
 
-@Load.command(AppValues.Load.criterias)
-def criteria():
+@load.command(name=AppValues.Load.criterias)
+@pass_dataframe_context
+def criteria(ctx: click.Context) -> None:
     """Load criteria."""
+    click.echo(message=ctx.parent.info_name)
+    click.echo(message=ctx.info_name)
+    ProgramUtils.inspectcontext(ctx)
+    Display.display_frame(dataframe=ctx.obj.dataframe,
+                          consoleholder=Webconsole.console,
+                          consoletable=Webconsole.table)
 
 
-@Load.command(AppValues.Load.references)
-def reference():
-    """Load project (metadata)."""
-
-
-@Views.command(AppValues.Views.allname)
-def showall():
-    """Shows/Views all data."""
-
-
-@Views.command(AppValues.Views.list)
-def listing():
-    """Views data in a list."""
-
-
-@Views.command(AppValues.Views.table)
-def table():
-    """Views data in a table."""
-
-
-@Views.command(AppValues.Views.columns)
-def columnar():
-    """Load data in table."""
+@load.command(AppValues.Load.references)
+@pass_dataframe_context
+def reference(ctx: click.Context) -> None:
+    """Load references (metadata)."""
+    click.echo(message=ctx.parent.info_name)
+    click.echo(message=ctx.info_name)
+    ProgramUtils.inspectcontext(ctx)
+    Display.display_frame(dataframe=ctx.obj.dataframe,
+                          consoleholder=Webconsole.console,
+                          consoletable=Webconsole.table)
 
 
 # 2. Find
-@App.command(AppValues.Find.cmd)
-def find():
-    """Add."""
+@run.group(AppValues.Find.cmd)
+@pass_dataframe_context
+def find(ctx: click.Context) -> None:
+    """Find: Find item, row(s), column(s)"""
+    click.echo(message=ctx.parent.info_name)
+    click.echo(message=ctx.info_name)
 
 
-@Select.command(AppValues.Find.items)
-def finditem():
-    """Select item."""
+@find.command(name="search")
+@click.option('--header', type=str,
+              help='Column\'s header label to search')
+@click.option('--query', type=str,
+              help='String query to search for')
+@pass_dataframe_context
+def search(ctx, header: str, query: str):
+    """Search: a column: by header and query."""
+    click.echo(message=ctx.info_name)
+    click.echo(message=ctx.parent.info_name)
+    click.echo(message=ctx.parent.parent.info_name)
+    
+    #
+    if not isinstance(header, str) or isinstance(query, str):
+        click.echo(
+                message=('Please provid text, not numbers etc, '
+                         + 'for header and query.'),
+                err=True)
+    #
+    searchresult: pd.DataFrame
+    click.echo(message=ctx.parent.info_name)
+    click.echo(message=ctx.info_name)
+    
+    #
+    if not isinstance(header, str) or isinstance(query, str):
+        click.echo(
+                message=('Please provid text, not numbers etc, '
+                         + 'for header and query.'),
+                err=True)
+    #
+    searchresult: pd.DataFrame
+    if header is not None and query is not None:
+        df = ctx.obj.dataframe
+        searchresult: pd.DataFrame = \
+            df[df[header].astype(str).str.contains(query)]
+        click.echo(
+                message=f'The rows with "{query}" '
+                        f'in column\'s "{header}" are:\n'
+                        f'{searchresult}')
+        output: tuple[str, str, pd.DataFrame] = header, query, searchresult
+        Display.display_frame(dataframe=searchresult,
+                              consoleholder=Webconsole.console,
+                              consoletable=Webconsole.table)
+        click.echo("===============================")
+        Display.display_search(output=output,
+                               consoleholder=Webconsole.console,
+                               consoletable=Webconsole.table)
+        click.echo("===============================")
+    #
+    else:
+        click.echo(
+                message='Please provide both column and query options.',
+                err=True)
 
 
-@Select.command(AppValues.Find.rows)
-def findrow():
-    """Select row(s)."""
-
-
-@Select.command(AppValues.Find.columns)
-def findcolumn():
-    """Select a column(s)."""
+run.add_command(search)
 
 
 # 2. Select
-@App.command(AppValues.Select.cmd)
-def select():
-    """Add."""
+
+@run.group(AppValues.Select.cmd)
+@pass_dataframe_context
+def select(ctx: click.Context) -> None:
+    """ Select: Select an item, a row, a column.
+        Use --help to see the options and actions (sub commands)
+        Intent level (L2): command path category.
+        Does nothing, is a path option to action (sub commands.)"""
+    click.echo(message=ctx.info_name)
+    click.echo(message=ctx.parent.info_name)
 
 
-@Select.command(AppValues.Select.items)
-def selectitem():
-    """Select item."""
+@select.command(AppValues.Select.items)
+@click.option('--linenumber', type=int,
+              help='Line number to find. Check the display')
+@click.option('--header', type=str,
+              help='Column\'s header, text, to find. Check the display')
+@pass_dataframe_context
+def item(ctx, linenumber: int, header: str) -> None | typing.NoReturn:
+    """ Select an item:
+        Action subcommand: Parent Intent: Select.
+        i: By row's linenumber number (int),
+        i: By column's header text (str)."""
+    if not isinstance(linenumber, int) or not isinstance(header, str):
+        click.echo(
+                message=('Please provide a number, for linenumber,'
+                         + 'not text etc. \n'
+                         + 'Please provide a text, for header,'
+                         + 'not a number etc. \n'),
+                err=True)
+    
+    if linenumber is not None and header is not None:
+        df = ctx.obj.dataframe
+        value: pd.DataFrame = df.loc[linenumber, header]
+        click.echo(
+                message=f'The value at line nos. {linenumber} and '
+                        f'column\'s header "{header}" is {value}')
+        output: tuple[str, int, pd.DataFrame] = \
+            header, linenumber, value
+        Display.display_selection(output=output,
+                                  consoleholder=Webconsole.console,
+                                  consoletable=Webconsole.table)
+    else:
+        click.echo(message='Please provide both row and column options.')
 
 
-@Select.command(AppValues.Select.rows)
-def selectrow():
-    """Select row(s)."""
+@select.command(AppValues.Select.rows)
+@click.option('--linenumber',
+              type=int,
+              help=('Line Nos (Position) to query of a single row. '
+                    + 'Check the display'))
+@pass_dataframe_context
+def row(ctx, linenumber: int) -> None | typing.NoReturn:
+    """ Select a row:
+        Action: subcommand: Parent Intent: Select
+        i: By row line number (id/position):
+        Refer to and check display for linenumber"""
+    #
+    if not isinstance(linenumber, int):
+        click.echo(
+                message=('Please provid text, not numbers etc, '
+                         + f'for column\'s header: {linenumber}'),
+                err=True)
+    #
+    if linenumber is not None:
+        df = ctx.obj.dataframe
+        row_data: pd.DataFrame = df.query('position == @linenumber')
+        click.echo(
+                message=f'The row with ID {linenumber} is:\n'
+                        f'{row_data}')
+        output: tuple[int, pd.DataFrame] = linenumber, row_data
+        Display.display_selection(output=output,
+                                  consoleholder=Webconsole.console,
+                                  consoletable=Webconsole.table)
+    #
+    else:
+        click.echo(message=f'Please provide a row\'s {linenumber}.')
 
 
-@Select.command(AppValues.Select.columns)
-def selectcolumn():
-    """Select a column(s)."""
+@select.command(AppValues.Select.columns)
+@click.command(name="select 1 column")
+@click.option('--header',
+              type=str,
+              help='Column\'s header label to query, Check the display')
+@pass_dataframe_context
+def column(ctx, header: str) -> None | typing.NoReturn:
+    """Select a column: by column's header"""
+    # Check foŕ parameter's type
+    if not isinstance(header, str):
+        click.echo(
+                message=('Please provid text, not numbers etc, '
+                         + f'for column\'s header: {header}'),
+                err=True)
+    #
+    if header is not None:
+        df = ctx.obj.dataframe
+        column_data: pd.DataFrame = df[header]
+        click.echo(
+                message=(f'The column\'s header "{header}" is:\n'
+                         + f'{column_data}'))
+        output: tuple[str, pd.DataFrame] = header, column_data
+        Display.display_selection(output=output,
+                                  consoleholder=Webconsole.console,
+                                  consoletable=Webconsole.table)
+    #
+    else:
+        click.echo(message=f'Please provide a column\'s. {header}')
 
 
-# New (Add) | Create, Add commands: by item, by row
-@App.command(AppValues.Add.cmd)
-def add():
-    """Add."""
+def acolumnselect(ctx, header: str) -> None | tuple[str, pd.DataFrame]:
+    """Select a column: by column's header"""
+    # Check foŕ parameter's type
+    if not isinstance(header, str):
+        click.echo(
+                message=('Please provid text, not numbers etc, '
+                         + f'for column\'s header: {header}'),
+                err=True)
+    #
+    if header is not None:
+        df = ctx.obj.dataframe
+        column_data: pd.DataFrame = df[header]
+        click.echo(
+                message=(f'The column\'s header "{header}" is:\n'
+                         + f'{column_data}'))
+        output: tuple[str, pd.DataFrame] = header, column_data
+        return output
+    #
+    else:
+        click.echo(message=f'Please provide a column\'s. {header}')
+        return None
 
 
-@Add.command(AppValues.Add.items)
-def additem():
-    """Add item."""
-
-
-@Add.command(AppValues.Add.rows)
-def addrow():
-    """Add row(s)."""
-
-
-@App.command(AppValues.Update.cmd)
-def update():
-    """Update."""
-
-
-@Update.command(AppValues.Update.items)
-def updateitem():
-    """Update item."""
-
-
-@Update.command(AppValues.Update.rows)
-def updaterow():
-    """Update row(s)."""
-
-
-@App.command(AppValues.Delete.cmd)
-def delete():
-    """Add."""
-
-
-@Delete.command(AppValues.Delete.items)
-def deleteitem():
-    """Delete item."""
-
-
-@Delete.command(AppValues.Delete.rows)
-def deleterow():
-    """Delete row(s)."""
-
-
-def main():
-    """Main."""
-    # typer.run(App)
-    tui = CriteriaApp()
-    typer.run(tui.app)
+class CRUD:
+    """CRUD: Create, Read, Update, Delete"""
+    
+    # New (Add) | Create, Add commands -> None: by item, by row
+    @run.group(AppValues.Add.cmd)
+    def add(self) -> None:
+        """Add: Create item, row(s)"""
+    
+    @add.command(AppValues.Add.items)
+    def additem(self) -> None:
+        """Add item.: Append/Create an item by a location/coordinate"""
+    
+    @add.command(AppValues.Add.rows)
+    def addrow(self) -> None:
+        """Add row(s).: Append/Create a row to the table: either at end, or insert."""
+    
+    @run.group(AppValues.Update.cmd)
+    def update(self) -> None:
+        """Update: Update item, row(s)"""
+    
+    @update.command(AppValues.Update.items)
+    def updateitem(self) -> None:
+        """Update item.: Find an item, update the item"""
+    
+    @update.command(AppValues.Update.rows)
+    def updaterow(self) -> None:
+        """Update row(s): Find a row, by id, and update the row."""
+    
+    @run.group(AppValues.Delete.cmd)
+    def delete(self) -> None:
+        """Delete: Delete item(s), row(s)"""
+    
+    @delete.command(AppValues.Delete.items)
+    def deleteitem(self) -> None:
+        """Delete item: Find an item, clear the item's content/reset to default."""
+    
+    @delete.command(AppValues.Delete.rows)
+    def deleterow(self) -> None:
+        """Delete row(s).: Find a row, by id, and delete the row: at end or by its position."""
 
 
 if __name__ == "__main__":
-    main()
+    ProgramUtils.warn()
+    print("Hello")
+    run()

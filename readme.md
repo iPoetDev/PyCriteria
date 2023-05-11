@@ -211,6 +211,24 @@ File |   Date    | LN | Issue | Fix   |  State  | Note
 `run.py` | 23-05-05  | 40 | misc | removed implict/wrong return | Passing | --
 `settings.pg` | 23-05-05  | 1 | assignment | changed type assign | Passing | --
 
+## 6.4 Code Integration
+
+### 6.4.1 Pull Request Checks
+
+#### 6.4.1.1 Check Providers
+
+- Synx: security/snyk (iPoetDev) — https://snyk.io/
+- Code Review Doctor: https://github.com/apps/code-review-doctor
+- Codecov: Codecov provides highly integrated tools to group, merge, archive and compare coverage reports.
+- codebeat: https://codebeat.co/
+- CodeFactor: https://www.codefactor.io/
+- Code scanning results / CodeQL: https://github.com/settings/security_analysis
+    - Dependency graph: Understand your dependencies. ``Enable``
+    - Dependabot: Keep your dependencies secure and up-to-date ``Enable``
+        - Dependabot Alert: Receive alerts for vulnerabilities that affect your dependencies. ``Enable``
+        - Dependabot security updates: Automatically open pull requests for security updates. ``Enable``
+    - Secret scanning: Receive alerts on GitHub for detected secrets, keys, or other tokens. ``Enable``
+
 ## 7.0 [Deploy](#deploy)
 
 ### 7.1 [Features](#features)

@@ -1,17 +1,12 @@
 ### LoveSandwiches ###
 ## Python 3.11
-# Feedbacj
+# Project Used
 loguru>=0.7.0
+click>=8.1.3
 typer>=0.9.0
-typer-cli
 rich>=13.3.5
-colorama>=0.4.4
-shellingham>=1.4.0
-pygments>=2.15.1
 ## Google API
 google>=3.0.0
-google-auth>=2.3.0
-google-auth-oauthlib>=0.4.6
 gspread>=5.8.0
 # Environment
 python-dotenv>=1.0.0
@@ -20,3 +15,5 @@ python-dotenv>=1.0.0
 ## URL & OAuth
 # Aysnc asyncio # Asynchronous I/O, event loop, coroutines and tasks.
 ## TUI/CLI
+
+pandas>=2.0.1

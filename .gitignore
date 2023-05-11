@@ -44,3 +44,4 @@ creds.json
 /.idea/sonarlint/securityhotspotstore/*
 # =================================================================
 *-v1.py
+/prompt_toolkit/
