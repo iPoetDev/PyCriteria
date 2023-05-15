@@ -2,8 +2,7 @@
 name: 'Heroku: Deployment SOP'
 about: Deployment SOP & Requirements SOP
 title: "[DEPLOY]: v.0.x.x: @2023.04.0x: Feature | Fix: "
-labels: ":bug: bug :bug:, :heavy_plus_sign:  enhancement :heavy_plus_sign:, :white_check_mark:
-task: chore :white_check_mark:"
+labels: ''
 assignees: iPoetDev
 
 ---
