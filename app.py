@@ -12,6 +12,7 @@ import click
 import gspread  # noqa: TCH002
 import pandas as pd
 import rich
+from click_repl import register_repl  # type: ignore
 
 # 3. Local
 from commands import AboutUsage, Commands
@@ -656,6 +657,8 @@ class CRUD:
         at end or by its position.
         """  # noqa: D415
 
+
+register_repl(run)
 
 if __name__ == "__main__":
     traceable: str = "Enable tracemalloc to get the object allocation traceback"
