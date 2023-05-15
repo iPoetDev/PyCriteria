@@ -15,3 +15,4 @@ gspread>=5.8.0
 gspread_dataframe>=3.0.8
 # Environment
 python-dotenv>=1.0.0
+numpy>=1.22.2 # not directly required, pinned by Snyk to avoid a vulnerability
