@@ -52,3 +52,5 @@ creds.json
 /cmdcomplete.py
 /tutorial.py
 /pycriteria.lnk
+*.log
+ruff.log

@@ -16,10 +16,10 @@ function socket() {
     this.on('open', function (client) {
 
         // Spawn terminal
-        client.tty = Pty.spawn('python3', ['run.py'], {
+        client.tty = Pty.spawn('python3', ['app.py'], {
             name: 'xterm-color',
-            cols: 80,
-            rows: 24,
+            cols: 150,
+            rows: 48,
             cwd: process.env.PWD,
             env: process.env
         });
