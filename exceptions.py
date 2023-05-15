@@ -2,14 +2,10 @@
 # pylint: disable=trailing-whitespace
 """Module Exception Status and Graceful recovery."""
 
-# 0.1 Core Imports
+# 0.1: Standard Library Imports
 import sys
-
 from typing import NoReturn
 
-# 0.2 Local Imports
-# from projectlogging import LOGRS
-# from settings import Settings
 
 class ExceptionValues:
     """Exception Values.

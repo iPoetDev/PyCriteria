@@ -9,14 +9,12 @@
 2) Fetching subsets with filters for unique columns values: Search by column
 3) Select a range of data.
 """
-# 0.1: Standard Library Imports
 import re
-
+# 0.1: Standard Library Imports
 from typing import NoReturn
 
-# 0.2 Third Party Modules
 import gspread  # type: ignore
-
+# 0.2 Third Party Modules
 from rich import print as rprint  # type: ignore
 
 # 0.3: Custom/Own Modules
