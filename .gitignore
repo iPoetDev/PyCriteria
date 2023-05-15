@@ -45,3 +45,10 @@ creds.json
 # =================================================================
 *-v1.py
 /prompt_toolkit/
+/App.puml
+/app-activity.puml
+/app-class.puml
+/app-object.puml
+/cmdcomplete.py
+/tutorial.py
+/pycriteria.lnk

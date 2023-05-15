@@ -7,12 +7,12 @@ Web Terminal: Entry point.
 # 1. StdLib
 import subprocess
 
-import typer
 from rich import print as rprint
+import typer
 
-import controller
 # 3. Local/Own
 from app import AppValues as Values
+import controller
 
 # 2. 3rd Party
 # ---
@@ -41,7 +41,8 @@ def run():
 
 def entry():
     """The main function is the entry point of the program.
-    It prints a welcome message and starts the app."""
+    It prints a welcome message and starts the app.
+    """
     run_subprocess()
 
 
@@ -62,6 +63,7 @@ def run_subprocess():
     I am a subscriber.
     Subsprocessing is outside of the scope of the assignement, by topics,.
     
+
     Example:
     Thought:
         I searched for how to run a Python script from another file.

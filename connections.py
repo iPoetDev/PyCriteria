@@ -1,5 +1,6 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
+# ruff: noqa: F841, ANN101, D415, ANN001
 """Module Connection Management."""
 
 # 0.1 Core Imports
@@ -15,7 +16,6 @@ from google.oauth2.service_account import Credentials  # type: ignore
 import gspread  # type: ignore
 
 # 0.3 Project Logging
-# 0.3 Local/Own Modules/Library
 from exceptions import ManagingExceptions as Graceful
 from settings import Settings
 
@@ -42,6 +42,7 @@ class ConnectExceptions:
 class GoogleConnector:
     # noinspection Style
     """Google sheet connector class.
+    
     Method
     ----------
         :Method: connect_to_remote: @staticmethod
@@ -53,8 +54,11 @@ class GoogleConnector:
     
     # noinspection SpellCheckingInspection
     @staticmethod
-    def connect_to_remote(credential_file, file_type: str = "json"):
-        """Synchronously connects to a Google Sheet using
+    def connect_to_remote(credential_file,
+                          file_type: str = "json") \
+            -> gspread.client.Client:  # noqa: ANN205, ANN001
+        """Synchronously connects to a Google Sheet using.
+        
         1: Cred.json file
         2: Maybe checks a type of file by extension str, not mime type, defaults: json
         3: Scopes: Global.
@@ -100,8 +104,11 @@ class GoogleConnector:
         return _creds.with_scopes(Settings.SCOPE)
     
     @staticmethod
-    def get_source(credentials, file_name: str) -> gspread.Spreadsheet:
-        """Connects/opens to a Google Sheet synchronously else exit for now
+    def get_source(credentials,
+                   file_name: str) \
+            -> gspread.Spreadsheet:  # noqa: ANN205, ANN001
+        """Connects/opens to a Google Sheet synchronously else exit for now.
+        
         Parameters
         ----------
             :param credentials: Google sheet scoped credentials
@@ -184,7 +191,9 @@ class GoogleConnector:
         try:
             return sheet.get_all_values()
         except ConnectExceptions.GSPREADERROR as _error:
-            _output: str = GoogleConnector.notfound_prompt(_error, sheet.title)
+            _output: str = GoogleConnector.notfound_prompt(
+                    notfound=_error,
+                    name=sheet.title)
             nofetch: None = Graceful.exiting_status(_error, _output)
             return nofetch
     
@@ -192,7 +201,7 @@ class GoogleConnector:
     # pylint: disable=line-too-long
     def notfound_prompt(
             notfound,
-            name: str) -> str:  # pylint: disable=line-too-long
+            name: str) -> str:  # pylint: disable=line-too-long # noqa: ANN001
         """Builds a prompt the correct file name or tab name based on error type.
 
         Parameters
@@ -237,30 +246,38 @@ class GoogleConnector:
 
 
 class SSLManager:
-    """SSL Manager
+    """SSL Manager.
+    
     :method open_ssl_connection: Opens secure connects to outside network
     :method close_ssl_connection: Closes secure connects to outside network.
     """
     sslsock: ssl.SSLSocket
     
     def __init__(self):
+        """Initialise SSL Manager."""
         self.sslsock: ssl.SSLSocket = SSLManager.open_ssl_connection()
     
     @staticmethod
-    def open_ssl_connection():
+    def open_ssl_connection() -> ssl.SSLSocket:
         """Opens secure connects to outside network
+        
         :return: _ssl
         :rtype: SSLSocket.
         """
         _connection: ssl.SSLContext = ssl.create_default_context()
-        _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        _ssl: ssl.SSLSocket = _connection.wrap_socket(_socket, server_hostname=Settings.DOMAINHOST)
+        _socket: socket = \
+            socket.socket(
+                    family=socket.AF_INET, type=socket.SOCK_STREAM)
+        _ssl: ssl.SSLSocket = \
+            _connection.wrap_socket(_socket,
+                                    server_hostname=Settings.DOMAINHOST)
         _ssl.connect((Settings.DOMAINHOST, Settings.HTTPS))
         return _ssl
     
     @staticmethod
-    def close_ssl_connection(sslsock: ssl.SSLSocket):
+    def close_ssl_connection(sslsock: ssl.SSLSocket) -> None:
         """Closes secure connects to outside network
+        
         Clears the sslsock variable from memory.
         """
         sslsock.close()

@@ -1,44 +1,77 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
+# ruff: noqa: F841, ANN101, D415
 """Module: PyCriteria Terminal App."""
 
 import dataclasses
 
 import click
+
 from pandas import pandas as pd
-from prompt_toolkit.completion import WordCompleter, NestedCompleter
 from rich import print as rprint
+
+import prompt_toolkit
+
+from prompt_toolkit.completion import NestedCompleter
+from prompt_toolkit.completion import WordCompleter
 
 
 class DataFrameContext:
     """DataFrame Context."""
     
-    def __init__(self, dataframe: pd.DataFrame):
+    def __init__(self, dataframe: pd.DataFrame) -> None:
         """Initialize."""
-        dataframe: pd.DataFrame = dataframe
+        self.dataframe: pd.DataFrame = dataframe
 
 
-pass_dataframe_context = click.make_pass_decorator(DataFrameContext, ensure=True)
+pass_dataframe_context = click.make_pass_decorator(
+        DataFrameContext, ensure=True)
+
+
+@click.group(name="start")
+def start() -> None:
+    """Main. Starts a local CLI REPL."""
+    click.echo(message="PyCriteria Terminal App.")
+    session: prompt_toolkit.PromptSession = \
+        prompt_toolkit.PromptSession(completer=Commands.nest_auto)
+    
+    while True:
+        try:
+            text = session.prompt('PyCriteria >  ')
+        except KeyboardInterrupt:
+            continue
+        except EOFError:
+            break
+        else:
+            click.echo('You entered:', text)
+    click.echo('GoodBye!')
 
 
 @dataclasses.dataclass(frozen=True)
 class Commands:
     """Class: Command Completer for Terminal App."""
-    base_run: str = "run"
-    base_about: str = "about"
-    intent_load: str = "load"
-    load_refresh: str = "refresh"
+    base_run: str = "run"  # done, empty, help
+    base_about: str = "about"  # done
+    ########################
+    intent_load: str = "load"  # done, empty, help
+    load_refresh: str = "refresh"  # function, writen
     load_list: str = "list"
     load_frame: str = "frame"
     load_table: str = "table"
     load_cols: str = "column"
     load_card: str = "card"
     intent_find: str = "find"
-    find_row: str = "f-row"
+    search_row: str = "search row"
+    search_column: str = "search column"
     intent_select: str = "select"
-    select_row: str = "s-row"
-    intent_add: str = "add"
-    add_row: str = "a-row"
+    select_item: str = "one row"
+    select_row: str = "one row"
+    select_column: str = "one column"
+    ########################
+    intent_add: str = "add"  # Add Intents: 3 sub commands
+    add_row: str = "add row"  # A new row appended
+    new_row: str = "new row"  # A new row appended
+    insert_row: str = "insert row"  # Insert at a posotion
     intent_update: str = "update"
     update_row: str = "u-row"
     intent_delete: str = "delete"
@@ -52,41 +85,45 @@ class Commands:
         """Initialize."""
         pass
     
-    cmd_auto: WordCompleter = WordCompleter([base_run,
-                                             intent_load,
-                                             load_refresh, load_list, load_frame,
-                                             load_table, load_cols, load_card,
-                                             intent_find, find_row,
-                                             intent_select, select_row,
-                                             intent_add, add_row,
-                                             intent_update, update_row,
-                                             intent_delete, delete_row,
-                                             intent_commit, commit_push, commit_sync,
-                                             intent_exit], ignore_case=True)
+    cmd_auto: WordCompleter = \
+        WordCompleter([base_run,
+                       intent_load,
+                       load_refresh, load_list, load_frame,
+                       load_table, load_cols, load_card,
+                       intent_find, search_row, search_column,
+                       intent_select, select_row, select_column,
+                       intent_add, add_row,
+                       intent_update, update_row,
+                       intent_delete, delete_row,
+                       intent_commit, commit_push, commit_sync,
+                       intent_exit], ignore_case=True)
     
-    nest_auto: NestedCompleter = NestedCompleter.from_nested_dict({
-            base_run: {intent_load: {
-                    load_refresh: None,
-                    load_list: None,
-                    load_frame: None,
-                    load_card: None},
-                    intent_find: {
-                            find_row: None},
-                    intent_select: {
-                            select_row: None},
-                    intent_add: {
-                            add_row: None},
-                    intent_update: {
-                            update_row: None},
-                    intent_delete: {
-                            delete_row: None},
-                    intent_commit: {
-                            commit_push: None,
-                            commit_sync: None},
-                    intent_exit: None,
-                    },
-            base_about: None,
-            })
+    nest_auto: NestedCompleter = \
+        NestedCompleter.from_nested_dict({
+                base_run: {intent_load: {
+                        load_refresh: None,
+                        load_list: None,
+                        load_frame: None,
+                        load_card: None},
+                        intent_find: {
+                                search_row: None, search_column: None},
+                        intent_select: {
+                                select_item: None,
+                                select_row: None,
+                                select_column: None},
+                        intent_add: {
+                                add_row: None},
+                        intent_update: {
+                                update_row: None},
+                        intent_delete: {
+                                delete_row: None},
+                        intent_commit: {
+                                commit_push: None,
+                                commit_sync: None},
+                        intent_exit: None,
+                        },
+                base_about: None,
+                })
 
 
 @dataclasses.dataclass(frozen=True)

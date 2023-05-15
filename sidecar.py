@@ -8,6 +8,7 @@ import warnings
 
 import click
 import rich
+
 from rich import inspect
 
 
@@ -31,7 +32,7 @@ class AppValues:
     
     @dataclasses.dataclass
     class Start:
-        """Start"""
+        """Start."""
         cmd: str = "start"
         name: str = "PyCriteria"
         welcome: str = f"Welcome to!{name}"
@@ -39,7 +40,7 @@ class AppValues:
     
     @dataclasses.dataclass
     class Run:
-        """Start"""
+        """Start."""
         cmd: str = "run"
         name: str = "PyCriteria"
         welcome: str = f"Welcome to!{name}"
@@ -53,6 +54,7 @@ class AppValues:
         :property: quik:str: typer short_help.
         """
         cmd: str = "load"
+        refresh: str = "refresh"
         projects: str = "projects"
         criterias: str = "criteria"
         references: str = "reference"
@@ -142,7 +144,7 @@ class AppValues:
 
 
 class ProgramUtils:
-    """Program Utilities
+    """Program Utilities.
 
     :property: ActionType: Literal["default", "error", "ignore", "always", "module", "once"]
     :method: inspect_cmd: Inspect a command's context.
@@ -150,6 +152,25 @@ class ProgramUtils:
     """
     
     ActionType: str = typing.Literal["default", "error", "ignore", "always", "module", "once"]
+    
+    @staticmethod
+    def startmemory():
+        """Start memory tracing."""
+        tracemalloc.start()
+    
+    @staticmethod
+    def stopmemory():
+        """Stop memory tracing."""
+        tracemalloc.stop()
+    
+    @staticmethod
+    def printmemtrace(obj: typing.Any):
+        """Print memory usage."""
+        # inspect(inspect)
+        trace = tracemalloc.get_object_traceback(obj)
+        rich.print(f"Memory: {trace}")
+        rich.inspect(trace, all=True)
+        click.echo(f"Memory: {trace}", err=True)
     
     @staticmethod
     def inspectcmd(func):
@@ -211,7 +232,6 @@ class ProgramUtils:
                     "once" to print only the first occurrence of matching warnings,
                            regardless of location
         """
-        tracemalloc.start()
-        if show:
-            warnings.filterwarnings(action, message=".*deprecated.*", category=DeprecationWarning)
-            warnings.filterwarnings(action, category=ResourceWarning)
+        warnings.filterwarnings(action, message=".*deprecated.*", category=DeprecationWarning)
+        warnings.filterwarnings(action, category=ResourceWarning)
+        warnings.filterwarnings(action, message="Enable tracemalloc to get the object allocation traceback")

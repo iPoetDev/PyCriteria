@@ -1,6 +1,9 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
+# ruff: noqa: E501
+
 """Module DataTranform: Manipulating the data from the sheet.
+
 @2023-05-05
 1) Fetching subsets with filters for matching rows
 2) Fetching subsets with filters for unique columns values: Search by column
@@ -24,9 +27,9 @@ connector: connections.GoogleConnector = connections.GoogleConnector()
 
 
 class DataTransform:
-    """@2023-05-05
-    Class DataTransform: Manipulating the data from the sheet.
+    """Class DataTransform: Manipulating the data from the sheet.
     
+    @2023-05-05
     Property
     --------
     :property wsheet: gspread.Worksheet: The worksheet to extract the data from.
@@ -63,6 +66,7 @@ class DataTransform:
                        row_headings: int = 1,
                        step: int = 1) -> list[str]:
         """@2023-05-05 - Used to filter the topics from a column in a sheet.
+        
         Extracts the unique values from a column in a sheet.
         :param wsheet: Gspread.Worksheet: The worksheet to extract the data from.
         :param column_header: str: The column header to extract the data from.
@@ -93,23 +97,23 @@ class DataTransform:
     
     @staticmethod
     def get_data(wsheet: gspread.Worksheet, filterd: str = 'H1:01') -> list[str]:
-        """@2023-05-05
+        """@2023-05-05.
+        
         Selects a subset of data from the worksheet using an A1 range filter.
         Relies on the columns to be in the string A1 notion for the filter
         Relies on the columns to be immutable in ordering
         :param wsheet: gspread.Worksheet: The worksheet to extract the data from.
         :param filterd: str: The filter to apply to the data.
         A1 notation for the filter.
-        :return: List[str]: The filtered data.
+        :return: list[str]: The filtered data.
         """
-        dataset = wsheet.get_values(filterd)
-        rprint(dataset)
+        dataset: list[str] = wsheet.get_values(filterd)
         return dataset
     
     @staticmethod
     def get_datamax(wsheet: gspread.Worksheet, filterd: str = "H1:01") -> list[str]:
-        """@2023-05-05
-        Get the latest row id/count and do something
+        """@2023-05-05 Get the latest row id/count and do something.
+        
         Selects a subset of data from the worksheet.
         Relies on the columns to be in the string A1 notion for the filter
         Relies on the columns to be immutable in ordering
@@ -125,8 +129,10 @@ class DataTransform:
     
     @staticmethod
     def fetch_a_row(wsheet: gspread.Worksheet, row: int) -> list[str]:
-        """@2023-05-05
-        Fetches a row from the worksheet, using the implicit zero-based index.
+        """@2023-05-05 Fetches a row from the worksheet.
+        
+        Uses the implicit zero-based index.
+        
         :alias: fetch_by_position
         :param wsheet: gspread.Worksheet: The worksheet to extract the data from.
         :param row: int: The row number to extract the data from.
@@ -138,13 +144,13 @@ class DataTransform:
     def fetch_by_status(wsheet: gspread.Worksheet,
                         todoflag: int,
                         column_filter: int = 12) -> list[str]:
-        """@2023-05-05
-        Fetches rows from the worksheet that match the given todo status
+        """Fetches rows from the worksheet to match a given todo status.
+        
+        @2023-05-05
         :param wsheet: gspread.Worksheet: The worksheet to extract the data from.
         :param todoflag: int: The todo status to extract the data from.
         :param column_filter: int: The column number to filter the data from.
         :return: list[str]: List of matching rows.
-        .
         """
         all_rows = wsheet.get_all_values()
         return [row for row in all_rows if row[column_filter] == todoflag]
@@ -153,8 +159,8 @@ class DataTransform:
     def fetch_by_reference(wsheet: gspread.Worksheet,
                            reference: str,
                            column_filter: int = 10) -> list[str] | NoReturn:
-        """@2023-05-05
-        Fetches rows from the worksheet that match the given criteria group.
+        """@2023-05-05 Match the given criteria group, fetch the row.
+        
         Parameters:
         -----------
         :param wsheet: gspread.Worksheet: The worksheet to extract the data from.
@@ -176,7 +182,8 @@ class DataTransform:
     def fetch_by_lo(wsheet: gspread.Worksheet,
                     criteria_group: str,
                     column_filter: int = 7) -> list[str]:
-        """@2023-05-05
+        """@2023-05-05.
+        
         Fetches rows from the worksheet that match the given criteria group.
         :param wsheet: gspread.Worksheet: The worksheet to extract the data from.
         :param criteria_group: str: The criteria group to extract the data from.
@@ -190,7 +197,8 @@ class DataTransform:
     def fetch_by_grade(wsheet: gspread.Worksheet,
                        performance: str,
                        column_filter: int = 6) -> list[str]:
-        """@2023-05-05
+        """@2023-05-05.
+        
         Fetches rows from the worksheet that match the given grade type.
         :param wsheet: gspread.Worksheet: The worksheet to extract the data from.
         :param performance: str: The performance to extract the data from: Pass, Merit, Distinction.
@@ -242,6 +250,73 @@ class DataTransform:
     def read_data(row: list[str]):
         """Reads the data per row."""
         pass
+
+
+class QueryFinder:
+    def __init__(self, locationquery, dataset):
+        self.sheet_name = locationquery.split('!')[0] if '!' in locationquery else None
+        self.query = locationquery.split('!')[-1]
+        self.dataset = dataset
+        self.max_row = len(dataset.get('values', []))
+        self.max_col = max([len(row) for row in dataset['values']]) if dataset.get('values') else 0
+        self.header_row = 0
+        
+        if self.max_row > 0 and all(isinstance(cell, str) for cell in dataset['values'][0]):
+            self.header_row = 1
+    
+    def find_cell(self, cell) -> str | None:
+        if cell[0].isalpha() and cell[1:].isdigit():
+            col = ord(cell[0].lower()) - 97
+            row = int(cell[1:]) - 1
+            if col < self.max_col and row < self.max_row:
+                return self.dataset['values'][row][col]
+        return None
+    
+    def find_range(self, start_cell, end_cell) -> list[str] | None:
+        start_col = ord(start_cell[0].lower()) - 97
+        start_row = int(start_cell[1:]) - 1
+        end_col = ord(end_cell[0].lower()) - 97
+        end_row = int(end_cell[1:]) - 1
+        if start_col < self.max_col and start_row < self.max_row and end_col < self.max_col and end_row < self.max_row:
+            return [[self.dataset['values'][i][j] for j in range(start_col, end_col + 1)] for i in
+                    range(start_row, end_row + 1)]
+        return None
+    
+    def find_column(self, column) -> list[str] | None:
+        col = ord(column.lower()) - 97
+        if col < self.max_col:
+            if self.header_row == 1:
+                return [self.dataset['values'][i][col] for i in range(self.header_row, self.max_row)]
+            else:
+                return [self.dataset['values'][i][col] for i in range(self.max_row)]
+        return None
+    
+    def find_row(self, row) -> list[str] | None:
+        row = int(row) - 1
+        if row < self.max_row:
+            if self.header_row == 1:
+                return self.dataset['values'][row]
+            else:
+                return self.dataset['values'][row + 1]
+        return None
+    
+    def get_query(self) -> str | list[str] | None:
+        if ':' in self.query:
+            cells = self.query.split(':')
+            if len(cells) == 1:
+                return self.find_cell(cells[0])
+            else:
+                start, end = cells
+                if len(start) == 1 and len(end) == 1:
+                    return self.find_column(start)
+                elif len(start) > 1 and len(end) == 1:
+                    return self.find_row(start)
+                elif len(start) == 1 and len(end) > 1:
+                    return self.find_column(start)
+                else:
+                    return self.find_range(start, end)
+        else:
+            return self.find_cell(self.query)
 
 
 # pylint: disable=too-few-public-methods, too-many-instance-attributes
