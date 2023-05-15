@@ -44,3 +44,13 @@ creds.json
 /.idea/sonarlint/securityhotspotstore/*
 # =================================================================
 *-v1.py
+/prompt_toolkit/
+/App.puml
+/app-activity.puml
+/app-class.puml
+/app-object.puml
+/cmdcomplete.py
+/tutorial.py
+/pycriteria.lnk
+*.log
+ruff.log

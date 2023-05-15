@@ -41,6 +41,8 @@ class Settings:
     TITLE: str = 'PyCriteria'  # pylint: disable=C0103
     PURPOSE: str = 'CLI to managing Project Criteria'  # pylint: disable=C0103
     WELCOME: str = f'Welcome to {TITLE} {PURPOSE} App.'  # pylint: disable=C0103
+    ON: bool = True  # pylint: disable=C0103
+    OFF: bool = False  # pylint: disable=C0103
     # Data String/Int Resources
     FILENAME: str = 'PyCriteria'  # pylint: disable=C0103
     SCOPE = [
@@ -48,6 +50,12 @@ class Settings:
             "https://www.googleapis.com/auth/drive.file",
             "https://www.googleapis.com/auth/drive"
             ]  # pylint: disable=C0103
+    
+    @dataclasses.dataclass(frozen=True)
+    class Console:
+        """Config."""
+        WIDTH: int = 80  # pylint: disable=C0103
+        HEIGHT: int = 24  # pylint: disable=C0103
 
 
 # pylint: disable=too-few-public-methods, too-many-instance-attributes

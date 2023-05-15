@@ -1,30 +1,34 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
+# ruff: noqa: ANN101, I001, ARG002
 """Module: Controller for the Terminal App."""
+# 0.1 Standard Library Imports
 import typing
-
-from typing import Optional
 import warnings
+from typing import NoReturn, Type
 
 import gspread  # type: ignore
-
-from rich import pretty as rpretty
-from rich import print as rprint
-from rich.console import Console
-from rich.console import ConsoleDimensions
-from rich.console import ConsoleOptions
-from rich.prompt import Prompt  # type: ignore
+import gspread_dataframe  # type: ignore
+import pandas as pd  # type: ignore
 import rich.style  # type: ignore
+# 0.2 Third Party Modules
+from click import echo  # type: ignore
+from gspread_dataframe import get_as_dataframe as get_gsdf  # type: ignore
+from rich import pretty as rpretty, print as rprint  # type: ignore; type: ignore
+from rich.console import Console, ConsoleDimensions, ConsoleOptions  # type: ignore
+from rich.prompt import Prompt  # type: ignore
 from rich.table import Table  # type: ignore
 
-# 0.3 Local imports
 import connections
-
-from datatransform import DataTransform
 import settings
+from datatransform import DataTransform
+# 0.3 Local imports
+from sidecar import ProgramUtils
 
+utils: ProgramUtils = ProgramUtils()
 connector: connections.GoogleConnector = connections.GoogleConnector()
 configuration: settings.Settings = settings.Settings()
+
 tablesettings: settings.TableSettings = settings.TableSettings()
 console: rich.console.Console = Console()
 transformer: DataTransform = DataTransform()
@@ -34,59 +38,13 @@ transformer: DataTransform = DataTransform()
 
 # plylint: disable=line-too-long
 class Controller:
-    """Controller for the effort of loading the data, fetching it, managing it.
-    
-    Links the connector to the app:
-    
-    CRUD engine + filter, find/search, show/hide
-    ---------------------------------------------
-    A: READ/FETCH: Loads the data from the sheet to the:
-     - DataModel - NYI
-     - App - WIP
-     - Display - WIP
-    B: CREATE: Inserts new data into the sheet: per item, per row, not per batch
-    C: UPDATE: Updates data in the sheet: per item, per row, not per batch
-       (matching cells, yet)
-    D: DELETE: Deletes data from the sheet: per item, per row, not per batch
-    E: READ/FILTER: Filters the data: per row, column
-       --> Affirmative: "Given me a subset to ETL"
-    F: READ/EXCLUDE: Hides the data: per row, column
-       --> Non-Affirmative: "Hide what I do not want to see"
-    G: SORT: Not doing sorting, thought, APIs have refernece to it.
-    
-    Controller is the hub of app tasks/actions; whereas:
-    -----------------------------------------------
-    1. The App handles TUI command logic (Typer) and bundles controller logic
-       into one entry point.
-    2. The WebConsole handles the console display/logics.
-    3. The DataTransformer handles any Extract, Transform,
-       Load (ETL) logic (load_* tasks are shared with controller)
-    4. The DataModel handles the in memory data structure and
-       data logics (maybe move Topics, Entry to DataModel)
-    5. The Display handles the TUI output display rendering logics
-       using the console.
-    6. The Connector handles the connection to the remote data source
-       (Google Sheets).
-    7. The Settings handle the configurations of the app/local packages for
-       strings, etc.
-    
+    """Controller.
 
     Methods:
     -------
     :method: refresh: Refreshed entired connection, sheet, worksheet, and data.
+    :method: load_wsheet: Loads the worksheet.
     :method: load_data: Loads the worksheet.
-    :method: load_data: Loads the data from the sheet.
-    :method: insert_newrow: Inserts a new row into the worksheet.
-    :method: insert_newitem: Inserts a new item into the worksheet.
-    :method: update_row: Updates a row in the worksheet.
-    :method: update_item: Updates an item in the worksheet.
-    :method: update_items: Updates matching item in the worksheet.
-    :method: delete_row: Deletes a row in the worksheet.
-    :method: delete_item: Deletes an item in the worksheet.
-    :method: filter_rows: Filters the worksheet by row(s).
-    :method: filter_columns: Filters the worksheet by column(s).
-    :method: hide_rows: Hides the worksheet by row(s) --> Display Class?
-    :method: hide_columns: Hides the worksheet by column(s) --> Display Class?
     """
     
     # 1. Loading Actions/Methods: Bulk: Connecting, Worhsheet, Entire Dataset
@@ -119,6 +77,7 @@ class Controller:
     @staticmethod
     def load_wsheet() -> gspread.Worksheet:
         """Loads a worksheet.
+        
         :return: gspread.Worksheet: The current worksheet to extract the data.
         """
         # 1.1: Connect to the sheet
@@ -138,188 +97,218 @@ class Controller:
         return connector.open_sheet(spread, configuration.TAB_NAME)
     
     @staticmethod
-    def load_data() -> list[str]:
-        """Loads the data."""
+    def fetch_data() -> list[str]:
+        """Loads the data.
+        
+        Deprecated: Use load_dataf instead.
+        """
         # 1.1: Connect to the sheet
         # 1.2: Read the data from the sheet
         # 1.3: Return the data from the sheet
         wsheet: gspread.Worksheet = Controller.load_wsheet()
         return transformer.get_data(wsheet, "H2:010")
     
-    # Loading a set of cells/cells items/a cell items from a range/row
-    # plylint: disable=line-too-long
-    # 2. FINDING: Search Actions/Methods: Individual item, all matching items, row but not batch
-    # https://docs.gspread.org/en/v5.4.0/user-guide.html#finding-a-cell # plylint: disable=line-too-long
-    # A1 Notation: https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet.acell #
-    # plylint: disable=line-too-long,C0301
-    # Row:Column: int: https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet.cell
-    # plylint: disable=line-too-long,C0301
-    # Find 1st: https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet.find #
-    # plylint: disable=line-too-long,C0301
-    # Find all: https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet.findall #
-    # plylint: disable=line-too-long,C0301
-    
-    # 3. CREATE: Insert Actions/Methods: Individual items, row but not batch insert
-    # https://docs.gspread.org/en/v5.4.0/user-guide.html#getting-all-values-from-a-row-or-a-column
-    # https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet.append_row
-    
-    @staticmethod  # Development Order: CREATE3.2
-    def insert_newrow(rowdata: list[str] = None,
-                      position: int = 1,
-                      lastrow: bool = False,
-                      editheader: bool = False,
-                      defaultvalue: str = ""):
-        """App Command: Inserts a new row into the sheet."""
-        # 3.1: Connect to the sheet/loads data ☑️
-        # 3.2: Find a row position, and cell position. 👔🚧
-        # 3.3: Reload new dataset from the sheet with new item highlighted 👔
-    
-    # https://docs.gspread.org/en/v5.4.0/user-guide.html#getting-a-cell-value
-    @staticmethod  # Development Order: CREATE3.3
-    def insert_item(itemdata: str, position: int = 1,
-                    cell_reference: Optional[str] = None,
-                    editheader: bool = False):
-        """App Command: Inserts an item into the sheet."""
-        # 3.1: Connect to the sheet/loads data ☑️
-        # 3.2: Find a row position, and cell position.👔🚧
-        # 3.3: Appends data the cell at end:
-        # 3.3:  either clearing and appending to cell contents 🚧
-        # 3.3:  by overwrighting within new Cell Object 🚧
-        # 3.5: Confirmed user with intermediate display (not commit/saved) 👔🚧
-        # 3.6: Sends data to the sheet 🚧
-        # 3.7: Reloads new dataset from the sheet, with new item displayed/highlighted 👔🚧
-    
-    # 4. DELETE: Remove Actions/Methods: Individual items, row but not batch delete/clear
-    # Note: https://developers.google.com/sheets/api/guides/values
-    # Note: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values
-    # Note: Batch Clear: https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet
-    # Note: Delete Rows: https://docs.gspread.org/en/v5.4.0/api/models/worksheet.html#gspread.worksheet.Worksheet
-    
     @staticmethod
-    def delete_row(position: int = 1,
-                   lastrow: bool = False,
-                   valuesonly: bool = True,
-                   editheader: bool = False):
-        """App Command: Delete a row into the sheet."""
-        # 4.1: Connect to the sheet/loads data ☑️
-        # 4.2: Removes/Clears the end row, i.e. 👔🚧
-        # 4.2: i.e. undo last append 🎬🔲
-        # 4.2: i.e. undo last insert 🎬🔲
-        # 4.2: i.e. removeś last row (last row id) 🎬🔲
-        # 4.3: Confirmed user with intermediate display (not commit/saved) 👔🚧
-        # 4.4: Sends data to the sheet 🚧🔲
-        # 4.5: Refreshes new dataset from the sheet, new API call, 🎬 🔲
-        # 4.6:   with new item displayed/highlighted 👔🚧
+    def delete(creds: gspread.Client) -> None:
+        """Deletes the client."""
+        del creds
+
+
+class Headers:
+    """Headers."""
     
-    @staticmethod
-    def delete_item(itemdata: str,
-                    position: int = 1,
-                    editheader: bool = False,
-                    defaultvalue: str = ""):
-        """App Command: Delete a row into the sheet."""
-        # 4.1: Connect to the sheet/loads data ☑️
-        # 4.2: Finds the first item in a row by a row id, and column id: RC1:RC2 or A1 Notation 👔🚧
-        # 4.2: Stores the item coordinates/Ai Notation to a ... 🎬🔲
-        # 4.3: Deletes an item in a row by a row id, and column id: RC1:RC2 or A1 Notation 🎬🔲
-        # 4.4: Confirmed user with intermediate display (not commit/saved) 👔🚧
-        # 4.2: Deletes an item in a row by a row id, and column id: RC1:RC2 or A1 Notation 🎬🔲
-        # 4.3: Reloads/refreshed new dataset from the sheet, refreshes the data 👔🚧
+    Criteria = typing.Literal["CriteriaGroup", "CriteriaRef", "Criteria", "CriteriaTopic", "Notes"]
+    Project = typing.Literal["Progress", "Flag", "Notes"]
+    MetaData = typing.Literal["Tier", "TierPrefix", "TierDepth", "Performance"]
+    References = typing.Literal["RowID", "Position", "LinkedRef"]
+
+
+class DataController:
+    """DataController for the effort of loading the data, fetching it, managing it.
+
+    Links the connector to the app's command:
+
+    CRUD engine + filter, find/search, show/hide
+    ---------------------------------------------
+    A: READ/FETCH: Loads the data from the sheet to the:
+    - DataModel - NYI
+    - App - WIP
+    - Display - WIP
+    B: CREATE: Inserts new data into the sheet: per item, per row, not per batch
+    C: UPDATE: Updates data in the sheet: per item, per row, not per batch
+    (matching cells, yet)
+    D: DELETE: Deletes data from the sheet: per item, per row, not per batch
+    E: READ/FILTER: Filters the data: per row, column
+    --> Affirmative: "Given me a subset to ETL"
+    F: READ/EXCLUDE: Hides the data: per row, column
+    --> Non-Affirmative: "Hide what I do not want to see"
+    G: SORT: Not doing sorting, thought, APIs have refernece to it.
+
+    Controller is the hub of app tasks/actions; whereas:
+    -----------------------------------------------
+    1. The App handles TUI command logic (Typer) and bundles controller logic
+    into one entry point.
+    2. The WebConsole handles the console display/logics.
+    3. The DataTransformer handles any Extract, Transform,
+    Load (ETL) logic (load_* tasks are shared with controller)
+    4. The DataModel handles the in memory data structure and
+    data logics (maybe move Topics, Entry to DataModel)
+    5. The Display handles the TUI output display rendering logics
+    using the console.
+    6. The Connector handles the connection to the remote data source
+    (Google Sheets).
+    7. The Settings handle the configurations of the app/local packages for
+    strings, etc.
+
+
+    Methods:
+    -------
+    :method: refresh: Refreshed entired connection, sheet, worksheet, and data.
+    :method: load_data: Loads the worksheet.
+    :method: load_dataf: Loads the dataframe from the sheet.
+    :method: insert_newrow: Inserts a new row into the worksheet.
+    :method: insert_newitem: Inserts a new item into the worksheet.
+    :method: update_row: Updates a row in the worksheet.
+    :method: update_item: Updates an item in the worksheet.
+    :method: update_items: Updates matching item in the worksheet.
+    :method: delete_row: Deletes a row in the worksheet.
+    :method: delete_item: Deletes an item in the worksheet.
+    :method: filter_rows: Filters the worksheet by row(s).
+    :method: filter_columns: Filters the worksheet by column(s).
+    :method: hide_rows: Hides the worksheet by row(s) --> Display Class?
+    :method: hide_columns: Hides the worksheet by column(s) --> Display Class?
+    """
     
-    # 5. UPDATE: Modify Actions/Methods: Individual items, row but not batch update
-    # https://docs.gspread.org/en/v5.4.0/user-guide.html#updating-cells
-    @staticmethod
-    def update_item(itemdata: str,
-                    position: int = 1,
-                    coordinate: Optional[str] = None,
-                    namerange: Optional[str] = None,
-                    editheader: bool = False,
-                    defaultvalue: str = ""):
-        """App Command: Update an item into the sheet."""
-        # 5.1: Connect to the sheet/loads data
-        # 5.2: Finds the first item in a row by a row id, and column id: RC1:RC2 or A1 Notation
-        # 5.3: Stored the items coordinates/Ai Notation to a datamodel
-        # 5.4: Displays item and item context (row data, position, column)
-        # 5.5: Updates an item in a row by stored coordinate
-        # 5.6: Confirms to user with intermediate display (not commit/saved)
-        # 5.7: Sends data to the sheet on confirmation.
-        # 5.8: Reloads/refreshed new dataset from the sheet, refreshes the data
-        # 5.9: Displays the newly refreshed data, highlighted
+    # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
+    ###
     
-    # Batch Update: or Matching all Cells verses a query string
-    @staticmethod
-    def update_items(itemdata: str,
-                     searching: str,
-                     coordinate: Optional[str] = None,
-                     namerange: Optional[str] = None,
-                     editheader: bool = False):
-        """App Command: Update an item into the sheet."""
-        # 5.1: Connect to the sheet/loads data
-        # 5.2: Finds the first item in a row by a row id, and column id: RC1:RC2 or A1 Notation
-        # 5.3: Stored the items coordinates/Ai Notation to a datamodel
-        # 5.4: Displays item and item context (row data, position, column)
-        # 5.5: Updates an item in a row by stored coordinate
-        # 5.6: Confirms to user with intermediate display (not commit/saved)
-        # 5.7: Sends data to the sheet on confirmation.
-        # 5.8: Reloads/refreshed new dataset from the sheet, refreshes the data
-        # 5.9: Displays the newly refreshed data, highlighted
+    dataframe: pd.DataFrame
+    wsheet: gspread.Worksheet
+    gsdframe: gspread_dataframe
     
-    @staticmethod
-    def update_row(rowdata: list[str] = None,
-                   position: int = 1,
-                   coordinate: Optional[str] = None,
-                   namerange: Optional[str] = None,
-                   editheader: bool = False):
-        """App Command: Update a row into the sheet."""
-        # 5.1: Connect to the sheet/loads data
-        # 5.2: Updates a row by id - Required
-        # 5.2: Updates a row by id and, optionally, a coordinate
-        # 5.2: Updates a row by id and, optionally, a named range
-        # 5.3: If by id, Returns the items coordinates/Ai Notation to a datamodel/locally
-        # 5.3: If by id: updates the entire rowdata
-        # 5.4: If by coordinate: updates the row with rowdata (whole or subset)
-        # 5.5: If by nameranged: updates the row with rowdata (whole or subset)
-        # 5.6: Confirms to user with intermediate display (not commit/saved)
-        # 5.7: Reloads/refreshed new dataset from the sheet, refreshes the data
-        # 5.9: Displays the newly refreshed data, highlighted (User Feedback)
+    def __init__(self, wsheet: gspread.Worksheet) -> None:
+        """Initialies the DataController."""
+        # Load the data into a panda dataframe
+        self.wsheet = wsheet
+        self.dataframe = pd.DataFrame(wsheet.get_all_records())
+        self.gsdframe = get_gsdf(self.wsheet, parse_dates=True, header=1)
     
-    # 6. FILTER: Reduction of DataSet: by row, column, cell, value, range, etc.
-    # https://docs.gspread.org/en/v5.4.0/user-guide.html#filtering
+    # https://www.w3schools.com/python/pandas/pandas_dataframes.asp
     
-    @staticmethod
-    def filter_rows(dataset: list[str] = None,
-                    selection: str = None,
-                    wrapping: Optional[str] = None,
-                    showheaders: bool = True,
-                    removefilter: bool = False):
-        """App Command: Filter a row or contigious rows from the sheet."""
+    # Use gspread_dataframe.set_with_dataframe(worksheet, dataframe,
+    # row=1, col=1, include_index=False, include_column_header=True,
+    # resize=False, allow_formulas=True, string_escaping='default')
+    # Sets the values of a given DataFrame, anchoring its upper-left
+    # corner at (row, col).
+    # (Default is row 1, column 1.)
+    # https://gspread-dataframe.readthedocs.io/en/latest/
     
-    @staticmethod
-    def filter_columns(dataset: list[str] = None,
-                       selection: str = None,
-                       wrapping: str = None,
-                       showheader: bool = True,
-                       removefilter: bool = False):
-        """App Command: Filter a column or contigious rows from the sheet."""
+    def load_dataframe_wsheet(self, wsheet: gspread.Worksheet) -> pd.DataFrame | None:
+        """Loads the worksheet into a dataframe.
+
+        :param wsheet: gspread.Worksheet: The worksheet to load
+        :return: pd.DataFrame | None: The dataframe or None
+        """
+        if wsheet.get_all_records():
+            dataframe: pd.DataFrame = pd.DataFrame(wsheet.get_all_records())
+            self.dataframe = dataframe
+            return dataframe
+        
+        rprint("No data loaded from Google Sheets.")
+        return None
     
-    @staticmethod
-    def hide_rows(dataset: list[str] = None,
-                  selection: str = None,
-                  showheaders: bool = True,
-                  unhide: bool = False):
-        """App Command: Filter a row or contigious rows from the sheet."""
-        # Maybe better in Display Class
+    def load_dataf(self, wsheet: gspread.Worksheet,
+                   filterr: str,
+                   dimensions=None) -> pd.DataFrame:  # noqa: ANN001
+        """Load the data into a panda dataframe.
+
+        :param wsheet: gspread.Worksheet: The worksheet to load the data from
+        :param filterr: str: The filter to apply to the data
+        :param dimensions: list[str]: The dimensions to load
+        """
+        if filter and dimensions:
+            self.dataframe = self.dataframe.loc[filterr, dimensions]
+        elif filterr:
+            self.dataframe = self.dataframe.loc[filterr]
+        elif dimensions:
+            self.dataframe = self.dataframe.loc[:, dimensions]
+        else:
+            self.dataframe = pd.DataFrame(wsheet.get_all_records())
+        
+        return self.dataframe
     
-    @staticmethod
-    def hide_columns(dataset: list[str] = None,
-                     selection: str = None,
-                     showheaders: bool = True,
-                     unhide: bool = False):
-        """App Command: Show/Hide a column or contigious columns from the display/dataset."""
-        # Maybe better in Display Class
+    def find_rows(self, query: str) -> pd.DataFrame:
+        """Find Rows by a query.
+
+        :param query: str: The query to search for
+        :return: pd.DataFrame
+        """
+        return self.dataframe.query(query)
+    
+    def filter_rows(self, position: int) -> pd.Series:
+        """Filter rows in the dataframe."""
+        return self.dataframe.iloc[position]
+    
+    def filter_columns(self, columns: str) -> pd.DataFrame:
+        """Filter columns in the dataframe."""
+        self.dataframe = self.dataframe.loc[:, columns]
+        return self.dataframe
+    
+    def add_item(self, position: int, item: str) -> pd.Series:
+        """Add an item to the dataframe."""
+        self.dataframe.iloc[position] = item
+        return self.dataframe.iloc[position]
+    
+    def add_row(self, position: int, values: list | dict) -> pd.Series:
+        """Add a row to the dataframe at the specified position."""
+        self.dataframe.loc[position] = values
+        return self.dataframe.loc[position]
+    
+    def update_item(self, position: int, item: str) -> pd.Series:
+        """Update an item in the dataframe."""
+        self.dataframe.iloc[position] = item
+        return self.dataframe.iloc[position]
+    
+    def update_row(self, position: int, values: list | dict) -> pd.Series | None:
+        """Update a row in the dataframe."""
+        for index, row in self.dataframe.iterrows():
+            if all(row == values):
+                continue
+            
+            self.dataframe.iloc[index] = values
+            return self.dataframe.iloc[index]
+        
+        return None
+    
+    def update_tarow(self, position: int, values: dict) -> pd.Series | None:
+        """Update a row in the dataframe."""
+        row = pd.Series(values)
+        if all(self.dataframe.iloc[position] == row):
+            return None
+        self.dataframe.iloc[position] = row
+        return self.dataframe.iloc[position]
+    
+    def delete_item(self, position: int, item: str) -> pd.Series:
+        """Delete an item in the dataframe."""
+        self.dataframe.iloc[position] = ""
+        return self.dataframe.iloc[position]
+    
+    def delete_row(self, position: int, values: list | dict) -> pd.DataFrame | None:
+        """Delete a row in the dataframe."""
+        for index, row in self.dataframe.iterrows():
+            if all(row == values):
+                self.dataframe = self.dataframe.drop(index)
+                return self.dataframe
+        return None
 
 
 class Display:
     """Displays the data."""
+    ColumnResultType: Type[tuple] = tuple[str, str, pd.DataFrame]
+    ItemSelectType: Type[tuple] = tuple[str, str, pd.DataFrame]
+    LineNoSelectType: Type[tuple] = tuple[int, pd.DataFrame]
+    ColumnSelectType: Type[tuple] = tuple[str, pd.DataFrame]
+    SearchColumnQueryType: Type[tuple] = tuple[str, str, pd.DataFrame]
     
     # pylint: disable=unnecessary-pass
     @staticmethod
@@ -328,7 +317,7 @@ class Display:
         pass
     
     @staticmethod
-    def display_data(dataset: list[str], switch: int = 0):
+    def display_datalist(dataset: list[str], switch: int = 0) -> None:
         """Displays the data."""
         separator: str = "||"
         carriage: str = "\n"
@@ -342,7 +331,7 @@ class Display:
         pass
     
     @staticmethod
-    def display_pretty(dataset: list[str], switch: int = 0):
+    def display_pretty(dataset: list[str], switch: int = 0) -> None:
         """Displays the data."""
         rpretty.install()
         separator: str = "||"
@@ -350,12 +339,24 @@ class Display:
         flush: typing.List[bool] = [False, True]
         rprint(dataset, sep=separator, end=carriage, flush=flush[switch])
     
+    @staticmethod
+    def display_data(dataframe: pd.DataFrame,
+                     consoleholder,  # noqa: ANN001
+                     consoletable: Table,
+                     title: str = "PyCriteria") -> None:  # noqa: ANN001
+        """Display Data: Wrapper for Any display."""
+        consoleholder.set_table(consoleholder, dataframe=dataframe)
+        Display.display_frame(dataframe=dataframe,
+                              consoleholder=consoleholder,
+                              consoletable=consoletable,
+                              title=title)
+    
     #
     @staticmethod
     def display_table(dataset: list[str],
                       consoleholder: Console,
                       consoletable: Table,
-                      title: str = "PyCriteria"):
+                      title: str = "PyCriteria") -> None | NoReturn:
         """Displays the data in a table."""
         # https://improveandrepeat.com/2022/07/python-friday-132-rich-tables-for-your-terminal-apps/
         # 1 Set Table
@@ -365,6 +366,207 @@ class Display:
             consoletable.add_row(*row)
         # 3 Print Table
         consoleholder.print(consoletable)
+        return None
+    
+    @staticmethod
+    def display_frame(dataframe: pd.DataFrame,
+                      consoleholder: Console,
+                      consoletable: Table,
+                      title: str = "PyCriteria") -> None | NoReturn:
+        """Displays the data in a table."""
+        consoletable.title = title
+        
+        for column in dataframe.columns:
+            # Create the table header headers
+            consoletable.add_column(header=column)
+        for _index, row in dataframe.iterrows():
+            # For each column, in dataframe's columns
+            # Retrieve the string value of the row by column refernece
+            # Then add the row to the table
+            consoletable.add_row(*[str(row[column]) for column in dataframe.columns])
+        
+        consoleholder.print(consoletable)
+    
+    @staticmethod
+    def display_search(output: tuple,
+                       consoleholder: Console,
+                       consoletable: Table,
+                       title: str = "PyCriteria") -> None | NoReturn:
+        """Displays the search accoridng to a output's result-set.
+        
+        A ResultSet is a type of tuple that varies in length and component types.
+        A resultset is used to carry the parameters of a search along
+            with the results of that search from
+             a) the command's stdin
+             b) to the cli's stdout or stderr.
+        The ResultSet is a tuple of the following types:
+            i) SearchColumnResultType: tuple[str, str, pd.DataFrame]
+                i.e. header, query, dataframe
+            ii) ItemSelectType: tuple[str, str, pd.DataFrame]
+        Parameters:
+        --------------------
+        :param output: tuple: The output of the search
+        :param consoleholder: Console: The console to print to
+        :param consoletable: Table: The table to print to
+        """
+        if ValidationQuerySetType.querysetcolumntype(output):
+            # If the output is a tuple of item selection
+            # Display the item selection
+            # Prints out the item's coordinates
+            headers, query, dataframe = output
+            Display.display_frame(dataframe=dataframe,
+                                  consoleholder=consoleholder,
+                                  consoletable=consoletable,
+                                  title=title)
+            echo(message=(f"You searched for: Query: {query}"
+                          + f"Against this Header: {headers}")),
+    
+    @staticmethod
+    def display_selection(output: tuple,
+                          consoleholder,  # noqa: ANN001
+                          consoletable: Table,
+                          title: str = "PyCriteria") -> None | NoReturn:  # noqa: ANN001
+        """Displays the selection accoridng to a output's result-set.
+        
+        A ResultSet is a type of tuple that varies in length and component types.
+        A resultset is used to carry the parameters of a selection along
+            with the results of that selection from
+             a) the command's stdin
+             b) to the cli's stdout or stderr.
+        The ResultSet is a tuple of the following types:
+        1. ItemSelectType: tuple[str, str, pd.DataFrame]
+        2. LineNoSelectType: tuple[int, pd.DataFrame]
+        3. ColumnResultType: tuple[str, str, pd.DataFrame]
+        
+        Parameters:
+        --------------------
+        :param output: tuple: The output of the selection
+        :param consoleholder: Any: The console to print to
+        :param consoletable: Table: The table to print to
+        :param title: str: The title of the table
+        
+
+        Returns:
+        --------------------
+        :return: None | NoReturn: This displays to the stdout/stderr
+        """
+        # Uses the return Data Structure types, i.e, of outputto determine the display set
+        
+        if ValidateResultSetTypes.selectitemtype(output):
+            # If the output is a tuple of item selection
+            # Display the item selection
+            # Prints out the item's coordinates
+            headers, linenumber, dataframe = output
+            consoleholder.set_table(dataframe=dataframe)
+            Display.display_frame(dataframe=dataframe,
+                                  consoleholder=consoleholder,
+                                  consoletable=consoletable,
+                                  title=title)
+            echo((f"Selected Reference: Line Number: {linenumber}\n"
+                  + f"Selected Column: Header: {headers}"))
+        elif ValidateResultSetTypes.selectrowtype(output):
+            # If the output is a tuple of row selection
+            # Display the row in a table.
+            # Print the row selected
+            linenumber, dataframe = output
+            consoleholder.set_table(dataframe=dataframe)
+            Display.display_frame(dataframe, consoleholder, consoletable, title)
+            rprint(f"Selected Row: Line Number: {linenumber}")
+        elif ValidateResultSetTypes.selectcolumntype(output):
+            # If the output is a tuple of column selection
+            # Display the column in a table.
+            # Print the column selected
+            header, dataframe = output
+            consoleholder.set_table(dataframe=dataframe)
+            Display.display_frame(dataframe, consoleholder, consoletable, title)
+            echo(f"Selected Column\'s: Header: {header}")
+        else:
+            # If the output is not of the above types
+            # Display an exception message, raise no error (yet_
+            echo(message=('The parameter out is not '
+                          + f'the correct resultset type: {output}'), err=True)
+
+
+class ValidateResultSetTypes:
+    """Validates the resultset types. From CRUD + Find/Select Ops.
+    
+    :method: selectitemtype: Checks the item resultset types.
+    :method: selectrowtype: Checks the row resultset types.
+    :method: selectcolumntype: Checks the column's resultset types.
+    """
+    
+    @staticmethod
+    def selectitemtype(typecheck: tuple) -> bool:
+        """Checks the item types.
+        
+        ItemSelectTypes: Tuple[str, int, pd.DataFrame]
+        Format: (header, linenumber, dataframe).
+        """
+        if (isinstance(typecheck, tuple) and
+                typing.get_args(typing.get_type_hints(Display)['ItemSelectType']) ==
+                (str, int, pd.DataFrame)):
+            echo("Output is not of type Display.ItemSelectType")
+            return False
+        
+        echo("Output is of type Display.ItemSelectType")
+        return True
+    
+    @staticmethod
+    def selectrowtype(typecheck: tuple) -> bool:
+        """Checks the item types.
+        
+        RowSelectTypes: Tuple[int, pd.DataFrame]
+        Format: (linenumber, dataframe).
+        """
+        if not (isinstance(typecheck, tuple) and
+                typing.get_args(typing.get_type_hints(Display)['RowSelectType']) ==
+                (int, pd.DataFrame)):
+            
+            echo("Output is not of type Display.ItemSelectType")
+            return False
+        
+        echo("Output is of type Display.ItemSelectType")
+        return True
+    
+    @staticmethod
+    def selectcolumntype(typecheck: tuple) -> bool:
+        """Checks the item types.
+        
+        ColumnSelectType: Tuple[str, pd.DataFrame].
+        """
+        if (isinstance(typecheck, tuple) and
+                typing.get_args(typing.get_type_hints(Display)['ColumnSelectType']) ==
+                (str, pd.DataFrame)):
+            
+            echo("Output is not of type Display.ColumnSelectType")
+            return False
+        
+        echo("Output is of type Display.ColumnSelectType")
+        return True
+
+
+class ValidationQuerySetType:
+    """Validates the query types. From CRUD + Find/Select Ops."""
+    
+    @staticmethod
+    def querysetitemtype(typecheck: tuple) -> bool:
+        """Checks the item types."""
+        pass
+    
+    @staticmethod
+    def querysetcolumntype(typecheck: tuple) -> bool:
+        """Checks the item types.
+        
+        ColumnQueryTypes: Tuple[str, pd.DataFrame].
+        """
+        if not (isinstance(typecheck, tuple) and
+                typing.get_args(typing.get_type_hints(Display)['SearchColumnQueryType']) ==
+                (str, str, pd.DataFrame)):
+            rprint("Output is not of type Display.SearchColumnQueryType")
+            return False
+        
+        rprint("Output is of type Display.SearchColumnQueryType")
+        return True
 
 
 class WebConsole:
@@ -372,16 +574,17 @@ class WebConsole:
     
     console: Console
     options: ConsoleOptions
-    table: Table
+    table: Table | None
     
     def __init__(self, width: int, height: int) -> None:
         """Initializes the web console."""
         self.console = self.console_configure()
         self.options = self.console_options(width, height)
-        self.table = self.configure_table()
+        self.table = None
     
     @staticmethod
-    def console_options(width: int = 80, height: int = 24) -> ConsoleOptions:
+    def console_options(width: int = configuration.Console.WIDTH,
+                        height: int = configuration.Console.HEIGHT) -> ConsoleOptions:
         """Configures the console."""
         max_width: int = width
         max_height: int = height
@@ -389,7 +592,7 @@ class WebConsole:
                 width=max_width, height=max_height)
         nolegacy: bool = False
         is_terminal: bool = True
-        encoding: str = "utf-8"
+        encoding: str = configuration.ENCODE
         options: ConsoleOptions = ConsoleOptions(
                 size=windowsize,
                 legacy_windows=nolegacy,
@@ -414,71 +617,35 @@ class WebConsole:
         return _console
     
     @staticmethod
-    def layout_configure():
+    def layout_configure() -> None:
         """Configures the Rich layout.
         
         Sets a bounding box for the console.
         """
     
     @staticmethod  #
-    def page_data(dataset: list[str]):
+    def page_data(dataset: list[str]) -> None | NoReturn:
         """Displays the data."""
         with console.pager(styles=True):
             rprint(dataset)
     
     @staticmethod
-    def configure_table(headings: int = 1) -> rich.table.Table:
+    def configure_table(dataframe: pd.DataFrame) -> rich.table.Table:
         """Configures Rich Console table."""
-        wsheet: gspread.Worksheet = Controller.load_wsheet()
         consoletable: rich.table.Table = Table()
-        selectheaders: dict[str, str] = tablesettings.CRITERIA_FILTER
-        headersrange: str = tablesettings.HEADERS_RANGE
-        _headers: list[str] = wsheet.row_values(headings)
         
-        def configure_columns(_headers: list[str]):
+        def configure_columns(_headers: list[str]) -> None:
             """Configures the headers."""
             for _header in _headers:
                 # Check if the header is the predefined headers by values
-                if _header in selectheaders.values():
-                    # Use list comprehension to get the key from the value: reverse lookup
-                    key = list(selectheaders.keys())[list(selectheaders.values()).index(_header)]
-                    # Use the key to get the value from the dictionary
-                    if key in headersrange:
-                        consoletable.add_column(selectheaders[key])
+                consoletable.add_column(_header)
         
-        configure_columns(_headers)
+        configure_columns(dataframe.columns)
         return consoletable
-
-
-class Topics:
-    """Topics."""
-    currenttopic: list[str]
-    datatransformr: DataTransform
     
-    def __init__(self):
-        """Init."""
-        self.currenttopic: list[str] = []
-        self.datatransformr: DataTransform = DataTransform()
-    
-    @classmethod
-    def load_uniques(cls, columnname: str) -> list[str]:
-        """Loads the unqiue topics of a column."""
-        _worksheet: gspread.Worksheet = Controller.load_wsheet()
-        _heading: str = columnname
-        currenttopics: list[str] = transformer.column_uniques(_worksheet, _heading)
-        return currenttopics
-    
-    # pylint: disable=unnecessary-pass
-    @staticmethod
-    def add_topic():
-        """Adds a topic."""
-        pass
-    
-    # pylint: disable=unnecessary-pass
-    @staticmethod
-    def remove_topic():
-        """Removes a topic."""
-        pass
+    def set_table(self, dataframe: pd.DataFrame) -> None:
+        """Sets the table."""
+        self.table = self.configure_table(dataframe=dataframe)
 
 
 class Entry:
@@ -490,7 +657,6 @@ class Entry:
     todo: str
     topics: list[str]
     todo_state: typing.Tuple[str, str] = ("unchecked", "checked")
-    categories = Topics()
     
     def __init__(self):
         """Init."""
@@ -498,11 +664,12 @@ class Entry:
         self.criteria: str = ""
         self.note: str = ""
         self.todo: str = ""
-        self.topics: list[str] = Topics.load_uniques("CriteriaTopics")
+        # self.topics: list[str] = Topics.load_uniques("CriteriaTopics")
     
     @staticmethod
     def prompt_addreferenece() -> str:
         """Prompts the user to add a reference.
+        
         Prints a guidance message on how to format the input.
         Takes only a string input for the reference (type: str].
         :returns: str: User input for the reference
@@ -527,7 +694,7 @@ class Entry:
         return Prompt.ask("Enter a note for this item?")
     
     @staticmethod
-    def prompt_selecttopic(topicslist: list[str], is_choices: bool = True):
+    def prompt_selecttopic(topicslist: list[str], is_choices: bool = True) -> str:
         """Prompts the user to update."""
         prompttext: str = "\\\\n".join([f"{i}. {topic}"
                                         for i, topic
@@ -547,22 +714,50 @@ class Entry:
                           choices=_state, default=_state[0])
 
 
-def main():
-    """Main."""
-    # Initilse WebConsole
-    webconsole: WebConsole = WebConsole(width=80, height=20)
-    mainconsole: Console = webconsole.console
-    maintable: Table = webconsole.table
-    # 0.1: Load the data
-    data: list[str] = Controller.load_data()
-    # 0.2: Display the data
-    Display.display_table(data,
-                          mainconsole,
-                          maintable)
-    # 0.3: Upload the data
+# def main():
+#    """Main."""
+#    # Initilse WebConsole
+#    webconsole: WebConsole = WebConsole(width=configuration.Console.WIDTH,
+#                                        height=configuration.Console.HEIGHT)
+#    mainconsole: Console = webconsole.console
+#    maintable: Table = webconsole.table
+# 0.1: Load the data
+#    data: list[str] = Controller.load_data()
+# 0.2: Display the data
+#    Display.display_table(data,
+#                          mainconsole,
+#                         maintable)
+# 0.3: Upload the data
+
+ActionType = typing.Literal["default", "error", "ignore", "always", "module", "once"]
 
 
-if __name__ == '__main__':
-    warnings.filterwarnings("ignore", message=".*deprecated.*", category=DeprecationWarning)
-    warnings.filterwarnings("ignore", category=ResourceWarning)
-    main()
+def warn(hide: bool = True, action: ActionType = "ignore") -> None:
+    """Configured Python Interpreter warnings.
+
+    Added: typing.Literal[str] : Invalid Type
+    Fixme: 'Literal' may be parameterized with literal ints, byte and unicode
+            strings, bools, Enum values, None, other literal types, or type
+            aliases to other literal types
+
+    Parameters:
+    ====================
+    :param hide: bool:
+                True to hide warnings, False to show warnings
+    :param action: Literal["default", "error", "ignore", "always", "module", "once"]:
+                "ignore" to ignore warnings,
+                "default" to show warnings
+                "error" to turn matching warnings into exceptions
+                "always" to always print matching warnings
+                "module" to print the first occurrence of matching warnings
+                         for each module where the warning is issued
+                "once" to print only the first occurrence of matching warnings,
+                       regardless of location
+    """
+    if hide:
+        warnings.filterwarnings(action, message=".*deprecated.*", category=DeprecationWarning)
+        warnings.filterwarnings(action, category=ResourceWarning)
+
+# if __name__ == '__main__':
+#     warn(hide=True, action="ignore")
+#     main()
