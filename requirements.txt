@@ -2,18 +2,16 @@
 ## Python 3.11
 # Project Used
 loguru>=0.7.0
+## TUI/CLI
 click>=8.1.3
 typer>=0.9.0
 rich>=13.3.5
+prompt_toolkit>=3.0.38
+## Data
+pandas>=2.0.1
 ## Google API
 google>=3.0.0
 gspread>=5.8.0
+gspread_dataframe>=3.0.8
 # Environment
 python-dotenv>=1.0.0
-# Dependency Injection Framework for Python
-# Secure
-## URL & OAuth
-# Aysnc asyncio # Asynchronous I/O, event loop, coroutines and tasks.
-## TUI/CLI
-
-pandas>=2.0.1

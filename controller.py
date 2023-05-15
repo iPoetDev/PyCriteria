@@ -7,11 +7,12 @@ import typing
 import warnings
 from typing import NoReturn, Type
 
+# 0.2 Third Party Modules: Compleete
 import gspread  # type: ignore
 import gspread_dataframe  # type: ignore
 import pandas as pd  # type: ignore
 import rich.style  # type: ignore
-# 0.2 Third Party Modules
+# 0.2 Third Party Modules: Individual
 from click import echo  # type: ignore
 from gspread_dataframe import get_as_dataframe as get_gsdf  # type: ignore
 from rich import pretty as rpretty, print as rprint  # type: ignore; type: ignore
@@ -19,10 +20,10 @@ from rich.console import Console, ConsoleDimensions, ConsoleOptions  # type: ign
 from rich.prompt import Prompt  # type: ignore
 from rich.table import Table  # type: ignore
 
+# 0.3 Local imports
 import connections
 import settings
 from datatransform import DataTransform
-# 0.3 Local imports
 from sidecar import ProgramUtils
 
 utils: ProgramUtils = ProgramUtils()
@@ -31,7 +32,7 @@ configuration: settings.Settings = settings.Settings()
 
 tablesettings: settings.TableSettings = settings.TableSettings()
 console: rich.console.Console = Console()
-transformer: DataTransform = DataTransform()
+transformer: DataTransform = DataTransform()  # deprecate: remov datatransform.py
 
 
 # 2. Read the data from the sheet by the controller
