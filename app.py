@@ -264,14 +264,14 @@ def refresh(ctx: click.Context) -> None:
                            f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
                            f'To go up one or two level, enter, each time:  ..  \n'
                            f'To Exit: ctrl + d  \n')
-    
+
     # Get Remote Sheet afresh
     def get_data() -> pd.DataFrame:
         """Get the dataframe from the context."""
         dataframe: pd.DataFrame = \
             DataControl.load_dataframe_wsheet(wsheet=Actions.load_wsheet())
         return dataframe
-    
+
     #
     def display_data(dataframe: pd.DataFrame) -> None:
         """Display the dataframe."""
@@ -282,21 +282,21 @@ def refresh(ctx: click.Context) -> None:
                                  consoletable=Webconsole.table,
                                  headerview=headers,
                                  viewfilter='Overview')
-        click.echo(message=f'Your data is refreshed/rehydrated')
-    
+        click.echo(message='Your data is refreshed/rehydrated')
+
     #
     def update_appdata(context, dataframe: pd.DataFrame) -> None:
         """Update the app data."""
         context.obj = newdataframe
         DataControl.dataframe = dataframe
-    
+
     # crumbs(context=ctx)
     df_ctx: pd.DataFrame = get_data()
     if df_ctx is not None:
         # Core Datasets
         currentdataframe: pd.DataFrame = DataControl.dataframe
         newdataframe: pd.DataFrame = get_data()
-        
+
         # Compare Frames Inner Function
         def compare_frames(olddata: pd.DataFrame, newdata: pd.DataFrame) -> bool:
             """Compare dataframes."""
@@ -305,10 +305,10 @@ def refresh(ctx: click.Context) -> None:
                 click.echo(message="Updated refreshed/rehydrated data")
                 rprint(diff, flush=True)
                 return False
-            
+
             click.echo(message="No changes in refreshed/rehydrated data")
             return True
-        
+
         # Test for changes
         if compare_frames(currentdataframe, newdataframe):
             # Display Current/Old Dataframe:

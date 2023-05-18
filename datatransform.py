@@ -260,9 +260,13 @@ class QueryFinder:
         self.query = locationquery.split('!')[-1]
         self.dataset = dataset
         self.max_row = len(dataset.get('values', []))
-        self.max_col = max([len(row) for row in dataset['values']]) if dataset.get('values') else 0
+        self.max_col = (
+            max(len(row) for row in dataset['values'])
+            if dataset.get('values')
+            else 0
+        )
         self.header_row = 0
-        
+
         if self.max_row > 0 and all(isinstance(cell, str) for cell in dataset['values'][0]):
             self.header_row = 1
     
@@ -303,22 +307,20 @@ class QueryFinder:
         return None
     
     def get_query(self) -> str | list[str] | None:
-        if ':' in self.query:
-            cells = self.query.split(':')
-            if len(cells) == 1:
-                return self.find_cell(cells[0])
-            else:
-                start, end = cells
-                if len(start) == 1 and len(end) == 1:
-                    return self.find_column(start)
-                elif len(start) > 1 and len(end) == 1:
-                    return self.find_row(start)
-                elif len(start) == 1 and len(end) > 1:
-                    return self.find_column(start)
-                else:
-                    return self.find_range(start, end)
-        else:
+        if ':' not in self.query:
             return self.find_cell(self.query)
+        cells = self.query.split(':')
+        if len(cells) == 1:
+            return self.find_cell(cells[0])
+        start, end = cells
+        if len(start) == 1 and len(end) == 1:
+            return self.find_column(start)
+        elif len(start) > 1 and len(end) == 1:
+            return self.find_row(start)
+        elif len(start) == 1 and len(end) > 1:
+            return self.find_column(start)
+        else:
+            return self.find_range(start, end)
 
 
 # pylint: disable=too-few-public-methods, too-many-instance-attributes
