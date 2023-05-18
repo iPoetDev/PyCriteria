@@ -3,10 +3,14 @@
 """Module App Settings and Environmental Vars."""
 # 0.1 Standard Imports
 import dataclasses
+
+
 # 0.1.2 Targeted Imports
 from importlib import util as findlib
 from pathlib import Path
-from typing import Dict, NoReturn, Union
+from typing import Dict
+from typing import NoReturn
+from typing import Union
 
 # 0.2 Third Party Modules
 import dotenv as dotenv_loader  # type: ignore
@@ -50,8 +54,8 @@ class Settings:
     @dataclasses.dataclass(frozen=True)
     class Console:
         """Config."""
-        WIDTH: int = 80  # pylint: disable=C0103
-        HEIGHT: int = 24  # pylint: disable=C0103
+        WIDTH: int = 150  # pylint: disable=C0103
+        HEIGHT: int = 48  # pylint: disable=C0103
 
 
 # pylint: disable=too-few-public-methods, too-many-instance-attributes

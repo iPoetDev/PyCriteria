@@ -205,8 +205,8 @@ Date |  Status
 File |   Date    | LN | Issue | Fix   |  State  | Note
 -----------------:|:---------:|:--:|:-----:|:-----:|:-------:|:---
 `datatransform.py` | 23-05-05  | 7 | import | added: ignore | Passing | https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
-`datatransform.py` | 23-05-05  | 8 | import | added: ignore | Passing | (Using --follow-imports=error, module not passed on command line)
 `datatransform.py` | 23-05-05  | 110 | return-value | added typing._SpecialForm | Passing | --
+`datatransform.py` | 23-05-05  | 8 | import | added: ignore | Passing | (Using --follow-imports=error, module not passed on command line)
 `projectlogging.py` | 23-05-05  | 97 | return-value | changed datastructure type | Passing | --
 `run.py` | 23-05-05  | 40 | misc | removed implict/wrong return | Passing | --
 `settings.pg` | 23-05-05  | 1 | assignment | changed type assign | Passing | --
