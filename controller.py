@@ -173,7 +173,7 @@ class ColumnSchema:
     DoD: str = "DoD"
     Performance: str = "Performance"
     Group: str = "CriteriaGroup"
-    Topic: str = "Topic"
+    Topic: str = "CriteriaTopic"
     Reference: str = "CriteriaRef"
     Criteria: str = "Criteria"
     Progress: str = "Progress"
@@ -195,17 +195,21 @@ class Headers:
     Where Column is an Enum of the column names or a subset.
     """
     c: ColumnSchema = ColumnSchema()
+    OverviewViews: list[str] = [c.Position, c.Group, c.Performance,
+                                c.Topic, c.Criteria, c.Progress]
     CriteriaView: list[str] = [c.Row, c.Position, c.Topic,
                                c.Reference, c.Criteria, c.Notes]
-    ProjectView: list[str] = ["RowID", "Position", "Tier", "DoD", "CriteriaRef", "Progress", "ToDoFlag"]
-    ToDoAllView: list[str] = ["RowID", "Position", "Performance", "DoD", "Criteria", "Progress", "Notes"]
-    ToDoSimpleView: list[str] = ["Position", "Criteria", "Progress", "Notes"]
-    ToDoDoDView: list[str] = ["Position", "DoD", "Criteria", "Progress"]
-    ToDoGradeView: list[str] = ["Position", "Criteria", "Performance", "DoD"]
-    ToDoReviewView: list[str] = ["CriteriaRef", "Criteria", "Performance", "Progress"]
-    NotesView: list[str] = ["Position", "Criter", "Notes"]
-    ReferenceView: list[str] = ["Position", "CriteriaRef", "LinkedRef"]
-    ViewFilter: list[str] = ["Criteria", "Project", "ToDo", "References"]
+    ProjectView: list[str] = [c.Position, c.Tier, c.DoD, c.Reference,
+                              c.Progress, c.Flag]
+    ToDoAllView: list[str] = [c.Position, c.Performance, c.DoD, c.Criteria,
+                              c.Progress, c.Notes]
+    ToDoSimpleView: list[str] = [c.Position, c.Criteria, c.Progress, c.Notes]
+    ToDoDoDView: list[str] = [c.Position, c.DoD, c.Criteria, c.Progress]
+    ToDoGradeView: list[str] = [c.Position, c.Criteria, c.Performance, c.DoD]
+    ToDoReviewView: list[str] = [c.Reference, c.Criteria, c.Performance, c.Progress]
+    NotesView: list[str] = [c.Position, c.Criteria, c.Notes]
+    ReferenceView: list[str] = [c.Position, c.Reference, c.Related]
+    ViewFilter: list[str] = ["Overview", "Criteria", "Project", "ToDo", "References"]
     ToDoChoices: list[str] = ["All", "Simple", "DoD", "Grade", "Review"]
     
     def __init__(self, labels: ColumnSchema) -> None:
@@ -598,7 +602,6 @@ class Display:
         filteredcolumns: pd.DataFrame = \
             dataframe.loc[:, dataframe.columns.isin(values=headers)]
         # for column in headerview:
-        # consoletable.add_column(header=column)
         for _index, row in filteredcolumns.iterrows():
             consoletable.add_row(*[str(row[column])
                                    for column in headers])

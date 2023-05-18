@@ -4,34 +4,22 @@
 """Module: PyCriteria Terminal App."""
 # 1. Std Lib
 import typing
-
-from typing import NewType
-from typing import Optional
 import warnings
+from typing import NewType, Optional
 
 # 2. 3rd Party
 import click
-
-from click_repl import register_repl  # type: ignore
 import gspread  # noqa: TCH002
 import pandas as pd
 import rich
+from click_repl import register_repl  # type: ignore
 from rich import pretty  # type: ignore
 
 # 3. Local
-from commands import AboutUsage
-from commands import Commands
-from controller import ColumnSchema
-from controller import Controller
-from controller import DataController
-from controller import Display
-from controller import Entry
-from controller import Headers
-from controller import WebConsole
-from controller import configuration
-from controller import rprint
-from sidecar import AppValues
-from sidecar import ProgramUtils
+from commands import AboutUsage, Commands
+from controller import (ColumnSchema, Controller, DataController, Display, Entry, Headers, WebConsole, configuration,
+                        rprint, )
+from sidecar import AppValues, ProgramUtils
 
 # Note: Move third-party import `gspread` into a type-checking block
 
@@ -114,7 +102,7 @@ class ViewFilter:
 
 @click.group(name=AppValues.Run.cmd)
 @click.pass_context
-def run(ctx: click.Context) -> None:
+def run(ctx) -> None:
     """Level: Run. Type: about to learn to use this CLI.
     
     Enter: $python app.py about
@@ -139,13 +127,13 @@ def run(ctx: click.Context) -> None:
             DataControl.load_dataframe_wsheet(wsheet=wsheet)
         return dataframe
     
-    crumbs(context=ctx)
+    # crumbs(context=ctx)
     ctx.obj = get_data()
 
 
 @run.group(name='about')
 @click.pass_context
-def about(ctx: click.Context) -> None:
+def about(ctx) -> None:
     """About. A Man page for this CLI."""
     
     def crumbs(context: click.Context) -> None:
@@ -176,7 +164,7 @@ def about(ctx: click.Context) -> None:
 # B) Loads Intent intentionally allows the user to load the data.
 @run.group(name=AppValues.Load.cmd)
 @click.pass_context
-def load(ctx: click.Context) -> None:
+def load(ctx) -> None:
     """Load data from the current context, intentionally.
     
     a) Get the dataframe from remote
@@ -202,7 +190,7 @@ def load(ctx: click.Context) -> None:
             DataControl.load_dataframe_wsheet(wsheet=wsheet)
         return dataframe
     
-    crumbs(context=ctx)
+    # crumbs(context=ctx)
     ctx.obj = get_data()
     # rich.inspect(ctx.obj)
     # rich.print(f'Context: {ctx.obj}')
@@ -218,7 +206,7 @@ def begins(ctx) -> None:
     :return: None - Produces stdout output
     """
     
-    def crumbs(context: click.Context) -> None:
+    def crumbs(context) -> None:
         """Display the command navigation crumbs."""
         crumb: str = context.info_name
         click.echo(message=f'Navigation: CLI: > Run > ... > Load'
@@ -244,7 +232,7 @@ def begins(ctx) -> None:
     # rich.inspect(ctx)
     
     # Display Dataframe
-    crumbs(context=ctx)
+    # crumbs(context=ctx)
     display_data(dataframe=get_data())
 
 
@@ -269,7 +257,7 @@ def refresh(ctx: click.Context) -> None:
     :return: None
     """
     
-    def crumbs(context: click.Context) -> None:
+    def crumbs(context) -> None:
         """Display the command navigation crumbs."""
         crumb: str = context.info_name
         click.echo(message=f'Navigation: CLI: > Run > ... > Load'
@@ -284,14 +272,30 @@ def refresh(ctx: click.Context) -> None:
             DataControl.load_dataframe_wsheet(wsheet=Actions.load_wsheet())
         return dataframe
     
-    crumbs(context=ctx)
+    #
+    def display_data(dataframe: pd.DataFrame) -> None:
+        """Display the dataframe."""
+        headers: list[str] = Head.OverviewViews
+        Webconsole.table = Webconsole.configure_table(headers=headers)
+        Display.display_subframe(dataframe=dataframe,
+                                 consoleholder=Webconsole.console,
+                                 consoletable=Webconsole.table,
+                                 headerview=headers,
+                                 viewfilter='Overview')
+        click.echo(message=f'Your data is refreshed/rehydrated')
+    
+    #
+    def update_appdata(context, dataframe: pd.DataFrame) -> None:
+        """Update the app data."""
+        context.obj = newdataframe
+        DataControl.dataframe = dataframe
+    
+    # crumbs(context=ctx)
     df_ctx: pd.DataFrame = get_data()
     if df_ctx is not None:
         # Core Datasets
-        olddataframe: pd.DataFrame = pd.DataFrame(df_ctx)
-        refreshed_data: pd.DataFrame = \
-            DataControl.load_dataframe_wsheet(Actions.load_wsheet())
-        newdataframe: pd.DataFrame = refreshed_data.dataframe
+        currentdataframe: pd.DataFrame = DataControl.dataframe
+        newdataframe: pd.DataFrame = get_data()
         
         # Compare Frames Inner Function
         def compare_frames(olddata: pd.DataFrame, newdata: pd.DataFrame) -> bool:
@@ -306,20 +310,16 @@ def refresh(ctx: click.Context) -> None:
             return True
         
         # Test for changes
-        if compare_frames(olddataframe, newdataframe):
+        if compare_frames(currentdataframe, newdataframe):
             # Display Current/Old Dataframe:
-            # a: Display the dataframe, c: Update ctx.obj
-            Display.display_data(dataframe=olddataframe,
-                                 consoleholder=Webconsole,
-                                 consoletable=Webconsole.table)
-            ctx.obj = olddataframe
+            # a: Display the dataframe, b: Update appdata
+            display_data(dataframe=currentdataframe)
+            update_appdata(context=ctx, dataframe=newdataframe)
         else:
             # Display New Dataframe:
-            # a: Display the dataframe, c: Update ctx.obj
-            Display.display_data(dataframe=newdataframe,
-                                 consoleholder=Webconsole.console,
-                                 consoletable=Webconsole.table)
-            ctx.obj = newdataframe
+            # a: Display the dataframe, b: Update appdata
+            display_data(dataframe=newdataframe)
+            update_appdata(context=ctx, dataframe=newdataframe)
     else:
         rprint("No data loaded.")
 
@@ -329,7 +329,7 @@ def refresh(ctx: click.Context) -> None:
 def project(ctx) -> None:
     """Load Projects. (data frame)."""
     
-    def crumbs(context: click.Context) -> None:
+    def crumbs(context) -> None:
         """Display the command navigation crumbs."""
         crumb: str = context.info_name
         click.echo(message=f'Navigation: CLI: > Run > ... > Load'
@@ -354,7 +354,7 @@ def project(ctx) -> None:
                                  headerview=headers,
                                  viewfilter='Project')
     
-    crumbs(context=ctx)
+    # crumbs(context=ctx)
     display_data(dataframe=get_data())
 
 
@@ -363,7 +363,7 @@ def project(ctx) -> None:
 def criteria(ctx) -> None:
     """Load project (metadata)."""
     
-    def crumbs(context: click.Context) -> None:
+    def crumbs(context) -> None:
         """Display the command navigation crumbs."""
         crumb: str = context.info_name
         click.echo(message=f'Navigation: CLI: > Run > ... > Load'
@@ -406,7 +406,7 @@ def criteria(ctx) -> None:
 def todo(ctx, display: str, selects: str) -> None:
     """Load todos, and display different filters/views."""
     
-    def crumbs(context: click.Context) -> None:
+    def crumbs(context) -> None:
         """Display the command navigation crumbs."""
         crumb: str = context.info_name
         click.echo(message=f'Navigation: CLI: > Run > ... > Load'
@@ -448,7 +448,7 @@ def todo(ctx, display: str, selects: str) -> None:
                                  headerview=select_view(view=viewoption),
                                  viewfilter='ToDo')
     
-    crumbs(context=ctx)
+    # crumbs(context=ctx)
     dataf: pd.DataFrame = get_data()
     try:
         if display is not None:
@@ -473,7 +473,7 @@ load.add_command(todo)
 def reference(ctx) -> None:
     """Load Reference/Index."""
     
-    def crumbs(context: click.Context) -> None:
+    def crumbs(context) -> None:
         """Display the command navigation crumbs."""
         crumb: str = context.info_name
         click.echo(message=f'Navigation: CLI: > Run > ... > Load'
@@ -498,7 +498,7 @@ def reference(ctx) -> None:
                                  headerview=headers,
                                  viewfilter='References')
     
-    crumbs(context=ctx)
+    # crumbs(context=ctx)
     display_data(dataframe=get_data())
 
 
@@ -508,7 +508,7 @@ def reference(ctx) -> None:
 def find(ctx: click.Context) -> None:
     """Find: Find item, row(s), column(s)."""
     
-    def crumbs(context: click.Context) -> None:
+    def crumbs(context) -> None:
         """Display the command navigation crumbs."""
         crumb: str = context.info_name
         click.echo(message=f'Navigation: CLI: > Run > ... > Load'
@@ -523,7 +523,7 @@ def find(ctx: click.Context) -> None:
             DataControl.load_dataframe_wsheet(wsheet=wsheet)
         return dataframe
     
-    crumbs(context=ctx)
+    # crumbs(context=ctx)
     ctx.obj = get_data()
 
 
@@ -541,9 +541,10 @@ def search(ctx: click.Context, header: str, query: str) -> None:
     :param query: str: String query to search for
     :return: None: Display as stdout or stderr
     """
+    
     # Context Trace: Remove
     
-    def crumbs(context: click.Context) -> None:
+    def crumbs(context) -> None:
         """Display the command navigation crumbs."""
         crumb: str = context.info_name
         click.echo(message=f'Navigation: CLI: > Run > ... > Load'
@@ -566,7 +567,7 @@ def search(ctx: click.Context, header: str, query: str) -> None:
     # Checks query completness and Context, and DF Typing/Existence
     dataf: pd.DataFrame = get_data()
     searchresult: pd.DataFrame
-    crumbs(context=ctx)
+    # crumbs(context=ctx)
     if Checks.is_querycomplete(header=header, query=query):
         # Current data: Remove after testing
         Display.display_data(dataframe=dataf,
@@ -610,7 +611,7 @@ def select(ctx: click.Context) -> None:
     Does nothing, is a path option to action (sub commands.).
     """
     
-    def crumbs(context: click.Context) -> None:
+    def crumbs(context) -> None:
         """Display the command navigation crumbs."""
         crumb: str = context.info_name
         click.echo(message=f'Navigation: CLI: > Run > ... > {crumb.title()}'
@@ -625,7 +626,7 @@ def select(ctx: click.Context) -> None:
             DataControl.load_dataframe_wsheet(wsheet=wsheet)
         return dataframe
     
-    crumbs(context=ctx)
+    # crumbs(context=ctx)
     dataf: pd.DataFrame = get_data()
     DataControl.dataframe = dataf
 
@@ -644,7 +645,7 @@ def item(ctx: click.Context, linenumber: int, header: str) -> None:
     i: By column's header text (str).
     """
     
-    def crumbs(context: click.Context) -> None:
+    def crumbs(context) -> None:
         """Display the command navigation crumbs."""
         crumb: str = context.info_name
         parent: str = context.parent.info_name
@@ -669,7 +670,7 @@ def item(ctx: click.Context, linenumber: int, header: str) -> None:
                          + 'not a number etc. \n'),
                 err=True)
     #
-    crumbs(context=ctx)
+    # crumbs(context=ctx)
     if linenumber is not None and header is not None:
         df: pd.DataFrame = get_data()
         value: pd.DataFrame = df.loc[linenumber, header]
@@ -703,7 +704,7 @@ def row(ctx: click.Context, linenumber: int) \
     """
     
     #
-    def crumbs(context: click.Context) -> None:
+    def crumbs(context) -> None:
         """Display the command navigation crumbs."""
         crumb: str = context.info_name
         parent: str = context.parent.info_name
@@ -727,7 +728,7 @@ def row(ctx: click.Context, linenumber: int) \
                          + f'for column\'s header: {linenumber}'),
                 err=True)
     #
-    crumbs(context=ctx)
+    # crumbs(context=ctx)
     if linenumber is not None:
         df: pd.DataFrame = get_data()
         row_data: pd.DataFrame = df.query('position == @linenumber')
