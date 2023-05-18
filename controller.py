@@ -2,11 +2,13 @@
 # pylint: disable=trailing-whitespace
 # ruff: noqa: ANN101, I001, ARG002
 """Module: Controller for the Terminal App."""
+import dataclasses
 # 0.1 Standard Library Imports
 import typing
 import warnings
 from typing import NoReturn, Type
 
+import click
 # 0.2 Third Party Modules: Compleete
 import gspread  # type: ignore
 import gspread_dataframe  # type: ignore
@@ -36,7 +38,6 @@ transformer: DataTransform = DataTransform()  # deprecate: remov datatransform.p
 
 
 # 2. Read the data from the sheet by the controller
-
 # plylint: disable=line-too-long
 class Controller:
     """Controller.
@@ -111,17 +112,109 @@ class Controller:
     
     @staticmethod
     def delete(creds: gspread.Client) -> None:
-        """Deletes the client."""
-        del creds
+        """Deletes/Cloes the client."""
+        # https://www.perplexity.ai/search/ac897d0d-bd38-4ebd-9a12-1e90fc172977?s=c
+        if not isinstance(creds, gspread.Client):
+            raise ValueError("Invalid: "
+                             "'creds' is not a authorised Client")
+        
+        if creds.session is not None:
+            try:
+                creds.session.close()
+            except Exception as e:
+                click.echo(f"Error closing session: {e}", err=True)
+            finally:
+                creds.session = None
+        
+        try:
+            del creds
+        except Exception as e:
+            click.echo(f"Error deleting client: {e}", err=True)
+
+
+@dataclasses.dataclass(frozen=True)
+class ColumnSchema:
+    """Column Names: simple Dataschema for the Datamodel.
+    
+    Usage:
+    To reduce string repetition, as per datamodel, and simplify reuse.
+    Done by centralising string values into one class/instance, for config.
+    
+    Future:
+    Additionally, this class could be (future feature) used to
+    dynamically generate/CRUD any changed in the Google sheet
+    without negatively impacting the codebase and raising KeyErrors.
+    
+    
+
+    Attributes:
+    ----------
+    property: Row: str
+    property: Position: str
+    property: Tier: str
+    property: Prefix: str
+    property: Depth: str
+    property: DoD: str
+    property: Performance: str
+    property: Group: str
+    property: Topic: str
+    property: Reference: str
+    property: Criteria: str
+    property: Progress: str
+    property: Flag: str
+    property: Notes: str
+    ------
+    """
+    Row: str = "RowID"
+    Position: str = "Position"
+    Tier: str = "Tier"
+    Prefix: str = "TierPrefix"
+    Depth: str = "TierDepth"
+    DoD: str = "DoD"
+    Performance: str = "Performance"
+    Group: str = "CriteriaGroup"
+    Topic: str = "CriteriaTopic"
+    Reference: str = "CriteriaRef"
+    Criteria: str = "Criteria"
+    Progress: str = "Progress"
+    Flag: str = "ToDoFlag"
+    Notes: str = "Notes"
+    Related: str = "LinkedRef"
 
 
 class Headers:
-    """Headers."""
+    """Headers.
+
+    Attributes:
+    ----------
+    property: Criteria: list[Column]
+    property: Project: list[Column]
+    property: MetaData: list[Column]
+    property: References: list[Column].
     
-    Criteria = typing.Literal["CriteriaGroup", "CriteriaRef", "Criteria", "CriteriaTopic", "Notes"]
-    Project = typing.Literal["Progress", "Flag", "Notes"]
-    MetaData = typing.Literal["Tier", "TierPrefix", "TierDepth", "Performance"]
-    References = typing.Literal["RowID", "Position", "LinkedRef"]
+    Where Column is an Enum of the column names or a subset.
+    """
+    c: ColumnSchema = ColumnSchema()
+    OverviewViews: list[str] = [c.Position, c.Group, c.Performance,
+                                c.Topic, c.Criteria, c.Progress]
+    CriteriaView: list[str] = [c.Row, c.Position, c.Topic,
+                               c.Reference, c.Criteria, c.Notes]
+    ProjectView: list[str] = [c.Position, c.Tier, c.DoD, c.Reference,
+                              c.Progress, c.Flag]
+    ToDoAllView: list[str] = [c.Position, c.Performance, c.DoD, c.Criteria,
+                              c.Progress, c.Notes]
+    ToDoSimpleView: list[str] = [c.Position, c.Criteria, c.Progress, c.Notes]
+    ToDoDoDView: list[str] = [c.Position, c.DoD, c.Criteria, c.Progress]
+    ToDoGradeView: list[str] = [c.Position, c.Criteria, c.Performance, c.DoD]
+    ToDoReviewView: list[str] = [c.Reference, c.Criteria, c.Performance, c.Progress]
+    NotesView: list[str] = [c.Position, c.Criteria, c.Notes]
+    ReferenceView: list[str] = [c.Position, c.Reference, c.Related]
+    ViewFilter: list[str] = ["Overview", "Criteria", "Project", "ToDo", "References"]
+    ToDoChoices: list[str] = ["All", "Simple", "DoD", "Grade", "Review"]
+    
+    def __init__(self, labels: ColumnSchema) -> None:
+        """Headers."""
+        self.c = labels
 
 
 class DataController:
@@ -303,6 +396,96 @@ class DataController:
         return None
 
 
+class WebConsole:
+    """Web Console."""
+    
+    console: Console
+    options: ConsoleOptions
+    table: Table
+    
+    def __init__(self, width: int, height: int) -> None:
+        """Initialises the web console."""
+        self.console = self.console_configure()
+        self.options = self.console_options(width, height)
+        self.table = Table()
+    
+    @staticmethod
+    def console_options(width: int = configuration.Console.WIDTH,
+                        height: int = configuration.Console.HEIGHT) -> ConsoleOptions:
+        """Configures the console."""
+        max_width: int = width
+        max_height: int = height
+        windowsize: ConsoleDimensions = ConsoleDimensions(
+                width=max_width, height=max_height)
+        nolegacy: bool = False
+        is_terminal: bool = True
+        encoding: str = configuration.ENCODE
+        options: ConsoleOptions = ConsoleOptions(
+                size=windowsize,
+                legacy_windows=nolegacy,
+                min_width=max_width,
+                max_width=max_width,
+                max_height=max_height,
+                encoding=encoding,
+                is_terminal=is_terminal)
+        return options
+    
+    @staticmethod
+    def console_configure() -> Console:
+        """Configures the console."""
+        _off: bool = False
+        _on: bool = True
+        _style: rich.style.StyleType = ""
+        _tabs: int = 4
+        _console: Console = Console(soft_wrap=_on,
+                                    style=_style,
+                                    tab_size=_tabs,
+                                    markup=_on)
+        return _console
+    
+    @staticmethod
+    def layout_configure() -> None:
+        """Configures the Rich layout.
+
+        Sets a bounding box for the console.
+        """
+    
+    @staticmethod  #
+    def page_data(dataset: list[str]) -> None | NoReturn:
+        """Displays the data."""
+        with console.pager(styles=True):
+            rprint(dataset)
+    
+    @staticmethod
+    def configure_table(headers: typing.Optional[list[str]]) -> rich.table.Table:
+        """Configures Rich Console table."""
+        consoletable: rich.table.Table = Table()
+        
+        def configure_columns(headings: list[str]) -> None:
+            """Configures the headers."""
+            if isinstance(headings, list):
+                for header in headings:
+                    # Check if the header is the predefined headers by values
+                    consoletable.add_column(header)
+            
+            else:
+                # raise TypeError("The headers must be a list of strings.")
+                click.echo("No Headers. Text only", err=True)
+        
+        configure_columns(headings=headers)
+        return consoletable
+    
+    @staticmethod
+    def set_datatable(dataframe: pd.DataFrame) -> rich.table.Table:
+        """Sets the table per dataframe."""
+        headers: list[str] = dataframe.columns.tolist()
+        consoletable: Table = WebConsole.configure_table(headers=headers)
+        return consoletable
+
+
+WebConsoleType: Type[WebConsole] = WebConsole
+
+
 class Display:
     """Displays the data."""
     ColumnResultType: Type[tuple] = tuple[str, str, pd.DataFrame]
@@ -310,6 +493,10 @@ class Display:
     LineNoSelectType: Type[tuple] = tuple[int, pd.DataFrame]
     ColumnSelectType: Type[tuple] = tuple[str, pd.DataFrame]
     SearchColumnQueryType: Type[tuple] = tuple[str, str, pd.DataFrame]
+    
+    ViewType: str = \
+        typing.Literal["table", "column", "list", "frame", "pager",
+        "tablepage", "columnpage", "listpage", "framepage"]
     
     # pylint: disable=unnecessary-pass
     @staticmethod
@@ -346,13 +533,20 @@ class Display:
                      consoletable: Table,
                      title: str = "PyCriteria") -> None:  # noqa: ANN001
         """Display Data: Wrapper for Any display."""
-        consoleholder.set_table(consoleholder, dataframe=dataframe)
+        # consoleholder.set_table(consoleholder, dataframe=dataframe)
         Display.display_frame(dataframe=dataframe,
                               consoleholder=consoleholder,
                               consoletable=consoletable,
                               title=title)
     
-    #
+    @staticmethod
+    def display_views(dataframe: pd.DataFrame,
+                      consoleholder,  # noqa: ANN001
+                      view: ViewType = "table",
+                      title: str = "PyCriteria") -> None:
+        """Display Data: Wrapper for Any display."""
+        pass
+    
     @staticmethod
     def display_table(dataset: list[str],
                       consoleholder: Console,
@@ -388,12 +582,37 @@ class Display:
         
         consoleholder.print(consoletable)
     
+    # The following is an AI Refactor from orginal authored code
+    # https://www.perplexity.ai/search/c8250a15-6f8c-4180-b277-349f9ccf83c8?s=c
+    @staticmethod
+    def display_subframe(dataframe: pd.DataFrame,
+                         consoleholder: Console | WebConsole,
+                         consoletable: Table,
+                         headerview: Headers | list[str] | str,
+                         viewfilter: Headers.ViewFilter = "Criteria") -> None | NoReturn:
+        """Displays the data in a table."""
+        # AI refactor put in place these guard conditions for the headerview
+        if isinstance(headerview, Headers):
+            headers: list = getattr(headerview, viewfilter)
+        elif isinstance(headerview, list):
+            headers: list = headerview
+        else:
+            headers: list = [headerview]
+        
+        filteredcolumns: pd.DataFrame = \
+            dataframe.loc[:, dataframe.columns.isin(values=headers)]
+        # for column in headerview:
+        for _index, row in filteredcolumns.iterrows():
+            consoletable.add_row(*[str(row[column])
+                                   for column in headers])
+        consoleholder.print(consoletable)
+    
     @staticmethod
     def display_search(output: tuple,
                        consoleholder: Console,
                        consoletable: Table,
                        title: str = "PyCriteria") -> None | NoReturn:
-        """Displays the search accoridng to a output's result-set.
+        """Displays the search accoridng to an output's result-set.
         
         A ResultSet is a type of tuple that varies in length and component types.
         A resultset is used to carry the parameters of a search along
@@ -409,6 +628,7 @@ class Display:
         :param output: tuple: The output of the search
         :param consoleholder: Console: The console to print to
         :param consoletable: Table: The table to print to
+        :param title: str: The title of the table
         """
         if ValidationQuerySetType.querysetcolumntype(output):
             # If the output is a tuple of item selection
@@ -427,7 +647,7 @@ class Display:
                           consoleholder,  # noqa: ANN001
                           consoletable: Table,
                           title: str = "PyCriteria") -> None | NoReturn:  # noqa: ANN001
-        """Displays the selection accoridng to a output's result-set.
+        """Displays the selection accoridng to an output's result-set.
         
         A ResultSet is a type of tuple that varies in length and component types.
         A resultset is used to carry the parameters of a selection along
@@ -570,85 +790,6 @@ class ValidationQuerySetType:
         return True
 
 
-class WebConsole:
-    """Web Console."""
-    
-    console: Console
-    options: ConsoleOptions
-    table: Table | None
-    
-    def __init__(self, width: int, height: int) -> None:
-        """Initializes the web console."""
-        self.console = self.console_configure()
-        self.options = self.console_options(width, height)
-        self.table = None
-    
-    @staticmethod
-    def console_options(width: int = configuration.Console.WIDTH,
-                        height: int = configuration.Console.HEIGHT) -> ConsoleOptions:
-        """Configures the console."""
-        max_width: int = width
-        max_height: int = height
-        windowsize: ConsoleDimensions = ConsoleDimensions(
-                width=max_width, height=max_height)
-        nolegacy: bool = False
-        is_terminal: bool = True
-        encoding: str = configuration.ENCODE
-        options: ConsoleOptions = ConsoleOptions(
-                size=windowsize,
-                legacy_windows=nolegacy,
-                min_width=max_width,
-                max_width=max_width,
-                max_height=max_height,
-                encoding=encoding,
-                is_terminal=is_terminal)
-        return options
-    
-    @staticmethod
-    def console_configure() -> Console:
-        """Configures the console."""
-        _off: bool = False
-        _on: bool = True
-        _style: rich.style.StyleType = ""
-        _tabs: int = 4
-        _console: Console = Console(soft_wrap=_on,
-                                    style=_style,
-                                    tab_size=_tabs,
-                                    markup=_on)
-        return _console
-    
-    @staticmethod
-    def layout_configure() -> None:
-        """Configures the Rich layout.
-        
-        Sets a bounding box for the console.
-        """
-    
-    @staticmethod  #
-    def page_data(dataset: list[str]) -> None | NoReturn:
-        """Displays the data."""
-        with console.pager(styles=True):
-            rprint(dataset)
-    
-    @staticmethod
-    def configure_table(dataframe: pd.DataFrame) -> rich.table.Table:
-        """Configures Rich Console table."""
-        consoletable: rich.table.Table = Table()
-        
-        def configure_columns(_headers: list[str]) -> None:
-            """Configures the headers."""
-            for _header in _headers:
-                # Check if the header is the predefined headers by values
-                consoletable.add_column(_header)
-        
-        configure_columns(dataframe.columns)
-        return consoletable
-    
-    def set_table(self, dataframe: pd.DataFrame) -> None:
-        """Sets the table."""
-        self.table = self.configure_table(dataframe=dataframe)
-
-
 class Entry:
     """Entry: Prompt, Input, Confirm."""
     
@@ -737,7 +878,7 @@ def warn(hide: bool = True, action: ActionType = "ignore") -> None:
     """Configured Python Interpreter warnings.
 
     Added: typing.Literal[str] : Invalid Type
-    Fixme: 'Literal' may be parameterized with literal ints, byte and unicode
+    Fixme: 'Literal' may be parameterised with literal ints, byte and unicode
             strings, bools, Enum values, None, other literal types, or type
             aliases to other literal types
 

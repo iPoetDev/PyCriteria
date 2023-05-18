@@ -13,10 +13,12 @@ import gspread  # noqa: TCH002
 import pandas as pd
 import rich
 from click_repl import register_repl  # type: ignore
+from rich import pretty  # type: ignore
 
 # 3. Local
 from commands import AboutUsage, Commands
-from controller import Controller, DataController, Display, Entry, WebConsole, configuration, rprint
+from controller import (ColumnSchema, Controller, DataController, Display, Entry, Headers, WebConsole, configuration,
+                        rprint, )
 from sidecar import AppValues, ProgramUtils
 
 # Note: Move third-party import `gspread` into a type-checking block
@@ -28,13 +30,15 @@ Commands: Commands = Commands()
 Actions: Controller = Controller()
 AppValues: AppValues = AppValues()
 DataControl: DataController = DataController(Actions.load_wsheet())
-
+Columns: ColumnSchema = ColumnSchema()
+Head: Headers = Headers(labels=Columns)
 Display: Display = Display()
 Entry: Entry = Entry()
 Webconsole: WebConsole = WebConsole(configuration.Console.WIDTH,
                                     configuration.Console.HEIGHT)
-
 ContextObject = NewType('ContextObject', Optional[object])
+
+pretty.install()
 
 
 class CriteriaApp:
@@ -60,7 +64,7 @@ class Checks:
         return not (ctx and isinstance(ctx, click.Context))
     
     @staticmethod
-    def has_dataframe(ctx: click.Context, ctx_obj: object) -> bool:
+    def has_dataframe(ctx: click.Context) -> bool:
         """Tests dataframe context.
         
         Hinted by Sourcery
@@ -86,22 +90,62 @@ class Checks:
         return header is not None or query is not None
 
 
+class ViewFilter:
+    """View Filters."""
+    
+    def __init__(self):
+        """Initialize."""
+        pass
+    
+    ProjectView: str = "ProjectView"
+
+
 @click.group(name=AppValues.Run.cmd)
 @click.pass_context
-def run(ctx: click.Context) -> None:
+def run(ctx) -> None:
     """Level: Run. Type: about to learn to use this CLI.
     
     Enter: $python app.py about
     This CLI has a multi-level command structure.
     https://mauricebrg.com/article/2020/08/advanced_cli_structures_with_python_and_click.html
     """
-    click.echo(message=f' run: {ctx.info_name}')
-    ctx.obj = {'debug': False}
+    click.echo(message="Navigation: CLI: > Run > ... [Intent] > [Action]\n")
+    click.echo(message=f'You are here: {ctx.info_name} \n')
+    
+    def crumbs(context: click.Context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        click.echo(message="Navigation: CLI: > Run* > ... [Intent] > [Action]\n"
+                           f'*: You are here: {crumb.title()}\n'
+                           f'To go up a level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
+    
+    def get_data() -> pd.DataFrame:
+        """Get the dataframe from the context."""
+        wsheet: gspread.Worksheet = Actions.load_wsheet()
+        dataframe: pd.DataFrame = \
+            DataControl.load_dataframe_wsheet(wsheet=wsheet)
+        return dataframe
+    
+    # crumbs(context=ctx)
+    ctx.obj = get_data()
 
 
 @run.group(name='about')
-def about() -> None:
-    """About."""
+@click.pass_context
+def about(ctx) -> None:
+    """About. A Man page for this CLI."""
+    
+    def crumbs(context: click.Context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > About'
+                           f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
+                           f'To go up a level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
+    
+    crumbs(context=ctx)
+    # Man Page
     AboutUsage.describe_usage()
     rprint("========================================")
     AboutUsage.example_usage()
@@ -120,7 +164,7 @@ def about() -> None:
 # B) Loads Intent intentionally allows the user to load the data.
 @run.group(name=AppValues.Load.cmd)
 @click.pass_context
-def load(ctx: click.Context) -> None:
+def load(ctx) -> None:
     """Load data from the current context, intentionally.
     
     a) Get the dataframe from remote
@@ -130,26 +174,45 @@ def load(ctx: click.Context) -> None:
     :param ctx: click.Context
     :return: None: Produces stdout
     """
-    # click.echo(message=ctx.parent.info_name)
-    # click.echo(message=ctx.info_name)
-    click.echo(message=f' load: {ctx.info_name}')
-    ctx.obj = DataControl.dataframe
-    click.echo(message=f' data: {ctx.obj}')
+    
+    def crumbs(context: click.Context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > {crumb.title()}*'
+                           f'> [ACTION]\n *: You are here: {crumb.title()}\n'
+                           f'To go up a level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
+    
+    def get_data() -> pd.DataFrame:
+        """Get the dataframe from the context."""
+        wsheet: gspread.Worksheet = Actions.load_wsheet()
+        dataframe: pd.DataFrame = \
+            DataControl.load_dataframe_wsheet(wsheet=wsheet)
+        return dataframe
+    
+    # crumbs(context=ctx)
+    ctx.obj = get_data()
+    # rich.inspect(ctx.obj)
+    # rich.print(f'Context: {ctx.obj}')
+    # click.echo(message=f' data: {ctx.obj}')
 
 
 @load.command(name='begins')
 @click.pass_context
-@click.pass_obj
-def begins(ctx: click.Context, obj: Optional[object]) -> None:
+def begins(ctx) -> None:
     """Begin/Initiated/.
     
     :param ctx: click.Context: Passed Object, by pass_context.
-    :param obj: click.Context.obj: Passed Object, by pass_obj.
     :return: None - Produces stdout output
     """
     
-    rich.inspect(ctx)
-    rich.print(f'Dataframe Context: {ctx}')
+    def crumbs(context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > Load'
+                           f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
+                           f'To go up one or two level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
     
     def get_data() -> pd.DataFrame:
         """Get the dataframe from the context."""
@@ -160,39 +223,22 @@ def begins(ctx: click.Context, obj: Optional[object]) -> None:
     
     def display_data(dataframe: pd.DataFrame) -> None:
         """Display the dataframe."""
-        WebConsole.set_table(Webconsole, dataframe=dataframe)
+        WebConsole.table = Webconsole.set_datatable(dataframe=dataframe)
         Display.display_frame(dataframe=dataframe,
                               consoleholder=Webconsole.console,
                               consoletable=Webconsole.table)
     
     # Check Context and Display acoordingly
+    # rich.inspect(ctx)
     
-    df_ctx: pd.DataFrame = pd.DataFrame(data=ctx,
-                                        dtype=object,
-                                        copy=True)
     # Display Dataframe
-    if Checks.has_dataframe(ctx=ctx, ctx_obj=obj):
-        df_ctx: pd.DataFrame = get_data()
-        display_data(dataframe=df_ctx)
-        ctx.obj = df_ctx
-    # When the dataframe context is empty
-    elif df_ctx is None:
-        df_ctx: pd.DataFrame = get_data()
-        # Type checkes for correctness
-        if Checks.has_dataframe(ctx=ctx, ctx_obj=df_ctx):
-            display_data(dataframe=df_ctx)
-            ctx.obj = df_ctx
-        else:
-            rprint('No data loaded. '
-                   'There is a problem with type: dataframe.')
-    else:
-        rprint('No data loaded. Cause: Unknown.')
+    # crumbs(context=ctx)
+    display_data(dataframe=get_data())
 
 
 @load.command(name=AppValues.Load.refresh)
 @click.pass_context
-@click.pass_obj
-def refresh(ctx: click.Context, obj: Optional[object]) -> None:
+def refresh(ctx: click.Context) -> None:
     """Load core / client side datasets (data frame).
     
     According to current (root?) context, refreshes the (as Pandas) Dataframe
@@ -207,27 +253,49 @@ def refresh(ctx: click.Context, obj: Optional[object]) -> None:
     
     :param ctx: click.Context
         Assumes that the dataframe is already loaded in the root cmd context
-    :param obj: click.Context.obj
     
     :return: None
     """
-    root_ctx: click.Context = ctx.find_root()
-    click.echo(message=root_ctx.info_name)
-    click.echo(message=ctx.parent.info_name)
-    click.echo(message=ctx.info_name)
     
-    click.echo(message=ctx.find_object(pd.DataFrame))
+    def crumbs(context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > Load'
+                           f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
+                           f'To go up one or two level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
     
-    ProgramUtils.inspectcontext(ctx)
+    # Get Remote Sheet afresh
+    def get_data() -> pd.DataFrame:
+        """Get the dataframe from the context."""
+        dataframe: pd.DataFrame = \
+            DataControl.load_dataframe_wsheet(wsheet=Actions.load_wsheet())
+        return dataframe
+    
     #
-    df_ctx: pd.DataFrame | object | None = obj
-    if df_ctx is not None and \
-            isinstance(obj, pd.DataFrame):
+    def display_data(dataframe: pd.DataFrame) -> None:
+        """Display the dataframe."""
+        headers: list[str] = Head.OverviewViews
+        Webconsole.table = Webconsole.configure_table(headers=headers)
+        Display.display_subframe(dataframe=dataframe,
+                                 consoleholder=Webconsole.console,
+                                 consoletable=Webconsole.table,
+                                 headerview=headers,
+                                 viewfilter='Overview')
+        click.echo(message=f'Your data is refreshed/rehydrated')
+    
+    #
+    def update_appdata(context, dataframe: pd.DataFrame) -> None:
+        """Update the app data."""
+        context.obj = newdataframe
+        DataControl.dataframe = dataframe
+    
+    # crumbs(context=ctx)
+    df_ctx: pd.DataFrame = get_data()
+    if df_ctx is not None:
         # Core Datasets
-        olddataframe: pd.DataFrame = pd.DataFrame(df_ctx)
-        refreshed_data: pd.DataFrame = \
-            DataControl.load_dataframe_wsheet(Actions.load_wsheet())
-        newdataframe: pd.DataFrame = refreshed_data.dataframe
+        currentdataframe: pd.DataFrame = DataControl.dataframe
+        newdataframe: pd.DataFrame = get_data()
         
         # Compare Frames Inner Function
         def compare_frames(olddata: pd.DataFrame, newdata: pd.DataFrame) -> bool:
@@ -242,100 +310,221 @@ def refresh(ctx: click.Context, obj: Optional[object]) -> None:
             return True
         
         # Test for changes
-        if compare_frames(olddataframe, newdataframe):
+        if compare_frames(currentdataframe, newdataframe):
             # Display Current/Old Dataframe:
-            # a: Display the dataframe, c: Update ctx.obj
-            Display.display_data(dataframe=olddataframe,
-                                 consoleholder=Webconsole,
-                                 consoletable=Webconsole.table)
-            ctx.obj = olddataframe
+            # a: Display the dataframe, b: Update appdata
+            display_data(dataframe=currentdataframe)
+            update_appdata(context=ctx, dataframe=newdataframe)
         else:
             # Display New Dataframe:
-            # a: Display the dataframe, c: Update ctx.obj
-            Display.display_data(dataframe=newdataframe,
-                                 consoleholder=Webconsole.console,
-                                 consoletable=Webconsole.table)
-            ctx.obj = newdataframe
+            # a: Display the dataframe, b: Update appdata
+            display_data(dataframe=newdataframe)
+            update_appdata(context=ctx, dataframe=newdataframe)
     else:
         rprint("No data loaded.")
 
 
 @load.command(name=AppValues.Load.projects)
 @click.pass_context
-@click.pass_obj
-def project(ctx: click.Context, obj: Optional[object]) -> None:
-    """Load project (metadata)."""
-    click.echo(message=ctx.parent.info_name)
-    click.echo(message=ctx.info_name)
-    ProgramUtils.inspectcontext(ctx)
+def project(ctx) -> None:
+    """Load Projects. (data frame)."""
     
-    # Check Context, and DF Typing
-    if not Checks.has_dataframe(ctx, obj):
-        rprint('No Data loaded. Incorrect type ')
-        return
+    def crumbs(context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > Load'
+                           f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
+                           f'To go up one or two level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
     
-    if obj is not None and \
-            isinstance(obj, pd.DataFrame):
-        Display.display_data(dataframe=pd.DataFrame(obj),
-                             consoleholder=Webconsole.console,
-                             consoletable=Webconsole.table)
+    def get_data() -> pd.DataFrame:
+        """Get the dataframe from the context."""
+        wsheet: gspread.Worksheet = Actions.load_wsheet()
+        dataframe: pd.DataFrame = \
+            DataControl.load_dataframe_wsheet(wsheet=wsheet)
+        return dataframe
+    
+    def display_data(dataframe: pd.DataFrame) -> None:
+        """Display the dataframe."""
+        headers: list[str] = Head.ProjectView
+        Webconsole.table = Webconsole.configure_table(headers=headers)
+        Display.display_subframe(dataframe=dataframe,
+                                 consoleholder=Webconsole.console,
+                                 consoletable=Webconsole.table,
+                                 headerview=headers,
+                                 viewfilter='Project')
+    
+    # crumbs(context=ctx)
+    display_data(dataframe=get_data())
 
 
 @load.command(name=AppValues.Load.criterias)
 @click.pass_context
-@click.pass_obj
-def criteria(ctx: click.Context, obj: Optional[object]) -> None:
+def criteria(ctx) -> None:
     """Load project (metadata)."""
-    click.echo(message=ctx.parent.info_name)
-    click.echo(message=ctx.info_name)
-    ProgramUtils.inspectcontext(ctx)
     
-    # Check Context, and DF Typing
-    if not Checks.has_dataframe(ctx, obj):
-        rprint('No Data loaded. Incorrect type ')
-        return
+    def crumbs(context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > Load'
+                           f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
+                           f'To go up one or two level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
     
-    if obj is not None and \
-            isinstance(obj, pd.DataFrame):
-        Display.display_data(dataframe=pd.DataFrame(obj),
-                             consoleholder=Webconsole.console,
-                             consoletable=Webconsole.table)
+    def get_data() -> pd.DataFrame:
+        """Get the dataframe from the context."""
+        wsheet: gspread.Worksheet = Actions.load_wsheet()
+        dataframe: pd.DataFrame = \
+            DataControl.load_dataframe_wsheet(wsheet=wsheet)
+        return dataframe
+    
+    def display_data(dataframe: pd.DataFrame) -> None:
+        """Display the dataframe."""
+        headers: list[str] = Head.CriteriaView
+        Webconsole.table = Webconsole.configure_table(headers=headers)
+        Display.display_subframe(dataframe=dataframe,
+                                 consoleholder=Webconsole.console,
+                                 consoletable=Webconsole.table,
+                                 headerview=headers)
+    
+    crumbs(context=ctx)
+    display_data(dataframe=get_data())
+
+
+@load.command("todo", help="Load todo list. Select views to display.")
+@click.pass_context
+@click.option('-d', '--display',
+              type=str,
+              default='All',
+              show_default=True,
+              help="Choose a display: from All, Simple, Done, Grade, Review")
+@click.option('-s', '--selects',
+              type=click.Choice(Head.ToDoChoices),
+              default='All',
+              show_default=True,
+              help="Choose a option: from All, Simple, Done, Grade, Review")
+def todo(ctx, display: str, selects: str) -> None:
+    """Load todos, and display different filters/views."""
+    
+    def crumbs(context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > Load'
+                           f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
+                           f'To go up one or two level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
+    
+    def get_data() -> pd.DataFrame:
+        """Get the dataframe from the context."""
+        wsheet: gspread.Worksheet = Actions.load_wsheet()
+        dataframe: pd.DataFrame = \
+            DataControl.load_dataframe_wsheet(wsheet=wsheet)
+        return dataframe
+    
+    def display_data(dataframe: pd.DataFrame, viewoption: str = 'All') -> None:
+        """Display the dataframe by view option."""
+        
+        def select_view(view: str) -> list[str]:
+            """Select the view."""
+            if view.lower() == 'All'.lower():
+                headers: list[str] = Head.ToDoAllView
+            elif view.lower() == 'Simple'.lower():
+                headers: list[str] = Head.ToDoDoDView
+            elif view.lower() == 'Done'.lower():
+                headers: list[str] = Head.ToDoGradeView
+            elif view.lower() == 'Grade'.lower():
+                headers: list[str] = Head.ToDoReviewView
+            elif view.lower() == 'Review'.lower():
+                headers: list[str] = Head.ToDoGradeView
+            else:
+                headers: list[str] = Head.ProjectView
+            return headers
+        
+        Webconsole.table = Webconsole.configure_table(
+                headers=select_view(view=viewoption))
+        Display.display_subframe(dataframe=dataframe,
+                                 consoleholder=Webconsole.console,
+                                 consoletable=Webconsole.table,
+                                 headerview=select_view(view=viewoption),
+                                 viewfilter='ToDo')
+    
+    # crumbs(context=ctx)
+    dataf: pd.DataFrame = get_data()
+    try:
+        if display is not None:
+            display_data(dataframe=dataf, viewoption=display)
+        elif selects is not None:
+            display_data(dataframe=dataf, viewoption=selects)
+        elif display == selects:
+            display_data(dataframe=dataf, viewoption=selects)
+        else:
+            display_data(dataframe=dataf, viewoption=selects)
+    except TypeError:
+        display_data(dataframe=dataf)
+        rich.print(f"You entered the wrong option: {display.lower()}\n"
+                   f"Please try again@ All, Simple, Done, Grade or Review")
+
+
+load.add_command(todo)
 
 
 @load.command(AppValues.Load.references)
 @click.pass_context
-@click.pass_obj
-def reference(ctx: click.Context, obj: Optional[object]) -> None:
-    """Load references (metadata)."""
-    click.echo(message=ctx.parent.info_name)
-    click.echo(message=ctx.info_name)
-    ProgramUtils.inspectcontext(ctx)
+def reference(ctx) -> None:
+    """Load Reference/Index."""
     
-    # Check Context, and DF Typing
-    if not Checks.has_dataframe(ctx, obj):
-        rprint('No Data loaded. Incorrect type ')
-        return
+    def crumbs(context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > Load'
+                           f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
+                           f'To go up one or two level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
     
-    if obj is not None and \
-            isinstance(obj, pd.DataFrame):
-        Display.display_data(dataframe=pd.DataFrame(obj),
-                             consoleholder=Webconsole.console,
-                             consoletable=Webconsole.table)
-        return
+    def get_data() -> pd.DataFrame:
+        """Get the dataframe from the context."""
+        wsheet: gspread.Worksheet = Actions.load_wsheet()
+        dataframe: pd.DataFrame = \
+            DataControl.load_dataframe_wsheet(wsheet=wsheet)
+        return dataframe
     
-    click.echo(message="Command did not run", err=True)
-    return
+    def display_data(dataframe: pd.DataFrame) -> None:
+        """Display the dataframe."""
+        headers: list[str] = Head.ReferenceView
+        Webconsole.table = Webconsole.configure_table(headers=headers)
+        Display.display_subframe(dataframe=dataframe,
+                                 consoleholder=Webconsole.console,
+                                 consoletable=Webconsole.table,
+                                 headerview=headers,
+                                 viewfilter='References')
+    
+    # crumbs(context=ctx)
+    display_data(dataframe=get_data())
 
 
 # 2. Find
 @run.group(AppValues.Find.cmd)
 @click.pass_context
-@click.pass_obj
-def find(ctx: click.Context, obj: Optional[object]) -> None:
+def find(ctx: click.Context) -> None:
     """Find: Find item, row(s), column(s)."""
-    click.echo(message=ctx.parent.info_name)
-    click.echo(message=ctx.info_name)
-    click.echo(message=obj)
+    
+    def crumbs(context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > Load'
+                           f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
+                           f'To go up one or two level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
+    
+    def get_data() -> pd.DataFrame:
+        """Get the dataframe from the context."""
+        wsheet: gspread.Worksheet = Actions.load_wsheet()
+        dataframe: pd.DataFrame = \
+            DataControl.load_dataframe_wsheet(wsheet=wsheet)
+        return dataframe
+    
+    # crumbs(context=ctx)
+    ctx.obj = get_data()
 
 
 @find.command(name="search")
@@ -344,62 +533,65 @@ def find(ctx: click.Context, obj: Optional[object]) -> None:
 @click.option('--query', type=str,
               help='String query to search for')
 @click.pass_context
-@click.pass_obj
-def search(ctx: click.Context, obj: Optional[object], header: str, query: str) -> None:
+def search(ctx: click.Context, header: str, query: str) -> None:
     """Search: a column: by header and query.
     
     :param ctx: click.Context
-    :param obj: click.Context.object: Alias/Context.obj for dataframe
     :param header: str: Column's header label to search
     :param query: str: String query to search for
     :return: None: Display as stdout or stderr
     """
+    
     # Context Trace: Remove
-    click.echo(message=ctx.info_name)
-    click.echo(message=ctx.parent.info_name)
-    click.echo(message=ctx.parent.parent.info_name)
+    
+    def crumbs(context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > Load'
+                           f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
+                           f'To go up one or two level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
+    
+    def get_data() -> pd.DataFrame:
+        """Get the dataframe from the context."""
+        wsheet: gspread.Worksheet = Actions.load_wsheet()
+        dataframe: pd.DataFrame = \
+            DataControl.load_dataframe_wsheet(wsheet=wsheet)
+        return dataframe
     
     # Not rasing errors, gently reminding/correcting user to enter correct data
     if Checks.isnot_querytype(header=header, query=query):
         click.echo(message="Please use text for header's name and query")
         return
     
-    df: object | None = obj
-    
-    if obj is not None:
-        # Checks query completness and Context, and DF Typing/Existence
-        searchresult: pd.DataFrame
-        if Checks.is_querycomplete(header=header, query=query) \
-                and Checks.has_dataframe(ctx, ctx_obj=obj):
-            df: pd.DataFrame = pd.DataFrame(obj)
-            # Current data: Remove after testing
-            Display.display_data(dataframe=df,
-                                 consoleholder=Webconsole.console,
-                                 consoletable=Webconsole.table)
-            click.echo("===============================")
-            # Result from a query, and asusrances, as feedback
-            searchresult: pd.DataFrame = \
-                df[df[header].astype(str).str.contains(query)]
-            click.echo(
-                    message=f'The rows with "{query}" '
-                            f'in column\'s "{header}" are:\n'
-                            f'{searchresult}')
-            # Build the Queryset: header, query, searchresult for display
-            output: tuple[str, str, pd.DataFrame] = header, query, searchresult
-            Display.display_data(dataframe=searchresult,
-                                 consoleholder=Webconsole.console,
-                                 consoletable=Webconsole.table)
-            click.echo("===============================")
-            # Remove one after testing
-            Display.display_search(output=output,
-                                   consoleholder=Webconsole.console,
-                                   consoletable=Webconsole.table)
-            click.echo("===============================")
-        #
-        else:
-            click.echo(
-                    message='Please provide a header name and query text, both.',
-                    err=True)
+    # Checks query completness and Context, and DF Typing/Existence
+    dataf: pd.DataFrame = get_data()
+    searchresult: pd.DataFrame
+    # crumbs(context=ctx)
+    if Checks.is_querycomplete(header=header, query=query):
+        # Current data: Remove after testing
+        Display.display_data(dataframe=dataf,
+                             consoleholder=Webconsole.console,
+                             consoletable=Webconsole.table)
+        click.echo("===============================")
+        # Result from a query, and asusrances, as feedback
+        searchresult: pd.DataFrame = \
+            dataf[dataf[header].astype(str).str.contains(query)]
+        click.echo(
+                message=f'The rows with "{query}" '
+                        f'in column\'s "{header}" are:\n'
+                        f'{searchresult}')
+        # Build the Queryset: header, query, searchresult for display
+        output: tuple[str, str, pd.DataFrame] = header, query, searchresult
+        Display.display_data(dataframe=searchresult,
+                             consoleholder=Webconsole.console,
+                             consoletable=Webconsole.table)
+        click.echo("===============================")
+        # Remove one after testing
+        Display.display_search(output=output,
+                               consoleholder=Webconsole.console,
+                               consoletable=Webconsole.table)
+        click.echo("===============================")
     
     click.echo(message="Command did not run", err=True)
     return
@@ -411,17 +603,32 @@ run.add_command(search)
 # 2. Select
 @run.group(AppValues.Select.cmd)
 @click.pass_context
-@click.pass_obj
-def select(ctx: click.Context, obj: Optional[object]) -> None:
+def select(ctx: click.Context) -> None:
     """Select: Select an item, a row, a column.
     
     Use --help to see the options and actions (sub commands)
     Intent level (L2): command path category.
     Does nothing, is a path option to action (sub commands.).
     """
-    click.echo(message=ctx.info_name)
-    click.echo(message=ctx.parent.info_name)
-    click.echo(message=obj)
+    
+    def crumbs(context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > {crumb.title()}'
+                           f'> [ACTION]*\n *: You are here: {crumb.title()}\n'
+                           f'To go up a level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
+    
+    def get_data() -> pd.DataFrame:
+        """Get the dataframe from the context."""
+        wsheet: gspread.Worksheet = Actions.load_wsheet()
+        dataframe: pd.DataFrame = \
+            DataControl.load_dataframe_wsheet(wsheet=wsheet)
+        return dataframe
+    
+    # crumbs(context=ctx)
+    dataf: pd.DataFrame = get_data()
+    DataControl.dataframe = dataf
 
 
 @select.command(AppValues.Select.items)
@@ -430,15 +637,30 @@ def select(ctx: click.Context, obj: Optional[object]) -> None:
 @click.option('--header', type=str,
               help='Column\'s header, text, to find. Check the display')
 @click.pass_context
-@click.pass_obj
-def item(ctx: click.Context, obj: Optional[object], linenumber: int, header: str) -> None:
+def item(ctx: click.Context, linenumber: int, header: str) -> None:
     """Select an item.
     
     Action subcommand: Parent Intent: Select.
     i: By row's linenumber number (int),
     i: By column's header text (str).
     """
-    click.echo(message=ctx.info_name)
+    
+    def crumbs(context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        parent: str = context.parent.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > {parent.title()}'
+                           f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
+                           f'To go up one or two level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
+    
+    def get_data() -> pd.DataFrame:
+        """Get the dataframe from the context."""
+        wsheet: gspread.Worksheet = Actions.load_wsheet()
+        dataframe: pd.DataFrame = \
+            DataControl.load_dataframe_wsheet(wsheet=wsheet)
+        return dataframe
+    
     #
     if not isinstance(linenumber, int) or not isinstance(header, str):
         click.echo(
@@ -448,35 +670,31 @@ def item(ctx: click.Context, obj: Optional[object], linenumber: int, header: str
                          + 'not a number etc. \n'),
                 err=True)
     #
-    if obj is not None:
-        if linenumber is not None and header is not None \
-                and Checks.has_dataframe(ctx, ctx_obj=obj):
-            df: pd.DataFrame = pd.DataFrame(obj)
-            value: pd.DataFrame = df.loc[linenumber, header]
-            Webconsole.set_table(dataframe=value)
-            click.echo(
-                    message=f'The value at line nos. {linenumber} and '
-                            f'column\'s header "{header}" is {value}')
-            output: tuple[str, int, pd.DataFrame] = \
-                header, linenumber, value
-            Display.display_selection(output=output,
-                                      consoleholder=Webconsole.console,
-                                      consoletable=Webconsole.table)
-        #
-        else:
-            click.echo(message='Please provide both row and column options.')
-    
-    click.echo(message="Command did not run", err=True)
+    # crumbs(context=ctx)
+    if linenumber is not None and header is not None:
+        df: pd.DataFrame = get_data()
+        value: pd.DataFrame = df.loc[linenumber, header]
+        Webconsole.table = Webconsole.set_datatable(dataframe=value)
+        click.echo(
+                message=f'The value at line nos. {linenumber} and '
+                        f'column\'s header "{header}" is {value}')
+        output: tuple[str, int, pd.DataFrame] = \
+            header, linenumber, value
+        Display.display_selection(output=output,
+                                  consoleholder=Webconsole.console,
+                                  consoletable=Webconsole.table)
+    #
+    else:
+        click.echo(message='Please provide both row and column options.')
 
 
 @select.command(AppValues.Select.rows)
+@click.pass_context
 @click.option('--linenumber',
               type=int,
               help=('Line Nos (Position) to query of a single row. '
                     + 'Check the display'))
-@click.pass_context
-@click.pass_obj
-def row(ctx: click.Context, obj: Optional[object], linenumber: int) \
+def row(ctx: click.Context, linenumber: int) \
         -> None | typing.NoReturn:
     """Select a row.
     
@@ -484,40 +702,54 @@ def row(ctx: click.Context, obj: Optional[object], linenumber: int) \
     i: By row line number (id/position):
     Refer to and check display for linenumber.
     """
+    
     #
-    click.echo(message=ctx.info_name)
+    def crumbs(context) -> None:
+        """Display the command navigation crumbs."""
+        crumb: str = context.info_name
+        parent: str = context.parent.info_name
+        click.echo(message=f'Navigation: CLI: > Run > ... > {parent.title()}'
+                           f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
+                           f'To go up one or two level, enter, each time:  ..  \n'
+                           f'To Exit: ctrl + d  \n')
+    
+    #
+    def get_data() -> pd.DataFrame:
+        """Get the dataframe from the context."""
+        wsheet: gspread.Worksheet = Actions.load_wsheet()
+        dataframe: pd.DataFrame = \
+            DataControl.load_dataframe_wsheet(wsheet=wsheet)
+        return dataframe
+    
+    #
     if not isinstance(linenumber, int):
         click.echo(
                 message=('Please provid text, not numbers etc, '
                          + f'for column\'s header: {linenumber}'),
                 err=True)
     #
-    if obj is not None:
-        if linenumber is not None and Checks.has_dataframe(ctx, ctx_obj=obj):
-            df = pd.DataFrame(obj)
-            row_data: pd.DataFrame = df.query('position == @linenumber')
-            Webconsole.set_table(dataframe=row_data)
-            click.echo(
-                    message=f'The row with ID {linenumber} is:\n'
-                            f'{row_data}')
-            output: tuple[int, pd.DataFrame] = linenumber, row_data
-            Display.display_selection(output=output,
-                                      consoleholder=Webconsole.console,
-                                      consoletable=Webconsole.table)
-        #
-        else:
-            click.echo(message=f'Please provide a row\'s {linenumber}.')
-    
-    click.echo(message="Command did not run", err=True)
-    return None
+    # crumbs(context=ctx)
+    if linenumber is not None:
+        df: pd.DataFrame = get_data()
+        row_data: pd.DataFrame = df.query('position == @linenumber')
+        Webconsole.table = Webconsole.set_datatable(dataframe=row_data)
+        click.echo(
+                message=f'The row with ID {linenumber} is:\n'
+                        f'{row_data}')
+        output: tuple[int, pd.DataFrame] = linenumber, row_data
+        Display.display_selection(output=output,
+                                  consoleholder=Webconsole.console,
+                                  consoletable=Webconsole.table)
+    #
+    else:
+        click.echo(message=f'Please provide a row\'s {linenumber}.', err=True)
 
 
 @select.command(AppValues.Select.columns)
+@click.pass_context
 @click.option('--header',
               type=str,
               help='Column\'s header label to query, Check the display')
-@click.pass_context
-@click.pass_obj
 def column(ctx: click.Context, obj: Optional[object], header: str) \
         -> None | typing.NoReturn:
     """Select a column: by column's header."""
@@ -530,26 +762,23 @@ def column(ctx: click.Context, obj: Optional[object], header: str) \
                          + f'for column\'s header: {header}'),
                 err=True)
     #
-    if obj is not None:
-        if header is not None and Checks.has_dataframe(ctx, ctx_obj=obj):
-            df: pd.DataFrame = pd.DataFrame(obj)
-            column_data: pd.DataFrame = df[header]
-            click.echo(
-                    message=(f'The column\'s header "{header}" is:\n'
-                             + f'{column_data}'))
-            output: tuple[str, pd.DataFrame] = header, column_data
-            Webconsole.set_table(dataframe=column_data)
-            Display.display_selection(output=output,
-                                      consoleholder=Webconsole.console,
-                                      consoletable=Webconsole.table)
-        #
-        else:
-            click.echo(message=f'Please provide a column\'s. {header}. \n'
-                               'And please check/refresh the dataset')
-        
-        return None
-    # If no dataframe, does not run cmd
-    click.echo(message="Command did not run", err=True)
+    
+    if header is not None:
+        df: pd.DataFrame = pd.DataFrame(obj)
+        column_data: pd.DataFrame = df[header]
+        click.echo(
+                message=(f'The column\'s header "{header}" is:\n'
+                         + f'{column_data}'))
+        output: tuple[str, pd.DataFrame] = header, column_data
+        Webconsole.table = Webconsole.set_datatable(dataframe=column_data)
+        Display.display_selection(output=output,
+                                  consoleholder=Webconsole.console,
+                                  consoletable=Webconsole.table)
+    #
+    else:
+        click.echo(message=f'Please provide a column\'s. {header}. \n'
+                           'And please check/refresh the dataset')
+    
     return None
 
 
@@ -581,7 +810,7 @@ def acolumnselect(dataframe: pd.DataFrame, header: str) \
                 message=(f'The column\'s header "{header}" is:\n'
                          + f'{column_data}'))
         output: tuple[str, pd.DataFrame] = header, column_data
-        Webconsole.set_table(dataframe=column_data)
+        Webconsole.table = Webconsole.set_datatable(dataframe=column_data)
         Display.display_selection(output=output,
                                   consoleholder=Webconsole.console,
                                   consoletable=Webconsole.table)
@@ -642,9 +871,9 @@ class CRUD:
     @click.pass_context
     @click.pass_obj
     def deleteitem(self, ctx: click.Context, obj: Optional[object]) -> None:  # noqa: ANN101
-        """Delete item: Find an item,.
+        """Delete item: Find an item.
         
-        clear the item's content/reset to default.
+        Clear the item's content/reset to default.
         """
     
     @delete.command(AppValues.Delete.rows)
@@ -658,6 +887,8 @@ class CRUD:
         """  # noqa: D415
 
 
+# Click Command repl is run from this function
+# See https://www.perplexity.ai/search/085c28b9-d6e8-4ea2-8234-783d7f1a054c?s=c
 register_repl(run)
 
 if __name__ == "__main__":
