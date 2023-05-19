@@ -25,16 +25,13 @@ from rich.table import Table  # type: ignore
 # 0.3 Local imports
 import connections
 import settings
-from datatransform import DataTransform
 from sidecar import ProgramUtils
 
 utils: ProgramUtils = ProgramUtils()
 connector: connections.GoogleConnector = connections.GoogleConnector()
 configuration: settings.Settings = settings.Settings()
-
 tablesettings: settings.TableSettings = settings.TableSettings()
 console: rich.console.Console = Console()
-transformer: DataTransform = DataTransform()  # deprecate: remov datatransform.py
 
 
 # 2. Read the data from the sheet by the controller
@@ -97,18 +94,6 @@ class Controller:
         # -> Move to Instance once the data is loaded is tested and working on
         # heroku
         return connector.open_sheet(spread, configuration.TAB_NAME)
-    
-    @staticmethod
-    def fetch_data() -> list[str]:
-        """Loads the data.
-        
-        Deprecated: Use load_dataf instead.
-        """
-        # 1.1: Connect to the sheet
-        # 1.2: Read the data from the sheet
-        # 1.3: Return the data from the sheet
-        wsheet: gspread.Worksheet = Controller.load_wsheet()
-        return transformer.get_data(wsheet, "H2:010")
     
     @staticmethod
     def delete(creds: gspread.Client) -> None:
@@ -211,6 +196,8 @@ class Headers:
     ReferenceView: list[str] = [c.Position, c.Reference, c.Related]
     ViewFilter: list[str] = ["Overview", "Criteria", "Project", "ToDo", "References"]
     ToDoChoices: list[str] = ["All", "Simple", "DoD", "Grade", "Review"]
+    HeadersChoices: list[str] = ["Position", "Tier", "Performance",
+                                 "Criteria", "Progress", "Notes"]
     
     def __init__(self, labels: ColumnSchema) -> None:
         """Headers."""
@@ -222,7 +209,7 @@ class DataController:
 
     Links the connector to the app's command:
 
-    CRUD engine + filter, find/search, show/hide
+    CRUD engine + filter, find/searches, show/hide
     ---------------------------------------------
     A: READ/FETCH: Loads the data from the sheet to the:
     - DataModel - NYI
@@ -334,7 +321,7 @@ class DataController:
     def find_rows(self, query: str) -> pd.DataFrame:
         """Find Rows by a query.
 
-        :param query: str: The query to search for
+        :param query: str: The query to use as a search
         :return: pd.DataFrame
         """
         return self.dataframe.query(query)
@@ -363,7 +350,7 @@ class DataController:
         self.dataframe.iloc[position] = item
         return self.dataframe.iloc[position]
     
-    def update_row(self, position: int, values: list | dict) -> pd.Series | None:
+    def update_row(self, values: list | dict) -> pd.Series | None:
         """Update a row in the dataframe."""
         for index, row in self.dataframe.iterrows():
             if all(row == values):
@@ -382,18 +369,23 @@ class DataController:
         self.dataframe.iloc[position] = row
         return self.dataframe.iloc[position]
     
-    def delete_item(self, position: int, item: str) -> pd.Series:
+    def delete_item(self, position: int) -> pd.Series:
         """Delete an item in the dataframe."""
         self.dataframe.iloc[position] = ""
         return self.dataframe.iloc[position]
     
-    def delete_row(self, position: int, values: list | dict) -> pd.DataFrame | None:
+    def delete_row(self, values: list | dict) -> pd.DataFrame | None:
         """Delete a row in the dataframe."""
         for index, row in self.dataframe.iterrows():
             if all(row == values):
                 self.dataframe = self.dataframe.drop(index)
                 return self.dataframe
         return None
+    
+    @staticmethod
+    def max(dataframe: pd.DataFrame) -> str:
+        """Return the maximum value in a row."""
+        return str(len(dataframe))
 
 
 class WebConsole:
@@ -476,9 +468,15 @@ class WebConsole:
         return consoletable
     
     @staticmethod
-    def set_datatable(dataframe: pd.DataFrame) -> rich.table.Table:
+    def set_datatable(dataframe: pd.DataFrame | pd.Series) -> rich.table.Table:
         """Sets the table per dataframe."""
-        headers: list[str] = dataframe.columns.tolist()
+        if isinstance(dataframe, pd.DataFrame):
+            headers: list[str] = dataframe.columns.tolist()
+        elif isinstance(dataframe, pd.Series):
+            headers: list[str] = dataframe.index.tolist()
+        else:
+            raise ValueError("Bad Parameter: Pandas DataFrame or Series object.")
+        
         consoletable: Table = WebConsole.configure_table(headers=headers)
         return consoletable
 
@@ -496,7 +494,7 @@ class Display:
     
     ViewType: str = \
         typing.Literal["table", "column", "list", "frame", "pager",
-        "tablepage", "columnpage", "listpage", "framepage"]
+        "tablepage", "columnpage", "listpage", "framepage"]  # noqa
     
     # pylint: disable=unnecessary-pass
     @staticmethod
@@ -537,6 +535,7 @@ class Display:
         Display.display_frame(dataframe=dataframe,
                               consoleholder=consoleholder,
                               consoletable=consoletable,
+                              headerview=Headers.HeadersChoices,
                               title=title)
     
     @staticmethod
@@ -567,19 +566,22 @@ class Display:
     def display_frame(dataframe: pd.DataFrame,
                       consoleholder: Console,
                       consoletable: Table,
+                      headerview: list[str] | str,
                       title: str = "PyCriteria") -> None | NoReturn:
         """Displays the data in a table."""
+        if isinstance(headerview, list):
+            headers: list = headerview
+        else:
+            headers: list = [headerview]
+        
         consoletable.title = title
         
-        for column in dataframe.columns:
-            # Create the table header headers
-            consoletable.add_column(header=column)
-        for _index, row in dataframe.iterrows():
-            # For each column, in dataframe's columns
-            # Retrieve the string value of the row by column refernece
-            # Then add the row to the table
-            consoletable.add_row(*[str(row[column]) for column in dataframe.columns])
-        
+        filteredcolumns: pd.DataFrame = \
+            dataframe.loc[:, dataframe.columns.isin(values=headers)]
+        # for column in headerview:
+        for _index, row in filteredcolumns.iterrows():
+            consoletable.add_row(*[str(row[column])
+                                   for column in headers])
         consoleholder.print(consoletable)
     
     # The following is an AI Refactor from orginal authored code
@@ -612,11 +614,11 @@ class Display:
                        consoleholder: Console,
                        consoletable: Table,
                        title: str = "PyCriteria") -> None | NoReturn:
-        """Displays the search accoridng to an output's result-set.
+        """Displays the searches accoridng to an output's result-set.
         
         A ResultSet is a type of tuple that varies in length and component types.
-        A resultset is used to carry the parameters of a search along
-            with the results of that search from
+        A resultset is used to carry the parameters of a searches along
+            with the results of that searches from
              a) the command's stdin
              b) to the cli's stdout or stderr.
         The ResultSet is a tuple of the following types:
@@ -625,7 +627,7 @@ class Display:
             ii) ItemSelectType: tuple[str, str, pd.DataFrame]
         Parameters:
         --------------------
-        :param output: tuple: The output of the search
+        :param output: tuple: The output of the searches
         :param consoleholder: Console: The console to print to
         :param consoletable: Table: The table to print to
         :param title: str: The title of the table
@@ -638,6 +640,7 @@ class Display:
             Display.display_frame(dataframe=dataframe,
                                   consoleholder=consoleholder,
                                   consoletable=consoletable,
+                                  headerview=Headers.HeadersChoices,
                                   title=title)
             echo(message=(f"You searched for: Query: {query}"
                           + f"Against this Header: {headers}")),
@@ -682,6 +685,7 @@ class Display:
             Display.display_frame(dataframe=dataframe,
                                   consoleholder=consoleholder,
                                   consoletable=consoletable,
+                                  headerview=Headers.HeadersChoices,
                                   title=title)
             echo((f"Selected Reference: Line Number: {linenumber}\n"
                   + f"Selected Column: Header: {headers}"))

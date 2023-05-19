@@ -235,7 +235,7 @@ File |   Date    | LN | Issue | Fix   |  State  | Note
 
 ### 7.2 [DoD](#done)
 
-> See [Definition of Done](_docs/done.md)
+> See [Definition of Done](.docs/done.md)
 
 ### 7.3 [Deployment](#deployment)
 
@@ -327,7 +327,7 @@ gitGraph:
 
 #### 7.3.2.1 Heroku Deployments
 
-- Must have buildpacks installed in correct order
+- Must have buildpacks installed in the correct order
     1. `heroku/nodejs`
     2. `heroku/python`
 - The heroku CLI `remove` buildpack option, along with the immediate re-install, needs further investifation as it
@@ -336,7 +336,7 @@ gitGraph:
   > - Not sure which main it was referring to:
       >
     - Was it a main branch on @ipoetdev...pycriteria.git
-  > - Or the remote heroku git.)
+  > - Or the remote heroku git.
 
 #### 7.3.2.2 Heroku CLI Logs
 

@@ -1,5 +1,6 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
+# ruff: noqa: ANN001, I001
 """Module: PyCriteria Terminal App."""
 import dataclasses
 import tracemalloc
@@ -8,7 +9,6 @@ import warnings
 
 import click
 import rich
-
 from rich import inspect
 
 
@@ -49,6 +49,7 @@ class AppValues:
     @dataclasses.dataclass
     class Load:
         """Load Settings.
+        
         :property: intro:str: typer panel/intro.
         :property: help:str: typer help.
         :property: quik:str: typer short_help.
@@ -146,34 +147,41 @@ class AppValues:
 class ProgramUtils:
     """Program Utilities.
 
-    :property: ActionType: Literal["default", "error", "ignore", "always", "module", "once"]
-    :method: inspect_cmd: Inspect a command's context.
+    :property: ActionType:
+        Literal["default", "error", "ignore", "always", "module", "once"]
+    :method: start_memory: Start memory tracing.
+    :method: stop_memory: Stop memory tracing.
+    :method: printmemtrace: Print memory trace.
+    :method: inspectcmd: Inspect a command's context.
+    :method: inspectcontent: Inspect a command's content.
     :method: warn: Warn the user about a command's action.
     """
     
-    ActionType: str = typing.Literal["default", "error", "ignore", "always", "module", "once"]
+    ActionType: str = typing.Literal["default", "error", "ignore",
+    "always", "module", "once"]  # noqa
     
     @staticmethod
-    def startmemory():
+    def startmemory() -> None:
         """Start memory tracing."""
         tracemalloc.start()
     
     @staticmethod
-    def stopmemory():
+    def stopmemory() -> None:
         """Stop memory tracing."""
         tracemalloc.stop()
     
     @staticmethod
-    def printmemtrace(obj: typing.Any):
+    def printmemtrace(obj: object) -> None:
         """Print memory usage."""
         # inspect(inspect)
-        trace = tracemalloc.get_object_traceback(obj)
+        trace = \
+            tracemalloc.get_object_traceback(obj)  # noqa
         rich.print(f"Memory: {trace}")
         rich.inspect(trace, all=True)
         click.echo(f"Memory: {trace}", err=True)
     
     @staticmethod
-    def inspectcmd(func):
+    def inspectcmd(func) -> None:
         """Inspect a command's context."""
         command: click.Command = click.Command(name=func.__name__)
         context: click.Context = click.Context(command)
@@ -195,7 +203,7 @@ class ProgramUtils:
         inspect(context.obj)
     
     @staticmethod
-    def inspectcontext(ctx):
+    def inspectcontext(ctx) -> None:
         """Inspect a command's context."""
         context: click.Context = ctx
         if context is None:
@@ -210,19 +218,18 @@ class ProgramUtils:
         inspect(context.obj)
     
     @staticmethod
-    def warn(show: bool = True, action: ActionType = "ignore"):
+    def warn(action: ActionType = "ignore") -> None:
         """Configured Python Interpreter warnings.
 
         Added: typing.Literal[str] : Invalid Type
-        Fixme: 'Literal' may be parameterized with literal ints, byte and unicode
+        Fixme: 'Literal' may be parameterised with literal ints, byte and unicode
                 strings, bools, Enum values, None, other literal types, or type
                 aliases to other literal types
 
         Parameters:
         ====================
-        :param show: bool:
-                    True to hide warnings, False to show warnings
-        :param action: Literal["default", "error", "ignore", "always", "module", "once"]:
+        :param action: Literal["default", "error", "ignore",
+                                "always", "module", "once"]:
                     "ignore" to ignore warnings,
                     "default" to show warnings
                     "error" to turn matching warnings into exceptions
@@ -232,6 +239,9 @@ class ProgramUtils:
                     "once" to print only the first occurrence of matching warnings,
                            regardless of location
         """
-        warnings.filterwarnings(action, message=".*deprecated.*", category=DeprecationWarning)
+        trace: str = \
+            "Enable tracemalloc to get the object allocation traceback"  # noqa
+        warnings.filterwarnings(action, message=".*deprecated.*",
+                                category=DeprecationWarning)
         warnings.filterwarnings(action, category=ResourceWarning)
-        warnings.filterwarnings(action, message="Enable tracemalloc to get the object allocation traceback")
+        warnings.filterwarnings(action, message=trace)

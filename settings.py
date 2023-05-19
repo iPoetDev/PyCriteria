@@ -1,19 +1,17 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
+# ruff: noqa: I001
 """Module App Settings and Environmental Vars."""
 # 0.1 Standard Imports
 import dataclasses
-
-
 # 0.1.2 Targeted Imports
 from importlib import util as findlib
 from pathlib import Path
-from typing import Dict
-from typing import NoReturn
-from typing import Union
+from typing import Dict, NoReturn, Union
 
 # 0.2 Third Party Modules
 import dotenv as dotenv_loader  # type: ignore
+from rich import print as rprint  # type: ignore
 
 # 0.3 Local/Own Imports
 from exceptions import ManagingExceptions as Graceful
@@ -88,6 +86,7 @@ class TableSettings:
 
 class EnvirnomentalVars:
     """EnvirnomentalVars.
+    
     Load .env file to develop with env vars early.
     
     :method: load_env: @staticmethod
@@ -97,6 +96,7 @@ class EnvirnomentalVars:
     @staticmethod
     def load_env(library: str = 'dotenv') -> Union[bool, NoReturn]:
         """Load .env file to develop with env vars early.
+        
         Parameters
         ----------
             :param library: str = 'dotenv' as default, err mandatory library.
@@ -119,6 +119,7 @@ class EnvirnomentalVars:
     @staticmethod
     def does_env_load(filename: str, encode: str = Settings.ENCODE) -> bool:
         """Checks if the .ENV file loads.
+        
         Usage: Used when dotenv module is successfully loaded.
         
         Parameters:
@@ -137,7 +138,7 @@ class EnvirnomentalVars:
         dotenv_path: Path = Path(filename)
         # Open the .env file and then load/close the .env file if a file exists
         with dotenv_path.open(encoding=encode):
-            print(success_message)
+            rprint(success_message)
             # LOGRS.debug(success_message)
             if dotenv_loader.load_dotenv(dotenv_path=dotenv_path,
                                          verbose=True,

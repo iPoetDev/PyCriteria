@@ -1,23 +1,24 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
+# ruff: noqa: I001
 """Module Exception Status and Graceful recovery."""
 
 # 0.1: Standard Library Imports
 import sys
-
 from typing import NoReturn
+
+from rich import print as rprint
 
 
 class ExceptionValues:
-    """Exception Values.
-    Introduced to remove cylic dependencies/imports.
-    """
+    """Exception Values."""
     ENV: str = '.env'
 
 
 # pylint: disable=too-few-public-methods
 class ManagingExceptions:
     """Managing Exceptions Gracefully.
+    
     :method: env_notfound_status: @staticmethod
     :method: exiting_exception: @staticmethod
     :method: input_correction: @staticmethod
@@ -28,8 +29,7 @@ class ManagingExceptions:
     def env_notfound_status(notfound: ModuleNotFoundError,
                             module: str = 'dotenv',
                             setting: str = ExceptionValues.ENV) -> NoReturn:
-        """@2023-05-05
-        Dotenv exception handler.
+        """Dotenv exception handler.
         
         Parameters
         ----------
@@ -48,12 +48,13 @@ class ManagingExceptions:
             'Import python-dotenv to load external \n'
         guidance_message += f'{setting} or check the ENV file path. '
         output: str = f'{error_context}: {issue_message} - {guidance_message}'
-        print(output)
+        rprint(output)
         return NoReturn
     
     @staticmethod
-    def exiting_status(error: Exception, message: str):
-        """@2023-05-05
+    def exiting_status(error: Exception, message: str) -> None:
+        """Make an exiting exception.
+        
         Make an exiting exception.
         1. Log the error
         2. Print the error
@@ -62,19 +63,16 @@ class ManagingExceptions:
         Parameters
         ----------
             :param error: Exception
-            :type: Exception
             :param message: str
-            :type: str
         """
         _error_context: str = f'{str(error).title}'
         _output: str = f'{_error_context}: {error}: {message}'
-        print(_output)
+        rprint(_output)
         sys.exit(1)
     
     @staticmethod
     def input_correction(error: Exception, message: str, kind: str) -> str:
-        """@2023-05-05
-        Gracefully allow a user to recover from a *NotFound exception.
+        """Gracefully allow a user to recover from a *NotFound exception.
         
         Parameters
         ----------
@@ -97,19 +95,19 @@ class ManagingExceptions:
         _prompt: str = f"Enter the new {kind} name:"
         # Prompt User from Console/Std.In
         while True:
-            print(_status)
+            rprint(_status)
             _value_str = input(_prompt)
-            print(_value_str)
+            rprint(_value_str)
             if ManagingExceptions.validate_input(_value_str):
-                print(_success, _value_str, sep=" ")
+                rprint(_success, _value_str)
                 break
         
         return _value_str
     
     @staticmethod
     def creds_correction(credentials: str, file_type: str, message: str) -> str:
-        """@2023.05.03
-        Gracefully allow a user to recover from a *NotFound exception.
+        """Make an exiting exception.
+        
         Seek a new credentials' filename from the user by prompting them.
         
         Parameters
@@ -135,18 +133,19 @@ class ManagingExceptions:
         _prompt: str = f"Enter the new {credentials} name with .json as extension:"
         # 3. Prompt User from Console/Std.In
         while True:
-            print(_status)
+            rprint(_status)
             value_str = input(_prompt)
-            print(value_str)
+            rprint(value_str)
             if ManagingExceptions.validate_input(value_str):
-                print(_success, value_str, sep=" ")
+                rprint(_success, value_str)
                 break
         # 4. Return the new credentials' filename
         return value_str
     
     @staticmethod
     def validate_input(value_str: str) -> bool:
-        """Validate the input. @2023.05.03
+        """Validate the input.
+        
         1: Asserting of string type
         2: Checking for length is 0.
         
@@ -179,7 +178,7 @@ class ManagingExceptions:
                 raise ValueError(_badvalue)
         # 3. Handle the exceptions
         except ValueError as error:
-            print(f"{error}: {_goodinput}")
+            rprint(f"{error}: {_goodinput}")
             return False
         # 4. Return True if valid
         return True
