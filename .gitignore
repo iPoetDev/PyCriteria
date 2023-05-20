@@ -54,3 +54,6 @@ creds.json
 /pycriteria.lnk
 *.log
 ruff.log
+/.app/
+/.app/
+/.apps/app.run.xml

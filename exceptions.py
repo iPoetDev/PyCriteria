@@ -77,7 +77,7 @@ class ManagingExceptions:
         Parameters
         ----------
             :param error: Exception: The exception to handle
-            :param message: str: The error message to display
+            :param message: str: The error message to Display
             :param kind: str: File or Tab type
             
 

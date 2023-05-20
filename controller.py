@@ -2,32 +2,40 @@
 # pylint: disable=trailing-whitespace
 # ruff: noqa: ANN101, I001, ARG002
 """Module: Controller for the Terminal App."""
-import dataclasses
 # 0.1 Standard Library Imports
+import dataclasses
+import datetime
 import typing
-import warnings
-from typing import NoReturn, Type
+from typing import NoReturn, Type, Literal
 
+#
+# 0.2.1 Third Party Modules: Compleete
 import click
-# 0.2 Third Party Modules: Compleete
 import gspread  # type: ignore
 import gspread_dataframe  # type: ignore
 import pandas as pd  # type: ignore
 import rich.style  # type: ignore
-# 0.2 Third Party Modules: Individual
+#
+# 0.2.2 Third Party Modules: Individual, Aliases
 from click import echo  # type: ignore
 from gspread_dataframe import get_as_dataframe as get_gsdf  # type: ignore
-from rich import pretty as rpretty, print as rprint  # type: ignore
-from rich.console import Console, ConsoleDimensions, ConsoleOptions  # type: ignore
+from rich import pretty as rpretty, print as rprint, box  # type: ignore
+from rich.columns import Columns  # type: ignore
+from rich.console import Console, ConsoleDimensions, ConsoleOptions, RenderableType  # type: ignore
+from rich.layout import Layout  # type: ignore
+from rich.panel import Panel  # type: ignore
 from rich.prompt import Prompt  # type: ignore
 from rich.table import Table  # type: ignore
+from rich.text import Text  # type: ignore
+from rich.theme import Theme  # type: ignore
 
+#
 # 0.3 Local imports
 import connections
 import settings
-from sidecar import ProgramUtils
 
-utils: ProgramUtils = ProgramUtils()
+#
+# 1.1: Global/Custom Variables
 connector: connections.GoogleConnector = connections.GoogleConnector()
 configuration: settings.Settings = settings.Settings()
 tablesettings: settings.TableSettings = settings.TableSettings()
@@ -229,12 +237,12 @@ class DataController:
     -----------------------------------------------
     1. The App handles TUI command logic (Typer) and bundles controller logic
     into one entry point.
-    2. The WebConsole handles the console display/logics.
+    2. The WebConsole handles the console Display/logics.
     3. The DataTransformer handles any Extract, Transform,
     Load (ETL) logic (load_* tasks are shared with controller)
     4. The DataModel handles the in memory data structure and
     data logics (maybe move Topics, Entry to DataModel)
-    5. The Display handles the TUI output display rendering logics
+    5. The Display handles the TUI output Display rendering logics
     using the console.
     6. The Connector handles the connection to the remote data source
     (Google Sheets).
@@ -394,12 +402,14 @@ class WebConsole:
     console: Console
     options: ConsoleOptions
     table: Table
+    terminal: Layout
     
     def __init__(self, width: int, height: int) -> None:
         """Initialises the web console."""
         self.console = self.console_configure()
         self.options = self.console_options(width, height)
         self.table = Table()
+        self.terminal = Layout()
     
     @staticmethod
     def console_options(width: int = configuration.Console.WIDTH,
@@ -481,7 +491,78 @@ class WebConsole:
         return consoletable
 
 
-WebConsoleType: Type[WebConsole] = WebConsole
+class Inner:
+    """Displays inner terminal layout."""
+    
+    layout: Layout = None
+    current: Layout = None
+    modified: Layout = None
+    header: Layout = None
+    editor: Layout = None
+    
+    def __init__(self) -> None:
+        """Initialises the inner terminal layout."""
+        self.layout = Layout()
+        self.arrange()
+        self.edit()
+    
+    def arrange(self) -> None:
+        """Configures the terminal."""
+        self.header = Layout(name="header", ratio=2)
+        self.editor = Layout(name="editor", ratio=3)
+        self.layout.split_column(self.header, self.editor)
+    
+    def edit(self, width: int = 40, part: int = 1) -> None:
+        """Configures the terminal."""
+        self.current = Layout(name="current",
+                              size=part,
+                              minimum_size=width)  # noqa
+        self.modified = Layout(name="modified",
+                               ratio=part,
+                               minimum_size=width)  # noqa
+        
+        self.layout.split_row(self.current, self.modified)
+    
+    def toggle(self,
+               headershow: bool = True,
+               editorshow: bool = True) -> None:
+        """Toggles Layouts."""
+        
+        if headershow:
+            self.layout["header"].visible = True
+        else:
+            self.layout["header"].visible = False
+        
+        if editorshow:
+            self.layout["editor"].visible = True
+        else:
+            self.layout["editor"].visible = False
+    
+    def updates(self,
+                renderable,
+                target: Literal["header", "editor", "current", "modified"]) -> None:
+        """Updates the layout."""
+        self.layout[target].update(renderable)
+    
+    def refresh(self, consoleholder: Console,
+                target: Literal["header", "editor", "current", "modified"]) -> None:
+        """Refreshes the layout."""
+        if consoleholder is None:
+            consoleholder = Console()
+            self.layout.refresh(consoleholder, layout_name=target)
+        elif isinstance(consoleholder, Console):
+            self.layout.refresh(consoleholder, layout_name=target)
+        elif isinstance(consoleholder, Console) and target is not None:
+            self.layout.refresh(consoleholder, layout_name=target)
+    
+    def laidout(self, consoleholder: Console, output: bool = True) -> Layout | None:
+        """Returns the layout."""
+        if not output:
+            return self.layout
+        
+        click.echo(f"Pane is: {self.layout['current'].name}")
+        consoleholder.print(self.layout)
+        return None
 
 
 class Display:
@@ -530,7 +611,7 @@ class Display:
                      consoleholder,  # noqa: ANN001
                      consoletable: Table,
                      title: str = "PyCriteria") -> None:  # noqa: ANN001
-        """Display Data: Wrapper for Any display."""
+        """Display Data: Wrapper for Any Display."""
         # consoleholder.set_table(consoleholder, dataframe=dataframe)
         Display.display_frame(dataframe=dataframe,
                               consoleholder=consoleholder,
@@ -543,7 +624,7 @@ class Display:
                       consoleholder,  # noqa: ANN001
                       view: ViewType = "table",
                       title: str = "PyCriteria") -> None:
-        """Display Data: Wrapper for Any display."""
+        """Display Data: Wrapper for Any Display."""
         pass
     
     @staticmethod
@@ -632,18 +713,15 @@ class Display:
         :param consoletable: Table: The table to print to
         :param title: str: The title of the table
         """
-        if ValidationQuerySetType.querysetcolumntype(output):
-            # If the output is a tuple of item selection
-            # Display the item selection
-            # Prints out the item's coordinates
-            headers, query, dataframe = output
-            Display.display_frame(dataframe=dataframe,
-                                  consoleholder=consoleholder,
-                                  consoletable=consoletable,
-                                  headerview=Headers.HeadersChoices,
-                                  title=title)
-            echo(message=(f"You searched for: Query: {query}"
-                          + f"Against this Header: {headers}")),
+        
+        headers, query, dataframe = output
+        Display.display_frame(dataframe=dataframe,
+                              consoleholder=consoleholder,
+                              consoletable=consoletable,
+                              headerview=Headers.HeadersChoices,
+                              title=title)
+        echo(message=(f"You searched for: Query: {query}"
+                      + f"Against this Header: {headers}")),
     
     @staticmethod
     def display_selection(output: tuple,
@@ -651,16 +729,6 @@ class Display:
                           consoletable: Table,
                           title: str = "PyCriteria") -> None | NoReturn:  # noqa: ANN001
         """Displays the selection accoridng to an output's result-set.
-        
-        A ResultSet is a type of tuple that varies in length and component types.
-        A resultset is used to carry the parameters of a selection along
-            with the results of that selection from
-             a) the command's stdin
-             b) to the cli's stdout or stderr.
-        The ResultSet is a tuple of the following types:
-        1. ItemSelectType: tuple[str, str, pd.DataFrame]
-        2. LineNoSelectType: tuple[int, pd.DataFrame]
-        3. ColumnResultType: tuple[str, str, pd.DataFrame]
         
         Parameters:
         --------------------
@@ -674,236 +742,423 @@ class Display:
         --------------------
         :return: None | NoReturn: This displays to the stdout/stderr
         """
-        # Uses the return Data Structure types, i.e, of outputto determine the display set
+        # Uses the return Data Structure types, i.e, of outputto determine the Display set
         
-        if ValidateResultSetTypes.selectitemtype(output):
-            # If the output is a tuple of item selection
-            # Display the item selection
-            # Prints out the item's coordinates
-            headers, linenumber, dataframe = output
-            consoleholder.set_table(dataframe=dataframe)
-            Display.display_frame(dataframe=dataframe,
-                                  consoleholder=consoleholder,
-                                  consoletable=consoletable,
-                                  headerview=Headers.HeadersChoices,
-                                  title=title)
-            echo((f"Selected Reference: Line Number: {linenumber}\n"
-                  + f"Selected Column: Header: {headers}"))
-        elif ValidateResultSetTypes.selectrowtype(output):
-            # If the output is a tuple of row selection
-            # Display the row in a table.
-            # Print the row selected
-            linenumber, dataframe = output
-            consoleholder.set_table(dataframe=dataframe)
-            Display.display_frame(dataframe, consoleholder, consoletable, title)
-            rprint(f"Selected Row: Line Number: {linenumber}")
-        elif ValidateResultSetTypes.selectcolumntype(output):
-            # If the output is a tuple of column selection
-            # Display the column in a table.
-            # Print the column selected
-            header, dataframe = output
-            consoleholder.set_table(dataframe=dataframe)
-            Display.display_frame(dataframe, consoleholder, consoletable, title)
-            echo(f"Selected Column\'s: Header: {header}")
-        else:
-            # If the output is not of the above types
-            # Display an exception message, raise no error (yet_
-            echo(message=('The parameter out is not '
-                          + f'the correct resultset type: {output}'), err=True)
-
-
-class ValidateResultSetTypes:
-    """Validates the resultset types. From CRUD + Find/Select Ops.
-    
-    :method: selectitemtype: Checks the item resultset types.
-    :method: selectrowtype: Checks the row resultset types.
-    :method: selectcolumntype: Checks the column's resultset types.
-    """
-    
-    @staticmethod
-    def selectitemtype(typecheck: tuple) -> bool:
-        """Checks the item types.
-        
-        ItemSelectTypes: Tuple[str, int, pd.DataFrame]
-        Format: (header, linenumber, dataframe).
-        """
-        if (isinstance(typecheck, tuple) and
-                typing.get_args(typing.get_type_hints(Display)['ItemSelectType']) ==
-                (str, int, pd.DataFrame)):
-            echo("Output is not of type Display.ItemSelectType")
-            return False
-        
-        echo("Output is of type Display.ItemSelectType")
-        return True
-    
-    @staticmethod
-    def selectrowtype(typecheck: tuple) -> bool:
-        """Checks the item types.
-        
-        RowSelectTypes: Tuple[int, pd.DataFrame]
-        Format: (linenumber, dataframe).
-        """
-        if not (isinstance(typecheck, tuple) and
-                typing.get_args(typing.get_type_hints(Display)['RowSelectType']) ==
-                (int, pd.DataFrame)):
-            
-            echo("Output is not of type Display.ItemSelectType")
-            return False
-        
-        echo("Output is of type Display.ItemSelectType")
-        return True
-    
-    @staticmethod
-    def selectcolumntype(typecheck: tuple) -> bool:
-        """Checks the item types.
-        
-        ColumnSelectType: Tuple[str, pd.DataFrame].
-        """
-        if (isinstance(typecheck, tuple) and
-                typing.get_args(typing.get_type_hints(Display)['ColumnSelectType']) ==
-                (str, pd.DataFrame)):
-            
-            echo("Output is not of type Display.ColumnSelectType")
-            return False
-        
-        echo("Output is of type Display.ColumnSelectType")
-        return True
-
-
-class ValidationQuerySetType:
-    """Validates the query types. From CRUD + Find/Select Ops."""
-    
-    @staticmethod
-    def querysetitemtype(typecheck: tuple) -> bool:
-        """Checks the item types."""
         pass
-    
-    @staticmethod
-    def querysetcolumntype(typecheck: tuple) -> bool:
-        """Checks the item types.
-        
-        ColumnQueryTypes: Tuple[str, pd.DataFrame].
-        """
-        if not (isinstance(typecheck, tuple) and
-                typing.get_args(typing.get_type_hints(Display)['SearchColumnQueryType']) ==
-                (str, str, pd.DataFrame)):
-            rprint("Output is not of type Display.SearchColumnQueryType")
-            return False
-        
-        rprint("Output is of type Display.SearchColumnQueryType")
-        return True
 
 
-class Entry:
-    """Entry: Prompt, Input, Confirm."""
+class Record:
+    """A Record is a row of data to be displayed in console, by views"""
     
-    reference: str
-    criteria: str
-    note: str
+    view: str = "table"
+    index: int = 0
+    z: int = 0
+    length: int = 1
+    headers: list[str] | None = []
+    values: list[str] | None = []
+    series: pd.Series | None = None
+    sourceframe: pd.DataFrame | None = None
+    size: int = 0
+    recordid = 0
+    positionid: int = int(recordid) + 1
+    rowid: str
+    recordid: str
     todo: str
-    topics: list[str]
-    todo_state: typing.Tuple[str, str] = ("unchecked", "checked")
+    flag: str
+    grade: str
+    status: str
+    topics: str
+    criteria: str
+    type: str
+    prefix: str
+    linked: str
+    reference: str
+    group: str
+    notes: str
     
-    def __init__(self):
-        """Init."""
-        self.reference: str = ""
-        self.criteria: str = ""
-        self.note: str = ""
-        self.todo: str = ""
-        # self.topics: list[str] = Topics.load_uniques("CriteriaTopics")
-    
-    @staticmethod
-    def prompt_addreferenece() -> str:
-        """Prompts the user to add a reference.
+    def __init__(self,
+                 labels: list[str] | None = None,
+                 display: str = "table",
+                 series: pd.Series | None = None,
+                 source: pd.DataFrame | None = None) -> None:
+        """A Record is a row of data in a table.
         
-        Prints a guidance message on how to format the input.
-        Takes only a string input for the reference (type: str].
-        :returns: str: User input for the reference
-        Test elsewhere for the format of the input.
+        Usage:
+        - A single row of data / record.
+          Many record instances equals many rows of data, for display only
+        - For printing individual records to the console, when < 5 per view.
+        - For greater than 5 records, use a DataFrame and a full table view.
+        - Display is the view, default is table, else: column, page, panel.
+        - Labels, for views, as a filtered list of DataFrame's headers.
+        
+        Parameters:
+        --------------------
+        :param labels: list[str]: The row headers, i.e. columns, data.
+        :param display: str: The view of the record, default is table.
+        :param series: pd.Series | None: The series of data, if any.
+        :param source: pd.DataFrame | None: The source of the data, if any.
         """
-        prompttext: str = \
-            ("A criteria reference has a format of x.x.x. \n"
-             + "Example: Uses multi-level list notations. \n"
-             + "1.2.0 is a reference to the second criteria of the first topic.\n"
-             + "Where 1 is the top item, 2 is the sub item, and 0 is the sub.sub item.\n")
-        rprint(prompttext, flush=True)
-        return Prompt.ask("Enter a x.x.x reference for the item?")
+        self.view: str = display
+        self.values: list[str]
+        self.index: int
+        self.length: int
+        self.headers: list[str] | list[pd.Index] | None = labels
+        self.series: pd.Series | None = series
+        self.sourceframe: pd.DataFrame | None = source
+        # Checks/loads Source, Dataframe, per instance
+        self.loadsingle(single=source)
+        self.loadrecord(single=source)
+    
+    def loadsingle(self, single: pd.DataFrame | pd.Series) -> None:
+        """Loads the source of the record, if any."""
+        if isinstance(single, pd.DataFrame):
+            if Record.checksingle(single):
+                self.series = pd.Series(
+                        data=single.values[Record.z],
+                        index=single.columns)
+                self.values = single.values[Record.z].tolist()
+                self.headers = single.columns.tolist()
+                self.sourceframe = single
+                self.length = len(self.values)
+                self.index = single.index[Record.z]
+        elif isinstance(single, pd.Series):
+            if Record.checksingle(single):
+                self.series: pd.Series = single
+                self.values = single.tolist()
+                self.headers: list[pd.Index] = single.axes
+                self.sourceframe: pd.DataFrame = \
+                    single.to_frame(name=single.name)  # noqa
+                self.length = single.size
+                self.index = single.index[Record.z]
+                self.size = single.size
+    
+    def loadrecord(self, single: pd.Series) -> None:
+        """Sets individial record properties."""
+        if Record.checksingle(single):
+            self.rowid: str = single.RowID
+            self.recordid: int = single.Position
+            self.type: str = single.Tier
+            self.prefix: str = single.TierPrefix
+            self.grade: str = single.Performance
+            self.status: str = single.DoD
+            self.todo: str = single.Progress
+            self.flag: str = single.ToDoFlag
+            self.group: str = single.CriteriaGroup
+            self.topics: str = single.CriteriaTopic
+            self.reference: str = single.CriteriaRef
+            self.criteria: str = single.Criteria
+            self.linked: str = single.LinkedRef
+            self.notes: str = single.Notes
     
     @staticmethod
-    def prompt_addcriteria():
-        """Prompts the user."""
-        return Prompt.ask("Enter a criteria text to this item?")
+    def checksingle(single: pd.DataFrame | pd.Series) -> bool:
+        """Checks the source of the record, if any."""
+        if isinstance(single, pd.DataFrame):
+            if single.ndim == Record.length and single.empty is False:
+                return True
+            else:
+                click.echo(message="The DataFrame must be a single row.",
+                           err=True)
+                return False
+        
+        if isinstance(single, pd.Series) and single.empty is False:
+            return True
+        else:
+            click.echo(message="The Series must be a single row.",
+                       err=True)
+            return False
+    
+    def card(self, consolecard: Console,
+             source: pd.Series | None = None,
+             out: bool = False) -> Table | None:
+        """Displays the record as a cardinal."""
+        
+        def config() -> Table:
+            """Displays the record as a cardinal."""
+            g: Table = Table.grid(expand=True)
+            g.add_column(header="Property",
+                         min_width=15,
+                         ratio=1,
+                         vertical='top')  # noqa
+            g.add_column(header="Value",
+                         min_width=50,
+                         justify="right",
+                         ratio=2,
+                         vertical='top')  # noqa
+            return g
+        
+        def display(table: Table, data: pd.Series | None = None) -> Table | None:
+            """Populates the card from instance or a from external source"""
+            if data is not None and isinstance(data, pd.Series):
+                for label, value in data.items():
+                    table.add_row(str(label), str(value))
+                return table
+            elif self.series is not None and isinstance(self.series, pd.Series):
+                for label, value in self.series.items():
+                    table.add_row(str(label), str(value))
+                return table
+        
+        card: Table = display(table=config(), data=source)
+        if out is True:
+            consolecard.print(card)
+            return None
+        else:
+            return card
     
     @staticmethod
-    def prompt_addnote() -> str:
-        """Prompts the user."""
-        return Prompt.ask("Enter a note for this item?")
+    def panel(consolepane: Console,
+              renderable,
+              fits: bool = False,
+              card: tuple[int | None, int | None] | None = None,
+              align: typing.Literal["left", "center", "right"] = "center",
+              outline: rich.box = box.SIMPLE, sendtolayout: bool = False) \
+            -> Panel | None:  # noqa
+        """Frames the renderable as a panel."""
+        
+        def config(dimensions: tuple[int, int]) -> Panel:
+            """Frames the renderable as a panel."""
+            width, height = dimensions
+            if width is None and height is None:
+                p: Panel = Panel(renderable=renderable,
+                                 expand=fits,
+                                 box=outline,
+                                 title=renderable.title,
+                                 title_align=align)
+                return p
+            
+            p: Panel = Panel(renderable=renderable,
+                             expand=fits,
+                             width=width,
+                             height=height,
+                             box=outline,
+                             title=renderable.title,
+                             title_align=align)
+            return p
+        
+        # Switches the flow: returns | print| to stdout
+        panel: Panel = config(dimensions=card)
+        if sendtolayout is True:
+            return panel
+        else:
+            consolepane.print(panel)
+            return None
     
-    @staticmethod
-    def prompt_selecttopic(topicslist: list[str], is_choices: bool = True) -> str:
-        """Prompts the user to update."""
-        prompttext: str = "\\\\n".join([f"{i}. {topic}"
-                                        for i, topic
-                                        in enumerate(topicslist, 1)])
-        rprint(prompttext, flush=True)
-        rprint("Enter the name, not the number", flush=True)
-        return Prompt.ask("Choose a new topic for the critera?",
-                          choices=topicslist,
-                          default=topicslist[
-                              0], show_choices=is_choices)
+    def display(self, consoledisplay: Console,
+                sizing: tuple[int, int] = None,
+                record=None, sendtolayout: bool = False) -> Panel | None:
+        """Displays the record as a table, card."""
+        # Checks the external record, self record
+        if record is not None:
+            card: Table | None = record.card(consolecard=consoledisplay)
+        else:
+            card: Table | None = self.card(consolecard=consoledisplay)
+        # Exluced Printed card deets
+        if card is None:
+            click.echo(message="__")
+            return None
+        # Get a panel
+        panel: Panel | None = \
+            self.panel(consolepane=consoledisplay,
+                       renderable=card,
+                       card=sizing)  # noqa
+        # Switches the flow: return to layout | print panel to stdout
+        if sendtolayout is True and panel is not None:
+            return panel
+        elif panel is not None:
+            consoledisplay.print(panel)
+            return None
+        else:
+            click.echo(message="The panel's is printed")
+            return None
     
-    @staticmethod
-    def prompt_checktodo(state: typing.Tuple[str, str] = todo_state) -> str:
-        """Prompts the user to toggle the todo."""
-        _state: list[str] = [state[0].lower(), state[1].lower()]
-        return Prompt.ask("Choose to check, or not the todo item?",
-                          choices=_state, default=_state[0])
+    def header(self, consolecard: Console,
+               sendtolayout: bool = False,
+               gridfit: bool = True,
+               subgrid: bool = False) -> Table | None:
+        """Displays the header of the record"""
+        
+        def config(fit: bool = True) -> Table:
+            """Displays the record as a cardinal."""
+            g: Table = Table.grid(expand=fit)
+            g.add_column(header="Index",
+                         min_width=30,
+                         ratio=2,
+                         vertical='top')  # noqa
+            g.add_column(header="Spacer",
+                         min_width=10,
+                         justify="center",
+                         ratio=1,
+                         vertical='top')  # noqa
+            g.add_column(header="Grade",
+                         min_width=30,
+                         ratio=2,
+                         vertical='top')  # noqa
+            return g
+        
+        def indexgrid(expan: bool) -> Table:
+            """Display the subtable for Index/Identifiers"""
+            identtable: Table = config(fit=expan)
+            rowid_label: str = 'Record Name:'
+            spacer: str = '.....'
+            rowid_value: str = f'{self.rowid} - {self.series.name}'
+            identtable.add_row(rowid_label,
+                               spacer,
+                               rowid_value)
+            pos_label: str = 'Position ID:'
+            pos_value: str = f'{self.recordid}'
+            identtable.add_row(pos_label,
+                               spacer,
+                               pos_value)
+            return identtable
+        
+        def gradegrid(expan: bool) -> Table:
+            """Display the subtable for Grade/Performance"""
+            gradetable: Table = config(fit=expan)
+            grade_label: str = 'Grade:'
+            spacer: str = '..........'
+            grade_value = f'{self.grade}'
+            gradetable.add_row(grade_label, spacer, grade_value)
+            outcome_label: str = 'Outcome:'
+            spacer: str = '..........'
+            outcome_value = f'{self.type} | {self.prefix}:{self.reference}'
+            gradetable.add_row(outcome_label, spacer, outcome_value)
+            click.echo(message=f"Grade: {grade_value}")
+            click.echo(message=f"Outcome: {outcome_value}")
+            return gradetable
+        
+        def mastergrid(table: Table,
+                       left: Table,
+                       right: Table,
+                       fit: bool) -> Table:
+            """ Display the header grid table"""
+            master: Table = table
+            master.grid(expand=fit)
+            master.add_row(left, right)
+            return master
+        
+        indexpane: Table = indexgrid(expan=subgrid)
+        gradepane: Table = gradegrid(expan=subgrid)
+        masterpane: Table = mastergrid(table=config(),
+                                       left=indexpane,
+                                       right=gradepane,
+                                       fit=gridfit)  # noqa
+        if sendtolayout is True:
+            return masterpane
+        else:
+            consolecard.print(masterpane)
+            return None
+    
+    def editable(self, consoleedit: Console,
+                 expand: bool = False,
+                 sendtolayout: bool = False) -> Table | None:
+        """Displays the record: Use it for Current | Modified Records"""
+        
+        def config(fit: bool) -> Table:
+            """Displays the record as a cardinal."""
+            g: Table = Table.grid(expand=fit)
+            g.add_column(header="Current",
+                         min_width=45,
+                         ratio=1,
+                         vertical='top')  # noqa
+            return g
+        
+        def currentdata(table: Table, fit: bool) -> Table:
+            """Display the subtable for Index/Identifiers"""
+            currenttable: Table = table
+            currenttable.expand = fit
+            currenttable.title = 'Current Data'
+            todo_label: str = 'To Do: \n'
+            todo_value = f'{self.todo}'
+            criteria_label: str = 'Criteira: \n'
+            criteria_value = f'{self.criteria}'
+            currenttable.add_section()
+            notes_label: str = 'Notes: \n'
+            if self.notes is None:
+                notes_value = 'Add a note'
+            else:
+                notes_value = f'{self.notes}'
+            # Build rows
+            currenttable.add_row(todo_label)
+            currenttable.add_row(todo_value)
+            currenttable.add_row(criteria_label)
+            currenttable.add_row(criteria_value)
+            currenttable.add_row(notes_label)
+            currenttable.add_row(notes_value)
+            return currenttable
+        
+        currentdatapane: Table = \
+            currentdata(table=config(fit=expand),
+                        fit=False)  # noqa
+        if sendtolayout is True:
+            return currentdatapane
+        else:
+            consoleedit.print(currentdatapane)
+            return None
+    
+    def footer(self, consolefoot: Console,
+               sendtolayout: bool = False,
+               expand: bool = True,
+               valign: str = 'top') -> Table | None:
+        """Displays footer as a card/record"""
+        
+        # Config Table/Grid for Footer
+        def config(fit: bool, vertical: str) -> Table:
+            """Displays the record as a cardinal."""
+            g: Table = Table.grid(expand=fit)
+            g.add_column(header="More",
+                         min_width=30,
+                         ratio=1,
+                         vertical=vertical)  # noqa
+            g.add_column(header="Linked",
+                         min_width=15,
+                         ratio=1,
+                         vertical=vertical)  # noqa
+            g.add_column(header="Categories",
+                         min_width=20,
+                         ratio=1,
+                         vertical=vertical)  # noqa
+            return g
+        
+        def metapane(table: Table, wide: bool) -> Table:
+            """Display the subtable for Index/Identifiers"""
+            meta: Table = table
+            meta.expand = wide
+            meta.title = 'Footer: Project Data'
+            meta.add_section()
+            tier_label: str = 'Tier: '
+            link_label: str = 'Linked: '
+            tier_value = f'{self.type}.{self.prefix}.{self.reference}'
+            meta.add_row(f'{tier_label} {tier_value})', f'{link_label} {self.linked}', '')
+            meta.add_section()
+            now: datetime = datetime.datetime.now()
+            dt_string: str = now.strftime("%d/%m/%Y %H:%M")  # %S
+            meta.add_row(f'Viewed: {dt_string}', '/', '/')
+            return meta
+        
+        footer: Table = metapane(table=config(fit=expand, vertical=valign),
+                                 wide=expand)  # noqa
+        if sendtolayout is True:
+            return footer
+        else:
+            consolefoot.print(footer)
+            return None
 
 
-# def main():
-#    """Main."""
-#    # Initilse WebConsole
-#    webconsole: WebConsole = WebConsole(width=configuration.Console.WIDTH,
-#                                        height=configuration.Console.HEIGHT)
-#    mainconsole: Console = webconsole.console
-#    maintable: Table = webconsole.table
-# 0.1: Load the data
-#    data: list[str] = Controller.load_data()
-# 0.2: Display the data
-#    Display.display_table(data,
-#                          mainconsole,
-#                         maintable)
-# 0.3: Upload the data
-
-ActionType = typing.Literal["default", "error", "ignore", "always", "module", "once"]
-
-
-def warn(hide: bool = True, action: ActionType = "ignore") -> None:
-    """Configured Python Interpreter warnings.
-
-    Added: typing.Literal[str] : Invalid Type
-    Fixme: 'Literal' may be parameterised with literal ints, byte and unicode
-            strings, bools, Enum values, None, other literal types, or type
-            aliases to other literal types
-
-    Parameters:
-    ====================
-    :param hide: bool:
-                True to hide warnings, False to show warnings
-    :param action: Literal["default", "error", "ignore", "always", "module", "once"]:
-                "ignore" to ignore warnings,
-                "default" to show warnings
-                "error" to turn matching warnings into exceptions
-                "always" to always print matching warnings
-                "module" to print the first occurrence of matching warnings
-                         for each module where the warning is issued
-                "once" to print only the first occurrence of matching warnings,
-                       regardless of location
-    """
-    if hide:
-        warnings.filterwarnings(action, message=".*deprecated.*", category=DeprecationWarning)
-        warnings.filterwarnings(action, category=ResourceWarning)
-
-# if __name__ == '__main__':
-#     warn(hide=True, action="ignore")
-#     main()
+class Editor:
+    """The Editor is a console utility for editing records."""
+    
+    record: Record = None
+    oldseries: pd.Series | None = None
+    newseries: pd.Series | None = None
+    oldframe: pd.DataFrame | None = None
+    newframe: pd.DataFrame | None = None
+    
+    def __init__(self, currentrecord: Record = None) -> None:
+        """The Editor is a console utility for editing records."""
+        if currentrecord is not None:
+            self.record = currentrecord
+        else:
+            click.echo(message="No editing possible", err=True)
+        
+        self.oldseries = self.record.series
+        self.oldframe = self.record.sourceframe

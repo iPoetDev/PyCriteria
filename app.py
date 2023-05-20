@@ -3,42 +3,49 @@
 # ruff: noqa: F841, ANN101, ANN001, D415, RET505, I001, F405, F403
 """Module: PyCriteria Terminal App."""
 # 1. Std Lib
-from typing import Literal, NewType, Optional
+from typing import Literal, Optional
 
+import click  # type: ignore
 # 2. 3rd Party
 import rich
+import rich.panel
 from click_repl import register_repl  # type: ignore
-from rich import pretty  # type: ignore
+from pandas import pandas as pd, DataFrame, Series  # type: ignore
+from rich import pretty, print as rprint  # type: ignore
 
 # 3. Local: Note the controller * intentionally imports all from the module
 from commands import AboutUsage, Commands
-from controller import *
+from controller import (Controller, DataController, ColumnSchema, Headers,
+                        Display, WebConsole, configuration, gspread,
+                        Record, Inner, )
 from sidecar import AppValues, ProgramUtils
 
 # Note: Move third-party import `gspread` into a type-checking block
 
 # Global Modules/Objects
+# 1.1 Commands.py
 About: AboutUsage = AboutUsage()
-
 Commands: Commands = Commands()
+# 1.2 Controller.py
 Actions: Controller = Controller()
 AppValues: AppValues = AppValues()
 DataControl: DataController = DataController(Actions.load_wsheet())
 Columns: ColumnSchema = ColumnSchema()
 Head: Headers = Headers(labels=Columns)
 Display: Display = Display()
-Entry: Entry = Entry()
 Webconsole: WebConsole = WebConsole(configuration.Console.WIDTH,
                                     configuration.Console.HEIGHT)
-ContextObject = NewType('ContextObject', Optional[object])
-
+Webconsole.terminal = Inner()
+# 1.3 Sidecar.py
+utils: ProgramUtils = ProgramUtils()
 pretty.install()
 
 
 class View:
     """View."""
     
-    Load: list[str] = ["Load", "Begins", "Project", "Criteria", "ToDo", "Reference", "Refresh"]
+    Load: list[str] = ["Load", "Begins", "Project", "Criteria",
+                       "ToDo", "Reference", "Refresh"]
     Todo: list[str] = ["ToDo", "All", "Simple", "Done", "Grade", "Review"]
     
     def __init__(self):
@@ -49,14 +56,22 @@ class View:
 view: View = View()
 
 
+class Terminal:
+    """Terminal."""
+    
+    def __init__(self):
+        """Initialize."""
+        pass
+
+
 class CriteriaApp:
     """PyCriteria Terminal App."""
     
     values: AppValues
     
-    def __init__(self):
+    def __init__(self, values: AppValues):
         """Initialize."""
-        self.values = AppValues()
+        self.values = values
     
     @staticmethod
     def crumbs(context: click.Context) -> None:
@@ -67,10 +82,14 @@ class CriteriaApp:
             crumb: str = context.info_name
         else:
             crumb: str = root
-        click.echo(message=f'Navigation: CLI: > Run > ... > Load'
-                           f'> {crumb.title()}*\n *: You are here: {crumb.title()}\n'
-                           f'To go up one or two level, enter, each time:  ..  \n'
-                           f'To Exit: ctrl + d  \n')
+        
+        text: str = ('Navigation: CLI: > Run > ... > Load'
+                     + f'> {crumb.title()}*\n *: '
+                     + f'You are here: {crumb.title()}\n'
+                     + 'To go up one or two level, enter, each time:  ..  \n'
+                     + 'To Exit: ctrl + d  \n')
+        click.echo(
+                message=text)
     
     @staticmethod
     def get_data() -> pd.DataFrame:
@@ -155,13 +174,14 @@ class CriteriaApp:
     def search_data(frame: pd.DataFrame,
                     label: str,
                     searchstr: str,  # noqa
-                    case: bool = False, echo: bool = False) -> pd.DataFrame:  # noqa
+                    case: bool = False, echos: bool = False) \
+            -> pd.DataFrame:  # noqa
         """Search the dataframe."""
         searchresult: pd.DataFrame = \
             frame[frame[label].astype(str).str.contains(searchstr,
                                                         case=case)]
         
-        if echo:
+        if echos:
             click.echo(
                     message=f'The rows with "{searches}" in column\'s'
                             f' "{label}" are:\n {searchresult}')
@@ -211,7 +231,7 @@ class CriteriaApp:
              searchterm: str = None,
              strict: bool = False,
              zero: bool = True) \
-            -> pd.DataFrame | None:
+            -> pd.DataFrame | pd.Series | None:
         """Get the rows from the dataframe.
         
         Parameters
@@ -231,16 +251,12 @@ class CriteriaApp:
             
         return pd.DataFrame | None: - Expect a result or None
         """
-        result: pd.DataFrame | None
+        result: pd.DataFrame | pd.Series | None
         if index:
-            result: pd.DataFrame = App.index(frame=frame,
-                                             index=index,
-                                             zero=zero)
+            result = App.index(frame=frame, index=index, zero=zero)  # noqa
         elif searchterm:
             # Search across all columns for the position value
-            result: pd.DataFrame = App.search_rows(frame=frame,
-                                                   searchterm=searchterm,
-                                                   exact=strict)
+            result = App.search_rows(frame=frame, searchterm=searchterm, exact=strict)
             if result.empty is not False:
                 click.echo(f"Found: {result}")
             else:
@@ -249,21 +265,21 @@ class CriteriaApp:
             click.echo("Please provide either an index or searches term")
             return None
         
-        return result | None
+        return result
     
     @staticmethod
     def index(frame: pd.DataFrame,
               index: int = None,
               zero: bool = True) \
-            -> pd.DataFrame | None:
+            -> pd.DataFrame | pd.Series | None:
         """Get the index from the dataframe."""
         if zero and index is not None:
-            result: pd.DataFrame = frame.iloc[index - 1] \
+            result = frame.iloc[index - 1] \
                 if index >= 0 else frame.iloc[index]
             click.echo(f"Found: {result} for zero index {index - 1}")
             return result
         elif not zero and index is not None:
-            result: pd.DataFrame = frame.iloc[index] \
+            result = frame.iloc[index] \
                 if index > 0 else frame.iloc[index]
             click.echo(f"Found: {result} for standard index {index}")
             return result
@@ -320,7 +336,7 @@ class CriteriaApp:
         return resultframe if not None else filterframe
 
 
-App: CriteriaApp = CriteriaApp()
+App: CriteriaApp = CriteriaApp(values=AppValues)
 
 
 class Checks:
@@ -372,9 +388,27 @@ class Checks:
         
         click.echo(message="No changes in refreshed/rehydrated data")
         return True
+    
+    @staticmethod
+    def santitise(s: str) -> str | None:
+        """Sanitise strings."""
+        empty: str = ''
+        if s != empty and isinstance(s, str):
+            return s.strip() if s else None
+        else:
+            click.echo(message="Searching by index only. No keywords.")
+            return None
 
 
 Guard: Checks = Checks()
+
+
+class Results:
+    """Results."""
+    
+    def __init__(self):
+        """Initialize."""
+        pass
 
 
 @click.group(name=AppValues.Run.cmd)
@@ -508,25 +542,25 @@ def criteria(ctx) -> None:
     App.update_appdata(context=ctx, dataframe=dataframe)
 
 
-@load.command("todo", help="Load todo list. Select views to display.")
+@load.command("todo", help="Load todo list. Select views to Display.")
 @click.pass_context
-@click.option('-d', '--display',
+@click.option('-d', '--Display',
               type=str,
               default='All',
               show_default=True,
-              help="Choose a display: from All, Simple, Done, Grade, Review")
+              help="Choose a Display: from All, Simple, Done, Grade, Review")
 @click.option('-s', '--selects',
               type=click.Choice(choices=Head.ToDoChoices),
               default='All',
               show_default=True,
               help="Choose a option: from All, Simple, Done, Grade, Review")
 def todo(ctx, display: str, selects: str) -> None:
-    """Load todos, and display different filters/views."""
+    """Load todos, and Display different filters/views."""
     # App.crumbs(context=ctx)
     dataframe: pd.DataFrame = App.get_data()
     
     def viewopt(inputs: str, choice: str) -> str:
-        """Choose a view input source to display."""
+        """Choose a view input source to Display."""
         if inputs == choice:
             return choice
         elif inputs is not None:
@@ -564,8 +598,8 @@ def reference(ctx) -> None:
     App.update_appdata(context=ctx, dataframe=dataframe)
 
 
-@load.command("views", help="Load views. Select views to display.")
-@click.option('-d', '--display',
+@load.command("views", help="Load views. Select views to Display.")
+@click.option('-d', '--Display',
               type=click.Choice(choices=view.Load),
               default='All', show_default=True)
 @click.pass_context
@@ -609,7 +643,7 @@ def find(ctx: click.Context) -> None:
     App.update_appdata(context=ctx, dataframe=dataframe)
 
 
-@find.command("keyword", help="Load todo list. Select views to display.")
+@find.command("keyword", help="Load todo list. Select views to Display.")
 @click.pass_context
 @click.option('-q', '--query',
               type=str,
@@ -622,7 +656,7 @@ def find(ctx: click.Context) -> None:
               show_default=True,
               help="Choose a option: from All, Simple, Done, Grade, Review")
 def keyword(ctx, query: str, selects: str) -> None:
-    """Load todos, and display different filters/views."""
+    """Load todos, and Display different filters/views."""
     #
     sourcedata: pd.DataFrame = App.get_data()
     filteredata: pd.DataFrame = \
@@ -672,7 +706,7 @@ def search(ctx: click.Context, header: str, query: str) -> None:
         searchresult: pd.DataFrame = App.search_data(frame=sourcedata,
                                                      label=header,
                                                      searchstr=query)
-        # Build the Queryset: header, query, searchresult for display
+        # Build the Queryset: header, query, searchresult for Display
         Display.display_data(dataframe=searchresult,
                              consoleholder=Webconsole.console,
                              consoletable=Webconsole.table)
@@ -718,7 +752,7 @@ def searches(ctx: click.Context, label: str, query: str) -> None:
         searchresult: pd.DataFrame = App.search_data(frame=sourcedata,
                                                      label=label,
                                                      searchstr=query)
-        # Build the Queryset: header, query, searchresult for display
+        # Build the Queryset: header, query, searchresult for Display
         Display.display_data(dataframe=searchresult,
                              consoleholder=Webconsole.console,
                              consoletable=Webconsole.table)
@@ -733,18 +767,17 @@ run.add_command(searches)
 
 
 @find.command(name="locate", help="Locate row(s), via index, column, row.")
-@click.option('-s', '--searches', type=str,
+@click.option('-s', '--searches', 'searche', type=str,
               help='Search for a string in the dataframe',
               prompt=True,
-              optional=True)
+              default='')
 @click.option('-i', '--index',
               type=click.IntRange(
                       min=1,
                       max=len(DataControl.dataframe),
                       clamp=True),
               help=f'Select between 1 and f{len(DataControl.dataframe)}',
-              prompt=True,
-              optional=True)
+              prompt=True)
 @click.option('-a', '--axis',
               type=click.Choice(['index', 'column', 'row'],
                                 case_sensitive=False),
@@ -753,16 +786,18 @@ run.add_command(searches)
               prompt=True,
               required=True)
 @click.pass_context
-def locate(ctx: click.Context, index: int, searchterm: str,
+def locate(ctx: click.Context, index: int, searche: str,
            axis: str = Literal['index', 'column', 'row']) -> None:
     """Locate: a row: by index or searches term via index, column or row."""
+    searchterm: str = Guard.santitise(searche)
     
     # Define the function to get the row frames
     def getrowframe(data: pd.DataFrame,
-                    ix: int, st: str) -> pd.DataFrame | None:
+                    ix: int, st: str) -> pd.Series | pd.DataFrame | None:
         """Get a row from a dataframe by index or searches term."""
         if ix and not st:
             result = App.rows(frame=data, index=ix)
+            rich.inspect(result)
         elif ix and st:
             result = App.rows(frame=data, index=ix, searchterm=st)
         elif not ix and st:
@@ -770,18 +805,48 @@ def locate(ctx: click.Context, index: int, searchterm: str,
         else:
             return None
         
-        return result
+        if isinstance(result, pd.Series):
+            click.echo(f"Found a record")
+            return result
+        elif isinstance(result, pd.DataFrame):
+            click.echo(f"Found a set of records")
+            return result
+        else:
+            click.echo(f"Found something: undefined")
+            return None
     
     # Get the dataframe
     dataframe: pd.DataFrame = App.get_data()
     if axis.lower() == 'index':
-        resultframe: pd.DataFrame = \
+        resultframe = \
             getrowframe(data=dataframe, ix=index, st=searchterm)
-        rich.print(resultframe)
-        # App.display_todo(dataframe=resultframe)
-    elif axis.lower() == 'columns':
+        
+        # if isinstance(resultframe, pd.Series):
+        # click.echo(f"Found: \n {getrowframe(data=dataframe, ix=index, st=searchterm)}")
+        # click.echo(resultframe.values)
+        # rich.inspect(resultframe)
+        # return None
+        
+        if Record.checksingle(resultframe):
+            individual = Record(source=resultframe)
+            if individual.card(consolecard=Webconsole.console) is not None:
+                dimensions: tuple[int, int] = (40, 20)
+                # panel: rich.panel.Panel = individual.display(
+                # consoledisplay=Webconsole.console,
+                # sizing=dimensions,
+                # sendtolayout=True)
+                # Webconsole.console.print(panel)
+                # Webconsole.terminal.updates(renderable=panel, target="current")
+                # Webconsole.terminal.laidout(Webconsole.console)
+                individual.header(Webconsole.console)
+            else:
+                individual.card(consolecard=Webconsole.console)
+        
+        else:
+            click.echo(message="The result is not a single record")
+    elif axis.lower() == 'column':
         click.echo(message="Please use the searches command to searches columns")
-    elif axis.lower() == 'rows':
+    elif axis.lower() == 'row' and searchterm is not None:
         resultframe: pd.DataFrame = \
             getrowframe(data=dataframe, ix=index, st=searchterm)
         rich.print(resultframe)
@@ -869,9 +934,6 @@ class CRUD:
 register_repl(run)
 
 if __name__ == "__main__":
-    traceable: str = "Enable tracemalloc to get the object allocation traceback"
-    warnings.filterwarnings("ignore",
-                            message=traceable, )
-    ProgramUtils.warn()
+    utils.warn()
     click.echo("Hello")
     run()
