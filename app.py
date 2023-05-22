@@ -17,7 +17,7 @@ from rich import pretty, print as rprint  # type: ignore
 from commands import AboutUsage, Commands
 from controller import (Controller, DataController, ColumnSchema, Headers,
                         Display, WebConsole, configuration, gspread,
-                        Record, Inner, )
+                        Record, Inner, Editor, )
 from sidecar import AppValues, ProgramUtils
 
 # Note: Move third-party import `gspread` into a type-checking block
@@ -56,12 +56,83 @@ class View:
 view: View = View()
 
 
-class Terminal:
-    """Terminal."""
+class Window:
+    """Window: Arrange Layouts, Panels, Cards."""
     
     def __init__(self):
         """Initialize."""
         pass
+    
+    @staticmethod
+    def showrecord(locateddata: pd.Series | pd.DataFrame,
+                   dimensions: tuple[int, int] = (40, 20),
+                   sendtoeditor: bool = False,
+                   debug: bool = False) -> Record | None:
+        """Display Record."""
+        if debug:
+            rprint(locateddata)
+        elif locateddata.empty is False:
+            # Individual record holds the singular record, handles displays
+            # Selecting different calls on the individual record yields
+            # different displays/outputs.
+            # Only displays a pd.Series, implicitly.
+            # Not designed for results >1, unless part of a loop.
+            individual = Record(source=locateddata)
+            if individual.card(consolecard=Webconsole.console) is not None:
+                # panel: rich.panel.Panel = individual.display(
+                # consoledisplay=Webconsole.console,
+                # sizing=dimensions,
+                # sendtolayout=True)
+                # Webconsole.console.print(panel)
+                # Webconsole.terminal.updates(renderable=panel, target="current")
+                # Webconsole.terminal.laidout(Webconsole.console)
+                individual.header(Webconsole.console)
+                individual.editable(Webconsole.console)
+                individual.footer(Webconsole.console)
+            else:
+                individual.card(consolecard=Webconsole.console)
+            
+            if sendtoeditor:
+                return individual
+            else:
+                return None
+    
+    @staticmethod
+    def showedited(editeddata: pd.Series | pd.DataFrame,
+                   dimensions: tuple[int, int] = (40, 20),
+                   sendtoeditor: bool = False,
+                   debug: bool = False) -> Record | None:
+        """Display Edited Record."""
+        if debug:
+            rprint(editeddata)
+        elif editeddata.empty is False:
+            # Individual record holds the singular record, handles displays
+            # Selecting different calls on the individual record yields
+            # different displays/outputs.
+            # Only displays a pd.Series, implicitly.
+            # Not designed for results >1, unless part of a loop.
+            individual = Record(source=editeddata)
+            if individual.card(consolecard=Webconsole.console) is not None:
+                # panel: rich.panel.Panel = individual.display(
+                # consoledisplay=Webconsole.console,
+                # sizing=dimensions,
+                # sendtolayout=True)
+                # Webconsole.console.print(panel)
+                # Webconsole.terminal.updates(renderable=panel, target="current")
+                # Webconsole.terminal.laidout(Webconsole.console)
+                individual.header(Webconsole.console)
+                individual.editable(Webconsole.console)
+                individual.footer(Webconsole.console)
+            else:
+                individual.card(consolecard=Webconsole.console)
+            
+            if sendtoeditor:
+                return individual
+            else:
+                return None
+
+
+window: Window = Window()
 
 
 class CriteriaApp:
@@ -409,6 +480,30 @@ class Results:
     def __init__(self):
         """Initialize."""
         pass
+    
+    @staticmethod
+    def getrowframe(data: pd.DataFrame,
+                    ix: int, st: str) -> pd.Series | pd.DataFrame | None:
+        """Get a row from a dataframe by index or searches term."""
+        if ix and not st:
+            result = App.rows(frame=data, index=ix)
+            rich.inspect(result)
+        elif ix and st:
+            result = App.rows(frame=data, index=ix, searchterm=st)
+        elif not ix and st:
+            result = App.rows(frame=data, searchterm=st)
+        else:
+            return None
+        
+        if isinstance(result, pd.Series):
+            click.echo(f"Found a record")
+            return result
+        elif isinstance(result, pd.DataFrame):
+            click.echo(f"Found a set of records")
+            return result
+        else:
+            click.echo(f"Found something: undefined")
+            return None
 
 
 @click.group(name=AppValues.Run.cmd)
@@ -828,19 +923,12 @@ def locate(ctx: click.Context, index: int, searche: str,
         # return None
         
         if Record.checksingle(resultframe):
-            individual = Record(source=resultframe)
-            if individual.card(consolecard=Webconsole.console) is not None:
-                dimensions: tuple[int, int] = (40, 20)
-                # panel: rich.panel.Panel = individual.display(
-                # consoledisplay=Webconsole.console,
-                # sizing=dimensions,
-                # sendtolayout=True)
-                # Webconsole.console.print(panel)
-                # Webconsole.terminal.updates(renderable=panel, target="current")
-                # Webconsole.terminal.laidout(Webconsole.console)
-                individual.header(Webconsole.console)
-            else:
-                individual.card(consolecard=Webconsole.console)
+            # Individual record holds the singular record, handles displays
+            # Selecting different calls on the individual record yields
+            # different displays/outputs.
+            # Only displays a pd.Series, implicitly.
+            # Not designed for results >1, unless part of a loop. # noqa
+            window.showrecord(locateddata=resultframe, debug=True)
         
         else:
             click.echo(message="The result is not a single record")
@@ -859,25 +947,203 @@ def locate(ctx: click.Context, index: int, searche: str,
 
 run.add_command(locate)
 
+"""CRUD: Create, Read, Update, Delete."""
+
+
+# New (Add) | Create, Add commands -> None: by item, by row
+@run.group(AppValues.Add.cmd)
+@click.pass_context
+@click.pass_obj
+def add(self, ctx: click.Context) -> None:  # noqa: ANN101
+    """Add: a Note"""
+    App.update_appdata(context=ctx, dataframe=App.get_data())
+    click.echo(message="Updated App Data")
+
+
+@add.command("add note", help="Add a note to a found record")
+@click.pass_context
+@click.option('-s', '--searches', 'searche', type=str,
+              help='Leave blank if known location/row, i.e. index',
+              prompt="To use this option, enter a search term: ",
+              default='')
+@click.option('-i', '--index',
+              type=click.IntRange(
+                      min=1,
+                      max=len(DataControl.dataframe),
+                      clamp=True),
+              help='Optionally leave blank when searching by a string, i.e. searches\n'
+                   f'Select between 1 and {len(DataControl.dataframe)}: ',
+              prompt=f'Select between 1 and {len(DataControl.dataframe)}: ')
+@click.option('-n', '--note', 'note', type=str,
+              help='Add 1st note to the record',
+              prompt="Add a note to the record",
+              required=True)
+@click.option('-a', '--axis',
+              type=click.Choice(['index', 'column', 'row'],
+                                case_sensitive=False),
+              help='Choose axis to seach in/by. Default: row',
+              default='index',
+              prompt="Select by, to focus on: index",
+              required=True)
+def addsinglenote(self, ctx: click.Context, index: int, searche: str, note: str,
+                  axis: str = Literal['index']) -> None:  # noqa: ANN101
+    """Add a new note to a record
+
+    Append by a location/coordinate.
+    """
+    # Fetch the dataframe
+    dataframe: pd.DataFrame = App.get_data()
+    if axis.lower() == 'index':
+        resultframe = Results.getrowframe(data=dataframe,
+                                          ix=index,
+                                          st=Guard.santitise(searche))
+        if Record.checksingle(resultframe) and note is not None:
+            editing = window.showrecord(locateddata=resultframe,
+                                        debug=True)  # noqa
+            if editing is not None:
+                editor = Editor(currentrecord=editing, sourceframe=resultframe)
+                if index is not None:
+                    editor.addingnotes(notes=note, location=index)
+                else:
+                    editor.addingnotes(notes=note)
+                click.echo(message=f"Editing: {editing}")
+                App.update_appdata(context=ctx, dataframe=editor.newresultframe)
+            else:
+                click.echo(message=f"Exiting: editing mode")
+        else:
+            click.echo(message="The result is not a single record", err=True)
+
+
+@run.group(AppValues.Update.cmd)
+@click.pass_context
+def update(self, ctx: click.Context) -> None:  # noqa: ANN101
+    """Update: Update item, row(s)."""
+    App.update_appdata(context=ctx, dataframe=App.get_data())
+    click.echo(message="Updated App Data")
+
+
+@add.command("update note", help="Add a note to a found record")
+@click.pass_context
+@click.option('-s', '--searches', 'searche', type=str,
+              help='Leave blank if known location/row, i.e. index',
+              prompt="To use this option, enter a search term: ",
+              default='')
+@click.option('-i', '--index',
+              type=click.IntRange(
+                      min=1,
+                      max=len(DataControl.dataframe),
+                      clamp=True),
+              help='Optionally leave blank when searching by a string, i.e. searches\n'
+                   f'Select between 1 and {len(DataControl.dataframe)}: ',
+              prompt=f'Select between 1 and {len(DataControl.dataframe)}: ')
+@click.option('-n', '--note', 'note', type=str,
+              help='Add 1st note to the record',
+              prompt="Add a note to the record",
+              required=True)
+@click.option('-a', '--axis',
+              type=click.Choice(['index'],
+                                case_sensitive=False),
+              help='Choose axis to seach in/by. Default: row',
+              default='index',
+              prompt="Select by, to focus on: index",
+              required=True)
+def updateanote(ctx: click.Context, index: int, searche: str, note: str,
+                axis: str = Literal['index']) -> None:  # noqa: ANN101
+    """Update to a record
+
+    Append by a location/coordinate.
+    """
+    # Fetch the dataframe
+    dataframe: pd.DataFrame = App.get_data()
+    if axis.lower() == 'index':
+        resultframe = Results.getrowframe(data=dataframe,
+                                          ix=index,
+                                          st=Guard.santitise(searche))
+        if Record.checksingle(resultframe) and note is not None:
+            editing = window.showrecord(locateddata=resultframe,
+                                        debug=True)  # noqa
+            if editing is not None:
+                editor = Editor(currentrecord=editing, sourceframe=resultframe)
+                if index is not None:
+                    editor.addingnotes(notes=note, location=index)
+                else:
+                    editor.addingnotes(notes=note)
+                click.echo(message=f"Editing: {editing}")
+                App.update_appdata(context=ctx, dataframe=editor.newresultframe)
+            else:
+                click.echo(message=f"Exiting: editing mode")
+        else:
+            click.echo(message="The result is not a single record", err=True)
+
+
+@run.group(AppValues.Delete.cmd)
+@click.pass_context
+def delete(ctx: click.Context) -> None:  # noqa: ANN101
+    """Delete: Delete a note"""
+    App.update_appdata(context=ctx, dataframe=App.get_data())
+    click.echo(message="Updated App Data")
+
+
+@delete.command("delete note", help="Delete a note from a found record")
+@click.pass_context
+@click.option('-s', '--searches', 'searche', type=str,
+              help='Leave blank if known location/row, i.e. index',
+              prompt="To use this option, enter a search term: ",
+              default='')
+@click.option('-i', '--index',
+              type=click.IntRange(
+                      min=1,
+                      max=len(DataControl.dataframe),
+                      clamp=True),
+              help='Optionally leave blank when searching by a string, i.e. searches\n'
+                   f'Select between 1 and {len(DataControl.dataframe)}: ',
+              prompt=f'Select between 1 and {len(DataControl.dataframe)}: ')
+@click.option('-n', '--note', 'note', type=str,
+              help='Clears the note from the record',
+              prompt="Delete a note, leave blank",
+              required=True)
+@click.option('-a', '--axis',
+              type=click.Choice(['index'],
+                                case_sensitive=False),
+              help='Choose axis to seach in/by. Default: index',
+              default='index',
+              prompt="Hit enter, to continue: index",
+              required=True)
+def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
+                axis: str = Literal['index']) -> None:  # noqa: ANN101
+    """Delete item: Find an item.
+
+    Clear the item's content/reset to default.
+    """
+    dataframe: pd.DataFrame = App.get_data()
+    if axis.lower() == 'index' and searche is '':
+        resultframe = Results.getrowframe(data=dataframe,
+                                          ix=index,
+                                          st=Guard.santitise(searche))
+        if Record.checksingle(resultframe) and note is not None:
+            editing = window.showrecord(locateddata=resultframe,
+                                        debug=True)  # noqa
+            if editing is not None:
+                editor = Editor(currentrecord=editing, sourceframe=resultframe)
+                if index is not None:
+                    editor.addingnotes(notes=note, location=index)
+                else:
+                    editor.addingnotes(notes=note)
+                click.echo(message=f"Editing: {editing}")
+                App.update_appdata(context=ctx, dataframe=editor.newresultframe)
+            else:
+                click.echo(message=f"Exiting: editing mode")
+        else:
+            click.echo(message="The result is not a single record \n"
+                               "Try again.", err=True)
+    else:
+        click.echo(message="Text searches is not yet implemented\n"
+                           "Use searches with no input\n"
+                           "Try again, using -i/--index and a number value"
+                           "and axes: index")
+
 
 class CRUD:
-    """CRUD: Create, Read, Update, Delete."""
-    
-    # New (Add) | Create, Add commands -> None: by item, by row
-    @run.group(AppValues.Add.cmd)
-    @click.pass_context
-    @click.pass_obj
-    def add(self, ctx: click.Context, obj: Optional[object]) -> None:  # noqa: ANN101
-        """Add: Create item, row(s)."""
-    
-    @add.command(AppValues.Add.items)
-    @click.pass_context
-    @click.pass_obj
-    def additem(self, ctx: click.Context, obj: Optional[object]) -> None:  # noqa: ANN101
-        """Add item.: Append/Create an item.
-        
-        Append by a location/coordinate.
-        """
     
     @add.command(AppValues.Add.rows)
     @click.pass_context
@@ -902,21 +1168,6 @@ class CRUD:
     @click.pass_obj
     def updaterow(self, ctx: click.Context, obj: Optional[object]) -> None:  # noqa: ANN101
         """Update row(s): Find a row, by id, and update the row."""
-    
-    @run.group(AppValues.Delete.cmd)
-    @click.pass_context
-    @click.pass_obj
-    def delete(self, ctx: click.Context, obj: Optional[object]) -> None:  # noqa: ANN101
-        """Delete: Delete item(s), row(s)."""
-    
-    @delete.command(AppValues.Delete.items)
-    @click.pass_context
-    @click.pass_obj
-    def deleteitem(self, ctx: click.Context, obj: Optional[object]) -> None:  # noqa: ANN101
-        """Delete item: Find an item.
-        
-        Clear the item's content/reset to default.
-        """
     
     @delete.command(AppValues.Delete.rows)
     @click.pass_context

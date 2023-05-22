@@ -2,6 +2,7 @@
 # pylint: disable=trailing-whitespace
 # ruff: noqa: ANN101, I001, ARG002
 """Module: Controller for the Terminal App."""
+
 # 0.1 Standard Library Imports
 import dataclasses
 import datetime
@@ -540,12 +541,12 @@ class Inner:
     
     def updates(self,
                 renderable,
-                target: Literal["header", "editor", "current", "modified"]) -> None:
+                target: Literal["header", "editor", "current", "modified", "footer"]) -> None:
         """Updates the layout."""
         self.layout[target].update(renderable)
     
     def refresh(self, consoleholder: Console,
-                target: Literal["header", "editor", "current", "modified"]) -> None:
+                target: Literal["header", "editor", "current", "modified", "footer"]) -> None:
         """Refreshes the layout."""
         if consoleholder is None:
             consoleholder = Console()
@@ -971,9 +972,9 @@ class Record:
             click.echo(message="The panel's is printed")
             return None
     
-    def header(self, consolecard: Console,
+    def header(self, consolehead: Console,
                sendtolayout: bool = False,
-               gridfit: bool = True,
+               gridfit: bool = False,
                subgrid: bool = False) -> Table | None:
         """Displays the header of the record"""
         
@@ -1045,7 +1046,7 @@ class Record:
         if sendtolayout is True:
             return masterpane
         else:
-            consolecard.print(masterpane)
+            consolehead.print(masterpane)
             return None
     
     def editable(self, consoleedit: Console,
@@ -1148,17 +1149,414 @@ class Editor:
     """The Editor is a console utility for editing records."""
     
     record: Record = None
-    oldseries: pd.Series | None = None
-    newseries: pd.Series | None = None
-    oldframe: pd.DataFrame | None = None
-    newframe: pd.DataFrame | None = None
+    oldresultseries: pd.Series | None = None
+    newsresultseries: pd.Series | None = None
+    oldresultframe: pd.DataFrame | None = None
+    newresultframe: pd.DataFrame | None = None
+    sourceframe: pd.DataFrame | None = None
     
-    def __init__(self, currentrecord: Record = None) -> None:
+    def __init__(self, currentrecord: Record = None,
+                 sourceframe: pd.DataFrame | None = None) -> None:
         """The Editor is a console utility for editing records."""
+        self.record.notes = None
         if currentrecord is not None:
             self.record = currentrecord
         else:
             click.echo(message="No editing possible", err=True)
         
-        self.oldseries = self.record.series
-        self.oldframe = self.record.sourceframe
+        self.oldresultseries = self.record.series
+        self.oldresultframe = self.record.sourceframe
+        self.newresultseries = None
+        self.newresultframe = None
+        self.sourceframe = sourceframe
+    
+    def edit(self, consoleedit: Console) -> None:
+        """The Editor is a console utility for editing records."""
+        pass
+    
+    def addingnotes(self, notes: str, location: int | None = None) -> None:
+        """ Adding Notes to the Record/Series for the add note command
+        
+        The Editor is a CUD controller for modifing record values.
+        The column is well known: ColumnSchema.Notes
+        The index is inputted by the user.
+        The value is the note's text inputted by the user.
+        
+        Similar: updatingnotes(), deletingnotes()
+        
+        Parameters
+        ----------
+        :param notes: The notes to be added to the record.
+        :param location: The location of the notes to be added to the record.
+        :return: None
+        """
+        
+        # Perplexity AI was used to build out this function, based on below.
+        # https://www.perplexity.ai/search/a8d503cb-8aec-489a-8cf5-7f3e5b573cb7?s=c
+        if notes is not None and isinstance(notes, str):
+            self.record.notes = notes
+            # PROMPT USE, as an exmaple, for user by PerplexityAI
+            # copy old result series to a new result series with added notes
+            # copy old result frame into a new result frame with added notes
+            # find the location in the source frame of the new series
+            # update the same index by either editing the note by column/id
+            # so a series column must match the source frame column
+            # and a series index must match the source frame index
+            # and the location row, column of the sourceframe be updated
+            # with the new note
+            # and then a copy of the sourceframe be either
+            # a) returned
+            # b) using click.prompt() to ask if the user wants to save the
+            #    sourceframe and
+            #    using click.confirm() to ask if the user wants commit to the remote
+            #    commit function is to be defined, as it is destructive/overwrites
+            # THEN:
+            # Then I take the AI generated code and
+            #    refactor it into several functions for reuse and development.
+            # 1: Add guard clauses: _isempty() and _hascontent()
+            # 2: Add a hub function to modify the notes with a 'editmode' flag
+            # 3: Use multiple confirm prompts to confirm the user's intent
+            # 4: By branching on the user's intent:
+            #    - add notes becomes insert note if the target was empty.
+            #    - add notes becomes append note if the target was not empty.
+            #    - so does not force the user to retype the same note
+            #      on a new command in CLI app => UserFlow
+            # THIS IS HOW I use the AI start an idea, but I drive the solution.
+            # As the design pattern is formed, then it is adapted for similar.
+            # -----------------------------------------------------------------
+            # Update the record's series with the new notes
+            
+            editingseries = self.record.series.copy()
+            if self._isempty(editingseries, ColumnSchema.Notes):
+                if click.confirm("Please confirm to add your note"):
+                    self.modifynotes(editingseries,
+                                     record=self.record,
+                                     notes=notes,
+                                     editmode='insert',
+                                     location=location)
+                elif click.confirm(
+                        text="Do you want to modify your new note? \n"
+                             + f"Your latest note is {notes}. \n"):
+                    newnotes = click.prompt("Please enter changes: ")
+                    if isinstance(newnotes, str):
+                        self.modifynotes(editingseries,
+                                         record=self.record,
+                                         notes=str(newnotes),
+                                         editmode='insert',
+                                         location=location)
+                    else:
+                        click.echo(message="Please enter a string",
+                                   err=True)
+                else:
+                    click.echo("Exiting editing mode")
+                    return None
+            elif click.confirm(
+                    text="You are adding a note to an exitsing note. \n"
+                         + "Do you want to continue?"):
+                self.modifynotes(editingseries,
+                                 record=self.record,
+                                 notes=notes,
+                                 editmode='append',
+                                 location=location)
+                click.echo("Note appended, not created")
+            else:
+                click.echo("Exit editing mode")
+                return None
+    
+    def updatingnotes(self, notes: str, location: int | None = None) -> None:
+        """Updating Notes to the Record/Series for the update note command
+        
+        The Editor is a CUD controller for modifing record values.
+        The column is well known: ColumnSchema.Notes
+        The index is inputted by the user.
+        The value is the note's text inputted by the user.
+        
+        Similar: updatingnotes(), deletingnotes()
+        
+        Parameters
+        ----------
+        :param notes: The notes to be added to the record.
+        :param location: The location of the notes to be added to the record.
+        :return: None"""
+        
+        # See addingnotes() for the PerplexityAI use case as co-Pilot.
+        if notes is not None and isinstance(notes, str):
+            self.record.notes = notes
+            
+            editingseries = self.record.series.copy()
+            if self._hascontent(editingseries, ColumnSchema.Notes):
+                if click.confirm("Please confirm to add your note"):
+                    self.modifynotes(editingseries,
+                                     record=self.record,
+                                     notes=notes,
+                                     editmode='append',
+                                     location=location)
+                elif click.confirm(
+                        text="Do you want to modify your new note? \n"
+                             + f"Your latest note is {notes}. \n"):
+                    newnotes = click.prompt("Please enter changes: ")
+                    if isinstance(newnotes, str):
+                        self.modifynotes(editingseries,
+                                         record=self.record,
+                                         notes=str(newnotes),
+                                         location=location)
+                    else:
+                        click.echo(message="Please enter a string",
+                                   err=True)
+                else:
+                    click.echo("Exiting editing mode")
+                    return None
+    
+    def deletingnotes(self, notes: str, location: int | None = None) -> None:
+        """Deleting Notes to the Record/Series for the delete note command
+        
+        The Editor is a CUD controller for modifing record values.
+        The column is well known: ColumnSchema.Notes
+        The index is inputted by the user.
+        The value is the note's text inputted by the user.
+        
+        Similar: updatingnotes(), addingnotes()
+        
+        Parameters
+        ----------
+        :param notes: The notes to be added to the record.
+        :param location: The location of the notes to be added to the record.
+        :return: None"""
+        if notes is not None and isinstance(notes, str):
+            # Backup User's input into current record
+            self.record.notes = notes
+            # Create a transitory single data series from record
+            editingseries = self.record.series.copy()
+            # Check if the series has notes
+            if self._hascontent(editingseries, ColumnSchema.Notes):
+                # Confirm if the user wants to proceed.
+                # It is a CLI and not a GUI, and thus keywboard driven.
+                if click.confirm("Please confirm to clear your note?"):
+                    # Call the hub (CUD) function with editmode='clear' flag.
+                    self.modifynotes(editingseries,
+                                     record=self.record,
+                                     notes=notes,
+                                     editmode='clear',
+                                     location=location)
+                else:
+                    click.echo("Exiting editing mode")
+                    return None
+    
+    def modifynotes(self, editingseries, record: Record,
+                    notes: str,
+                    editmode: str = Literal["insert", "append", "clear"],
+                    location: int | None = None) -> None:  # noqa
+        """ Hub Function for editing notes: Note to the designed pattern
+        
+        Changes the notes, refeshes of the datasets, and commits.
+        
+        Notes to the Record/Series for the add note command
+        
+        The Editor is a CUD controller for modifing record values.
+        The column is well known: ColumnSchema.Notes
+        The index is inputted by the user.
+        The value is the note's text inputted by the user.
+        
+        Similar: updatingnotes(), deletingnotes()
+        
+        Parameters
+        ----------
+        :param editingseries: pandas.Series: The series to be edited.
+        :param record: Record: The record to be edited.
+        :param notes: The notes to be added to the record.
+        :param editmode: Literal["insert", "append", "clear"]: Possible values.
+                The mode of editing the notes.
+        :param location: int: | None:
+                The location of the notes to be added to the record.
+        :return: None"""
+        if editmode == "insert":
+            # Insert the notes - add / overwrite / create
+            editingseries[ColumnSchema.Notes] = notes
+        elif editmode == "append":
+            # Append the notes - add / overwrite / create
+            editingseries[ColumnSchema.Notes] = \
+                self.appendnotes(series=editingseries,
+                                 column=ColumnSchema.Notes,
+                                 value=notes)
+        elif editmode == "clear":
+            editingseries[ColumnSchema.Notes] = \
+                self.deletenotes(series=editingseries,
+                                 column=ColumnSchema.Notes,
+                                 value=notes)
+        
+        updatedframe = self.insert(
+                record=record,
+                value=editingseries[ColumnSchema.Notes],
+                column=ColumnSchema.Notes,
+                index=location)
+        self.newresultseries = editingseries
+        self.newresultframe = updatedframe
+        
+        if click.confirm("Do you want to save the updated DataFrame?"):
+            # self.sourceframe = updatedframe
+            # TODO: Implement the commit function to save the updated DataFrame remotely
+            # commit()
+            click.echo("TODO: DataFrame saved")
+        else:
+            click.echo("Exit editing mode")
+            return None
+    
+    # Editor's Notes Actions: ColumnSchema.Notes
+    def appendnotes(self, series: pd.Series, column: str, value: str) -> str:
+        """Appends notes to the existing notes; builds with a timestamp..
+        
+        Parameters
+        ----------
+        :param series: pandas.Series: The series to be edited.
+        :param value: str: The notes to be added to the record.
+        :param column: str: The name of the column to be edited.
+        :return: str
+        """
+        currentnotes = f"{series[column]}\n\n"
+        label = f"New Note: {self.timestamp()}\n"
+        newnote = f"{label}{value}\n"
+        return f"{currentnotes}{newnote}"
+    
+    @staticmethod
+    def deletenotes(series: pd.Series,
+                    column: str,
+                    value: str,
+                    nodestroy: bool = False) -> str:
+        """Deletes notes from the existing notes if flag: nodestroy/destroy
+        
+        Parameters
+        ----------
+        :param series: pandas.Series: The series to be edited.
+        :param value: str: The notes to be added to the record.
+        :param column: str: The name of the column to be edited.
+        :param nodestroy: bool: The flag to delete or not to delete.
+               A mechanism to handle destructive actions and safely delete.
+               Potentially flagged by user from a CLI command option.
+        :return: str
+        """
+        _cleared = ''
+        if nodestroy and series[column] is _cleared:
+            click.echo(message="No notes to delete")
+            return series[column]
+        elif nodestroy and series[column] is not _cleared:
+            click.echo(message="Exitsing notes present. No change")
+            return series[column]
+        elif not nodestroy and series[column] is not _cleared:
+            click.echo(message="Cleared")
+            cleared = series[column] = ''
+            return cleared
+        elif not nodestroy and series[column] is _cleared:
+            click.echo(message="No notes to delete")
+            return series[column]
+        elif value not in series[column]:
+            return series[column]
+        else:
+            click.echo(message="Replaced")
+            return series[column].replace(value, '')
+    
+    # Editor's Record Actions
+    def save(self, savedfranme: pd.DataFrame) -> None:
+        """ Saves the dataframe and commits it to the remote source
+        
+        The Editor is a console utility for editing records."""
+        # Prompt the user to save the updated DataFrame
+        if click.confirm("Do you want to save the updated DataFrame?"):
+            self.sourceframe = savedfranme
+            # TODO: Implement the commit function to save the updated DataFrame remotely
+            # commit()
+        else:
+            click.echo("Exit editing mode")
+            return None
+    
+    @staticmethod
+    def insert(record: Record, value: str,
+               column: str | None = None,
+               index: int | None = None) -> pd.DataFrame:
+        """ Inserts by column, using the Record.
+        name or index for rows, if either is known or given.
+        
+        The Editor is a console utility for editing records."""
+        updatedframe = record.sourceframe.copy()
+        if index is None and column is not None:
+            updatedframe.loc[record.series.name, column] = value
+        elif isinstance(index, int) and column is not None:
+            if isinstance(record.series.name, int):
+                if index == record.series.name:
+                    updatedframe.iloc[index, column] = value
+                elif index != record.series.name:
+                    updatedframe.iloc[index - 1, column] = value
+                else:
+                    updatedframe.iloc[index, column] = value
+            else:
+                click.echo(message="Series.name is not an int", err=True)
+                updatedframe.iloc[index, column] = value
+        else:
+            click.echo("Nothing inserted")
+        
+        # Note: If no changes were made, then a copy of original is returned
+        return updatedframe
+    
+    @staticmethod
+    def clear(record: Record, column: str | None = None,
+              index: int | None = None,
+              cleared: bool = True) -> pd.DataFrame:
+        """ Clears by column, using the Record."""
+        _empty = ''
+        _noned = None
+        if cleared:
+            value = _empty
+        else:
+            value = _noned
+        
+        updatedframe = record.sourceframe.copy()
+        if click.confirm(text="Do you want to clear the notes?. \n"
+                              "Importantly clears all notes"):
+            if index is None and column is not None:
+                updatedframe.loc[record.series.name, column] = value
+            elif isinstance(index, int) and column is not None:
+                if isinstance(record.series.name, int):
+                    if index == record.series.name:
+                        updatedframe.iloc[index, column] = value
+                    elif index != record.series.name:
+                        updatedframe.iloc[index - 1, column] = value
+                    else:
+                        updatedframe.iloc[index, column] = value
+                else:
+                    click.echo(message="Series.name is not an int", err=True)
+                    updatedframe.iloc[index, column] = value
+            else:
+                click.echo("Nothing inserted")
+        else:
+            click.echo("Nothing cleared")
+            click.echo("Exiting editing mode")
+        
+        # Note: If no changes were made, then a copy of original is returned
+        return updatedframe
+    
+    # Editor Utilities
+    @staticmethod
+    def _isempty(series: pd.Series, column: str) -> bool:
+        if series[column] is '' or \
+                series[column] is None:
+            return True
+        
+        return False
+    
+    @staticmethod
+    def _hascontent(series: pd.Series, column: str) -> bool:
+        if series[column] is not '' or \
+                series[column] is not None:
+            return True
+        
+        return False
+    
+    @staticmethod
+    def timestamp() -> str:
+        """Returns a timestamp"""
+        return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+# End of Controller Module
+# Globals: connector, configuration, tablesettings, console
+# Class: Controller, ColumnSchema, Headers, DataController,  Editor, WebConsole,
+# Class: Inner, Display, Record, Editor
+# Timestamp: 2022-05-21T16:30, copywrite (c) 2022-2025, see {} for more details.
