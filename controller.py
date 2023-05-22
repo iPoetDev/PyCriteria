@@ -772,10 +772,10 @@ class Record:
     criteria: str
     type: str
     prefix: str
-    linked: str
+    linked: str | None = ''
     reference: str
     group: str
-    notes: str
+    notes: str | None = ''
     
     def __init__(self,
                  labels: list[str] | None = None,
@@ -807,8 +807,11 @@ class Record:
         self.series: pd.Series | None = series
         self.sourceframe: pd.DataFrame | None = source
         # Checks/loads Source, Dataframe, per instance
-        self.loadsingle(single=source)
-        self.loadrecord(single=source)
+        if isinstance(series, pd.Series):
+            self.loadsingle(single=series)
+            self.loadrecord(single=series)
+        elif isinstance(source, pd.DataFrame):
+            self.loadsingle(single=source)
     
     def loadsingle(self, single: pd.DataFrame | pd.Series) -> None:
         """Loads the source of the record, if any."""
@@ -1154,11 +1157,14 @@ class Editor:
     oldresultframe: pd.DataFrame | None = None
     newresultframe: pd.DataFrame | None = None
     sourceframe: pd.DataFrame | None = None
+    ismodified: bool = False
+    lastmodified: str | None = None
+    modified: Record | None = None
+    lasteditmode: str = ''
     
     def __init__(self, currentrecord: Record = None,
                  sourceframe: pd.DataFrame | None = None) -> None:
         """The Editor is a console utility for editing records."""
-        self.record.notes = None
         if currentrecord is not None:
             self.record = currentrecord
         else:
@@ -1169,12 +1175,18 @@ class Editor:
         self.newresultseries = None
         self.newresultframe = None
         self.sourceframe = sourceframe
+        self.ismodified = False
+        self.lastmodified = None
+        self.modified = None
+        self.lasteditmode: str = ''
     
     def edit(self, consoleedit: Console) -> None:
         """The Editor is a console utility for editing records."""
         pass
     
-    def addingnotes(self, notes: str, location: int | None = None) -> None:
+    def addingnotes(self, notes: str,
+                    location: int | None = None,
+                    debug: bool = False) -> None:
         """ Adding Notes to the Record/Series for the add note command
         
         The Editor is a CUD controller for modifing record values.
@@ -1188,13 +1200,14 @@ class Editor:
         ----------
         :param notes: The notes to be added to the record.
         :param location: The location of the notes to be added to the record.
+        :param debug: The debug flag for the function.
         :return: None
         """
         
         # Perplexity AI was used to build out this function, based on below.
         # https://www.perplexity.ai/search/a8d503cb-8aec-489a-8cf5-7f3e5b573cb7?s=c
+        EDITMODE = 'insert'  # noqa
         if notes is not None and isinstance(notes, str):
-            self.record.notes = notes
             # PROMPT USE, as an exmaple, for user by PerplexityAI
             # copy old result series to a new result series with added notes
             # copy old result frame into a new result frame with added notes
@@ -1227,12 +1240,13 @@ class Editor:
             # Update the record's series with the new notes
             
             editingseries = self.record.series.copy()
+            self.lasteditmode = ''  # Clears out the last edit mode, before use
             if self._isempty(editingseries, ColumnSchema.Notes):
-                if click.confirm("Please confirm to add your note"):
+                if click.confirm(f"Please confirm to add/{EDITMODE} your note"):
                     self.modifynotes(editingseries,
                                      record=self.record,
                                      notes=notes,
-                                     editmode='insert',
+                                     editmode=EDITMODE,
                                      location=location)
                 elif click.confirm(
                         text="Do you want to modify your new note? \n"
@@ -1242,8 +1256,9 @@ class Editor:
                         self.modifynotes(editingseries,
                                          record=self.record,
                                          notes=str(newnotes),
-                                         editmode='insert',
-                                         location=location)
+                                         editmode=EDITMODE,
+                                         location=location,
+                                         debug=debug)
                     else:
                         click.echo(message="Please enter a string",
                                    err=True)
@@ -1257,13 +1272,16 @@ class Editor:
                                  record=self.record,
                                  notes=notes,
                                  editmode='append',
-                                 location=location)
+                                 location=location,
+                                 debug=debug)
                 click.echo("Note appended, not created")
             else:
                 click.echo("Exit editing mode")
                 return None
     
-    def updatingnotes(self, notes: str, location: int | None = None) -> None:
+    def updatingnotes(self, notes: str,
+                      location: int | None = None,
+                      debug: bool = False) -> None:
         """Updating Notes to the Record/Series for the update note command
         
         The Editor is a CUD controller for modifing record values.
@@ -1278,19 +1296,19 @@ class Editor:
         :param notes: The notes to be added to the record.
         :param location: The location of the notes to be added to the record.
         :return: None"""
-        
+        EDITMODE = 'append'  # noqa
         # See addingnotes() for the PerplexityAI use case as co-Pilot.
         if notes is not None and isinstance(notes, str):
-            self.record.notes = notes
-            
             editingseries = self.record.series.copy()
+            self.lasteditmode = ''  # Clears out the last edit mode, before use
             if self._hascontent(editingseries, ColumnSchema.Notes):
-                if click.confirm("Please confirm to add your note"):
+                if click.confirm(f"Please confirm to {EDITMODE} your note"):
                     self.modifynotes(editingseries,
                                      record=self.record,
                                      notes=notes,
-                                     editmode='append',
-                                     location=location)
+                                     editmode=EDITMODE,
+                                     location=location,
+                                     debug=debug)
                 elif click.confirm(
                         text="Do you want to modify your new note? \n"
                              + f"Your latest note is {notes}. \n"):
@@ -1299,15 +1317,20 @@ class Editor:
                         self.modifynotes(editingseries,
                                          record=self.record,
                                          notes=str(newnotes),
-                                         location=location)
+                                         editmode=EDITMODE,
+                                         location=location,
+                                         debug=debug)
                     else:
-                        click.echo(message="Please enter a string",
+                        click.echo(message=f"No Edit Made for  Update {EDITMODE}",
                                    err=True)
                 else:
-                    click.echo("Exiting editing mode")
+                    click.echo(f"Exiting editing mode: Update {EDITMODE}")
                     return None
     
-    def deletingnotes(self, notes: str, location: int | None = None) -> None:
+    def deletingnotes(self,
+                      notes: str,
+                      location: int | None = None,
+                      debug: bool = False) -> None:
         """Deleting Notes to the Record/Series for the delete note command
         
         The Editor is a CUD controller for modifing record values.
@@ -1322,11 +1345,12 @@ class Editor:
         :param notes: The notes to be added to the record.
         :param location: The location of the notes to be added to the record.
         :return: None"""
+        EDITMODE = 'clear'  # noqa
         if notes is not None and isinstance(notes, str):
             # Backup User's input into current record
-            self.record.notes = notes
             # Create a transitory single data series from record
             editingseries = self.record.series.copy()
+            self.lasteditmode = ''  # Clears out the last edit mode, before use
             # Check if the series has notes
             if self._hascontent(editingseries, ColumnSchema.Notes):
                 # Confirm if the user wants to proceed.
@@ -1336,16 +1360,17 @@ class Editor:
                     self.modifynotes(editingseries,
                                      record=self.record,
                                      notes=notes,
-                                     editmode='clear',
-                                     location=location)
+                                     editmode=EDITMODE,
+                                     location=location,
+                                     debug=debug)
                 else:
-                    click.echo("Exiting editing mode")
+                    click.echo(f"Exiting editing mode: Delete: {EDITMODE}")
                     return None
     
     def modifynotes(self, editingseries, record: Record,
                     notes: str,
                     editmode: str = Literal["insert", "append", "clear"],
-                    location: int | None = None) -> None:  # noqa
+                    location: int | None = None, debug=False) -> None:  # noqa
         """ Hub Function for editing notes: Note to the designed pattern
         
         Changes the notes, refeshes of the datasets, and commits.
@@ -1388,9 +1413,29 @@ class Editor:
                 record=record,
                 value=editingseries[ColumnSchema.Notes],
                 column=ColumnSchema.Notes,
-                index=location)
+                index=location, debug=debug)
         self.newresultseries = editingseries
         self.newresultframe = updatedframe
+        
+        if debug is True:
+            if isinstance(self.newresultseries, pd.Series) and \
+                    self.newresultseries.empty is False:
+                click.echo("Modified Series")
+            
+            if isinstance(self.newresultframe, pd.DataFrame) and \
+                    self.newresultframe.empty is False:
+                click.echo("Modified DataFrame")
+        
+        if self.newresultframe.empty is False:
+            self.ismodified = True
+            self.lastmodified = self.timestamp()
+            click.echo("Modified Frame at " + self.lastmodified)
+            self.modified = Record(
+                    series=editingseries,
+                    source=self.newresultframe)
+            if debug is True:
+                rich.inspect(self.modified)
+            self.lasteditmode = editmode  # sets the last edit mode for the record
         
         if click.confirm("Do you want to save the updated DataFrame?"):
             # self.sourceframe = updatedframe
@@ -1471,25 +1516,38 @@ class Editor:
     @staticmethod
     def insert(record: Record, value: str,
                column: str | None = None,
-               index: int | None = None) -> pd.DataFrame:
+               index: int | None = None,
+               debug: bool = False) -> pd.DataFrame:
         """ Inserts by column, using the Record.
         name or index for rows, if either is known or given.
         
         The Editor is a console utility for editing records."""
+        # https://www.perplexity.ai/search/1ae6c535-37ae-4721-bbc8-38aa37cae119?s=c
+        # Use for debuging IndexError: iloc cannot enlarge its target object
+        # Not used for developing the pattern below.
         updatedframe = record.sourceframe.copy()
         if index is None and column is not None:
-            updatedframe.loc[record.series.name, column] = value
+            updatedframe.at[record.series.name, column] = value
         elif isinstance(index, int) and column is not None:
             if isinstance(record.series.name, int):
-                if index == record.series.name:
-                    updatedframe.iloc[index, column] = value
+                if index - 1 == record.series.name:
+                    updatedframe.at[index, column] = value
+                    if debug:
+                        click.echo(f"Note Updated at row: {index} "
+                                   f"by zero index for {record.series.name}")
+                        rich.inspect(updatedframe.at[index, column])
                 elif index != record.series.name:
-                    updatedframe.iloc[index - 1, column] = value
-                else:
-                    updatedframe.iloc[index, column] = value
+                    # Debuging
+                    updatedframe.at[index, column] = value
+                    if debug:
+                        click.echo(f"Note Updated at row: by {index} only")
+                        rich.inspect(updatedframe.at[index, column])
+                if not debug:
+                    click.echo(f"Note Updated at row: {index} "
+                               f"for {record.series.name}")
             else:
                 click.echo(message="Series.name is not an int", err=True)
-                updatedframe.iloc[index, column] = value
+                updatedframe.at[index, column] = value
         else:
             click.echo("Nothing inserted")
         
@@ -1536,7 +1594,7 @@ class Editor:
     # Editor Utilities
     @staticmethod
     def _isempty(series: pd.Series, column: str) -> bool:
-        if series[column] is '' or \
+        if series[column] == '' or \
                 series[column] is None:
             return True
         
@@ -1544,17 +1602,27 @@ class Editor:
     
     @staticmethod
     def _hascontent(series: pd.Series, column: str) -> bool:
-        if series[column] is not '' or \
+        if series[column] != '' or \
                 series[column] is not None:
             return True
         
         return False
     
     @staticmethod
-    def timestamp() -> str:
+    def timestamp(tostring: bool = True,
+                  stamp: Literal['date', 'time', 'full', 'precise'] = 'full') -> str:
         """Returns a timestamp"""
-        return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+        if tostring:
+            fmat: str = "%Y-%m-%d %H:%M:%S.%f"
+            if stamp == 'date':
+                fmat = "%Y-%m-%d"
+            elif stamp == 'time':
+                fmat = "%H:%M:%S"
+            elif stamp == 'full':
+                fmat = "%Y-%m-%d %H:%M:%S"
+            elif stamp == 'precise':
+                fmat = "%Y-%m-%d %H:%M:%S.%f"
+            return datetime.datetime.now().strftime(fmat)
 # End of Controller Module
 # Globals: connector, configuration, tablesettings, console
 # Class: Controller, ColumnSchema, Headers, DataController,  Editor, WebConsole,

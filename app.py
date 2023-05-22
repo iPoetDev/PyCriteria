@@ -3,7 +3,7 @@
 # ruff: noqa: F841, ANN101, ANN001, D415, RET505, I001, F405, F403
 """Module: PyCriteria Terminal App."""
 # 1. Std Lib
-from typing import Literal, Optional
+from typing import Literal
 
 import click  # type: ignore
 # 2. 3rd Party
@@ -64,20 +64,34 @@ class Window:
         pass
     
     @staticmethod
-    def showrecord(locateddata: pd.Series | pd.DataFrame,
+    def sendto(value, switch: bool) -> Record | None:
+        """Switch Record."""
+        if switch:
+            return value
+        else:
+            return None
+    
+    @staticmethod
+    def showrecord(data: pd.Series | pd.DataFrame,
                    dimensions: tuple[int, int] = (40, 20),
                    sendtoeditor: bool = False,
                    debug: bool = False) -> Record | None:
         """Display Record."""
         if debug:
-            rprint(locateddata)
-        elif locateddata.empty is False:
+            rprint("Debug Mode: Show Record\n")
+            rprint(data)
+        elif data.empty is False:
             # Individual record holds the singular record, handles displays
             # Selecting different calls on the individual record yields
             # different displays/outputs.
             # Only displays a pd.Series, implicitly.
             # Not designed for results >1, unless part of a loop.
-            individual = Record(source=locateddata)
+            individual = Record(series=data, source=data)
+            
+            if not debug:
+                rprint("Trace Mode: Show Record\n")
+                rprint(individual)
+            
             if individual.card(consolecard=Webconsole.console) is not None:
                 # panel: rich.panel.Panel = individual.display(
                 # consoledisplay=Webconsole.console,
@@ -86,16 +100,17 @@ class Window:
                 # Webconsole.console.print(panel)
                 # Webconsole.terminal.updates(renderable=panel, target="current")
                 # Webconsole.terminal.laidout(Webconsole.console)
+                click.echo("========Displaying Full Card========")
+                click.echo("=====================================")
                 individual.header(Webconsole.console)
                 individual.editable(Webconsole.console)
                 individual.footer(Webconsole.console)
+                click.echo("=================END================")
             else:
+                click.echo("Displaying Simple Card")
                 individual.card(consolecard=Webconsole.console)
             
-            if sendtoeditor:
-                return individual
-            else:
-                return None
+            return Window.sendto(individual, sendtoeditor)
     
     @staticmethod
     def showedited(editeddata: pd.Series | pd.DataFrame,
@@ -130,6 +145,44 @@ class Window:
                 return individual
             else:
                 return None
+    
+    @staticmethod
+    def showmodified(editeddata: pd.Series,
+                     editor: Editor,
+                     commandtype: Literal['insert', 'append', 'clear'],
+                     debug=False) -> None:
+        """Display Modified Record."""
+        # Display single records
+        if Record.checksingle(editeddata):
+            if editor.ismodified and editor.lasteditmode == commandtype:
+                if debug:
+                    click.echo(message="==========Displaying: Changes=========\n")
+                # 1. Display the Edited record
+                window.showedited(editeddata=editeddata, debug=debug)
+                #
+                if debug:
+                    click.echo(message="==========Saving: changes made=========\n")
+                    click.echo(f" Modified: {editor.lastmodified} ")
+            else:
+                click.echo(message="No changes made. See above.")
+            #
+            if debug:
+                click.echo(message=f"=====================================")
+            # Switch confirmation on a command's type
+            if commandtype == 'insert':
+                click.echo(message=f"🆕 A new note is now added 🆕 at:"
+                                   + editor.lastmodified)
+            elif commandtype == 'append':
+                click.echo(message="A note is updated at:"
+                                   + editor.lastmodified)
+            elif commandtype == 'clear':
+                click.echo(message="A record's is now deleted at:"
+                                   + editor.lastmodified)
+            click.echo(message=f"Exiting: Command completed")
+            return None
+        else:
+            click.echo(message="No changes made. Bulk edits not supported.")
+            return None
 
 
 window: Window = Window()
@@ -483,26 +536,32 @@ class Results:
     
     @staticmethod
     def getrowframe(data: pd.DataFrame,
-                    ix: int, st: str) -> pd.Series | pd.DataFrame | None:
+                    ix: int, st: str, debug: bool = False) -> pd.Series | pd.DataFrame | None:
         """Get a row from a dataframe by index or searches term."""
         if ix and not st:
             result = App.rows(frame=data, index=ix)
-            rich.inspect(result)
         elif ix and st:
             result = App.rows(frame=data, index=ix, searchterm=st)
         elif not ix and st:
             result = App.rows(frame=data, searchterm=st)
         else:
+            click.echo(f"No Data for row: {ix}")
             return None
         
         if isinstance(result, pd.Series):
-            click.echo(f"Found a record")
+            if debug:
+                click.echo(f"GetRowFrame(): Found a record\n")
+                rich.inspect(result)
             return result
         elif isinstance(result, pd.DataFrame):
-            click.echo(f"Found a set of records")
+            if debug:
+                click.echo(f"GetRowFrame(): Found a set of records")
+                rich.inspect(result)
             return result
         else:
-            click.echo(f"Found something: undefined")
+            click.echo(f"GetRowFrame(): Found something: undefined")
+            if debug:
+                rich.inspect(result)
             return None
 
 
@@ -511,8 +570,6 @@ class Results:
 def run(ctx) -> None:
     """Level: Run. Type: about to learn to use this CLI.
     
-    This CLI has a multi-level command structure.
-    https://mauricebrg.com/article/2020/08/advanced_cli_structures_with_python_and_click.html
     """
     # App.crumbs(context=ctx)
     appdata: pd.DataFrame = App.get_data()
@@ -928,7 +985,7 @@ def locate(ctx: click.Context, index: int, searche: str,
             # different displays/outputs.
             # Only displays a pd.Series, implicitly.
             # Not designed for results >1, unless part of a loop. # noqa
-            window.showrecord(locateddata=resultframe, debug=True)
+            window.showrecord(data=resultframe, debug=True)
         
         else:
             click.echo(message="The result is not a single record")
@@ -951,16 +1008,21 @@ run.add_command(locate)
 
 
 # New (Add) | Create, Add commands -> None: by item, by row
-@run.group(AppValues.Add.cmd)
+@run.group("edit🎬", help="🎬 Edit: Enter editing mode. 🎬")
 @click.pass_context
-@click.pass_obj
-def add(self, ctx: click.Context) -> None:  # noqa: ANN101
-    """Add: a Note"""
+def edit(ctx: click.Context) -> None:  # noqa: ANN101
+    """Editing mode: enter editing for notes, todos, etc."""
+    click.echo(message="Entering editing mode for notes, todos, etc.")
+    click.echo(message="Steps: \n  1. Find a record: \n"
+                       "  2. Enter it's index id:\n"
+                       "  3. Edit by: adding, updating, deleting, \n"
+                       "  4. Save changes, \n  5. Exits automatically.")
+    click.echo(message="Prompts & Confirms used for a step by step process.")
     App.update_appdata(context=ctx, dataframe=App.get_data())
-    click.echo(message="Updated App Data")
+    click.echo(message="Working data is now ... rehydrated.")
 
 
-@add.command("add note", help="Add a note to a found record")
+@edit.command("note🆕", help="🆕 Add a note to a row of the record. 🆕 ")
 @click.pass_context
 @click.option('-s', '--searches', 'searche', type=str,
               help='Leave blank if known location/row, i.e. index',
@@ -985,44 +1047,60 @@ def add(self, ctx: click.Context) -> None:  # noqa: ANN101
               default='index',
               prompt="Select by, to focus on: index",
               required=True)
-def addsinglenote(self, ctx: click.Context, index: int, searche: str, note: str,
+def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
                   axis: str = Literal['index']) -> None:  # noqa: ANN101
     """Add a new note to a record
 
     Append by a location/coordinate.
     """
-    # Fetch the dataframe
+    # A) Rehydrtate dataframe from remote
     dataframe: pd.DataFrame = App.get_data()
-    if axis.lower() == 'index':
+    # B) Search by index (-i, --index option, default/only choice)
+    if axis.lower() == 'index' and searche == '':
+        click.echo(message="🆕 Adding .... a new note to a record 🆕")
+        # - Get the record
         resultframe = Results.getrowframe(data=dataframe,
                                           ix=index,
                                           st=Guard.santitise(searche))
+        # - Check if it is a single record
         if Record.checksingle(resultframe) and note is not None:
-            editing = window.showrecord(locateddata=resultframe,
-                                        debug=True)  # noqa
+            # - Display the found result and - send to the editor
+            editing = \
+                window.showrecord(data=resultframe,
+                                  sendtoeditor=True,
+                                  debug=False)  # noqa
+            # - Send the result to the editor
             if editing is not None:
-                editor = Editor(currentrecord=editing, sourceframe=resultframe)
+                editor = Editor(currentrecord=editing,
+                                sourceframe=resultframe)
                 if index is not None:
-                    editor.addingnotes(notes=note, location=index)
+                    editor.addingnotes(notes=note,
+                                       location=index,
+                                       debug=True)
                 else:
-                    editor.addingnotes(notes=note)
-                click.echo(message=f"Editing: {editing}")
-                App.update_appdata(context=ctx, dataframe=editor.newresultframe)
+                    editor.addingnotes(notes=note, debug=True)
+                # Display Record with Modified Data
+                click.echo(message=f"=====================================")
+                click.echo(message=f"Loading: edited record")
+                window.showmodified(editeddata=editor.newresultseries,
+                                    editor=editor,
+                                    commandtype='insert',
+                                    debug=True)
+            # Else, exit
             else:
                 click.echo(message=f"Exiting: editing mode")
+        # Bulk Editing not possible.
         else:
             click.echo(message="The result is not a single record", err=True)
+    # Features Flag: Text Searches Branch. Future to implement.
+    else:
+        click.echo(message="Text searches is not yet implemented\n"
+                           "Use searches with no input\n"
+                           "Try again, using -i/--index and a number value"
+                           "and axes: index")
 
 
-@run.group(AppValues.Update.cmd)
-@click.pass_context
-def update(self, ctx: click.Context) -> None:  # noqa: ANN101
-    """Update: Update item, row(s)."""
-    App.update_appdata(context=ctx, dataframe=App.get_data())
-    click.echo(message="Updated App Data")
-
-
-@add.command("update note", help="Add a note to a found record")
+@edit.command("note🔂", help="🔂 Append a note in current record's note 🔂")
 @click.pass_context
 @click.option('-s', '--searches', 'searche', type=str,
               help='Leave blank if known location/row, i.e. index',
@@ -1060,55 +1138,65 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
                                           ix=index,
                                           st=Guard.santitise(searche))
         if Record.checksingle(resultframe) and note is not None:
-            editing = window.showrecord(locateddata=resultframe,
-                                        debug=True)  # noqa
+            editing = \
+                window.showrecord(data=resultframe,
+                                  sendtoeditor=true)  # noqa
             if editing is not None:
-                editor = Editor(currentrecord=editing, sourceframe=resultframe)
+                editor = Editor(currentrecord=editing,
+                                sourceframe=resultframe)
                 if index is not None:
                     editor.addingnotes(notes=note, location=index)
                 else:
                     editor.addingnotes(notes=note)
-                click.echo(message=f"Editing: {editing}")
-                App.update_appdata(context=ctx, dataframe=editor.newresultframe)
+                # Display Record with Modified Data
+                click.echo(message=f"Loading: edited record")
+                window.showmodified(editeddata=editor.newresultseries,
+                                    editor=editor,
+                                    commandtype='append',
+                                    debug=True)
+                App.update_appdata(context=ctx,
+                                   dataframe=editor.newresultframe)
             else:
                 click.echo(message=f"Exiting: editing mode")
         else:
             click.echo(message="The result is not a single record", err=True)
+    else:
+        click.echo(message="Text searches is not yet implemented\n"
+                           "Use searches with no input\n"
+                           "Try again, using -i/--index and a number value"
+                           "and axes: index")
 
 
-@run.group(AppValues.Delete.cmd)
-@click.pass_context
-def delete(ctx: click.Context) -> None:  # noqa: ANN101
-    """Delete: Delete a note"""
-    App.update_appdata(context=ctx, dataframe=App.get_data())
-    click.echo(message="Updated App Data")
-
-
-@delete.command("delete note", help="Delete a note from a found record")
+@edit.command("note🗑️", help="🗑️Clears the note(s) from a record's line/row🗑️")
 @click.pass_context
 @click.option('-s', '--searches', 'searche', type=str,
-              help='Leave blank if known location/row, i.e. index',
-              prompt="To use this option, enter a search term: ",
+              help='SEARCH TERM:✋ Leave blank if known location/row, i.e. index\n'
+                   '✋ SKIP: Hit Enter. Default:  , a blank string',
+              prompt="SEARCH TERM:✋ SKIP: Hit enter, to continue: ",
               default='')
 @click.option('-i', '--index',
               type=click.IntRange(
                       min=1,
                       max=len(DataControl.dataframe),
                       clamp=True),
-              help='Optionally leave blank when searching by a string, i.e. searches\n'
+              help='BY ROW: ☑️ MUST: Know the line/row\'s index\'s id \n'
                    f'Select between 1 and {len(DataControl.dataframe)}: ',
-              prompt=f'Select between 1 and {len(DataControl.dataframe)}: ')
-@click.option('-n', '--note', 'note', type=str,
-              help='Clears the note from the record',
-              prompt="Delete a note, leave blank",
+              prompt=f'BY ROW: ☑️ Select between 1 and {len(DataControl.dataframe)}: ',
               required=True)
+@click.option('-n', '--note', 'note', type=str,
+              help='NOTE: ⭕ Clears the note. Hit Enter. Default:  , a blank string',
+              prompt="NOTE: ⭕ Hit enter, to continue: ",
+              confirmation_prompt="This will delete the note, hit enter, no input:",
+              default='',
+              show_default=True)
 @click.option('-a', '--axis',
               type=click.Choice(['index'],
                                 case_sensitive=False),
-              help='Choose axis to seach in/by. Default: index',
+              help='🔎 How to search in/by. Default: by row\'s index',
               default='index',
               prompt="Hit enter, to continue: index",
-              required=True)
+              required=True,
+              show_default=True)
 def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
                 axis: str = Literal['index']) -> None:  # noqa: ANN101
     """Delete item: Find an item.
@@ -1116,21 +1204,29 @@ def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
     Clear the item's content/reset to default.
     """
     dataframe: pd.DataFrame = App.get_data()
-    if axis.lower() == 'index' and searche is '':
+    if axis.lower() == 'index' and searche == '':
+        click.echo(f"🗑️ Deleting a Note, in {index}...🗑️")
         resultframe = Results.getrowframe(data=dataframe,
                                           ix=index,
                                           st=Guard.santitise(searche))
         if Record.checksingle(resultframe) and note is not None:
-            editing = window.showrecord(locateddata=resultframe,
-                                        debug=True)  # noqa
+            editing = \
+                window.showrecord(data=resultframe,
+                                  sendtoeditor=True)  # noqa
             if editing is not None:
-                editor = Editor(currentrecord=editing, sourceframe=resultframe)
+                editor = Editor(currentrecord=editing,
+                                sourceframe=resultframe)  # noqa
                 if index is not None:
                     editor.addingnotes(notes=note, location=index)
                 else:
                     editor.addingnotes(notes=note)
-                click.echo(message=f"Editing: {editing}")
-                App.update_appdata(context=ctx, dataframe=editor.newresultframe)
+                click.echo(message=f"Loading: edited record")
+                window.showmodified(editeddata=editor.newresultseries,
+                                    editor=editor,
+                                    commandtype='clear',
+                                    debug=True)
+                App.update_appdata(context=ctx,
+                                   dataframe=editor.newresultframe)
             else:
                 click.echo(message=f"Exiting: editing mode")
         else:
@@ -1143,48 +1239,67 @@ def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
                            "and axes: index")
 
 
-class CRUD:
-    
-    @add.command(AppValues.Add.rows)
-    @click.pass_context
-    @click.pass_obj
-    def addrow(self, ctx: click.Context, obj: Optional[object]) -> None:  # noqa: ANN101
-        """Add row(s).: Append/Create a row to the table: either at end, or insert."""
-    
-    @run.group(AppValues.Update.cmd)
-    @click.pass_context
-    @click.pass_obj
-    def update(self, ctx: click.Context, obj: Optional[object]) -> None:  # noqa: ANN101
-        """Update: Update item, row(s)."""
-    
-    @update.command(AppValues.Update.items)
-    @click.pass_context
-    @click.pass_obj
-    def updateitem(self, ctx: click.Context, obj: Optional[object]) -> None:  # noqa: ANN101
-        """Update item.: Find an item, update the item."""
-    
-    @update.command(AppValues.Update.rows)
-    @click.pass_context
-    @click.pass_obj
-    def updaterow(self, ctx: click.Context, obj: Optional[object]) -> None:  # noqa: ANN101
-        """Update row(s): Find a row, by id, and update the row."""
-    
-    @delete.command(AppValues.Delete.rows)
-    @click.pass_context
-    @click.pass_obj
-    def deleterow(self, ctx: click.Context, obj: Optional[object]) -> None:  # noqa: ANN101
-        """Delete row(s).
-        
-        Find a row, by id, and delete the row:
-        at end or by its position.
-        """  # noqa: D415
-
-
 # Click Command repl is run from this function
 # See https://www.perplexity.ai/search/085c28b9-d6e8-4ea2-8234-783d7f1a054c?s=c
 register_repl(run)
 
 if __name__ == "__main__":
     utils.warn()
-    click.echo("Hello")
+    click.echo(message="PyCriteria: A simple CLI for managing Code Institute's criteria\n"
+                       "=================================================================\n"
+                       "\n"
+                       "GETTING STARTED\n"
+                       "Type --help to get started\n"
+                       "Hold ctrl + d to exit \n"
+                       "Hold ctrl + c to abort \n"
+                       "Tab completion is available\n"
+                       "\n"
+                       "=================================================================\n"
+                       "\n"
+                       "CLI COMMANDS / REPL\n"
+                       "1: BASE: run (app.py). INFO only.\n"
+                       "2: INTENT: (load, find, add, update, delete). INFO only.\n"
+                       
+                       "3: ACTION: per INTENT the actionable sub-commands with options\n"
+                       "4: OPTIONS: per ACTION the options to perform the action\n"
+                       "NB: Each command can have multiple options\n"
+                       "\n"
+                       "=================================================================\n"
+                       "\n"
+                       "CLI DATA: REMOTE & LOCAL\n"
+                       "DATA: The data remotely pulled from Google Sheets (the remote).\n"
+                       "NB: Each command rehydrates/refreshes local data from the remote.\n"
+                       "  - This rehydration pattern is more expensive per command.\n"
+                       "  - It does ensure most recent data is pulled from the remote.\n"
+                       "  - An app local copy is stored globally, and updated per command.\n"
+                       "  - A scoped copy is used per command as active data.\n"
+                       "\n"
+                       "=================================================================\n"
+                       "\n"
+                       "CLI ENVIRONMENT & MAKING MISTAKES\n"
+                       "This CLI runs within its own sub shell/enviornment/REPL.\n"
+                       " - 🚧 As such it is tollerant to user input and user errors. 🚧\n"
+                       " - There will be commands input errors, as with any cli app.\n"
+                       " - These types of errors are part of the cli environment/repl.\n"
+                       " - Just try the command again, and enter in the correct input.\n"
+                       "\n"
+                       "=================================================================\n"
+                       "\n"
+                       "CLI COMMANDS & OPTIONS\n"
+                       "CLI uses multi-level command structure, similar to 'aws cli'.\n"
+                       " - This means that you can type a ACTION command and EITHER: \n"
+                       " a) then hit enter to enter a prompts sequence, to enter values.\n"
+                       " OR \n"
+                       " b) at a ACTION enter using -o or --option then a value/input\n"
+                       "    - e.g. '-o' with single hyphen is same as '--option'.\n"
+                       " NB: 'o' or 'option' is for illustrative purposes only\n"
+                       "\n"
+                       "=================================================================\n"
+                       "QUICK START\n"
+                       "\n"
+                       "Get started by typing: either --help or load, find, edit"
+                       "\n"
+                       "Use 'tab' when typing in command's first letters for autocomplete\n"
+                       "\n"
+                       "Then press 'space' to show the subcommands sub-menus\n")  # noqa
     run()
