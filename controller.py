@@ -874,7 +874,7 @@ class Record:
     
     def card(self, consolecard: Console,
              source: pd.Series | None = None,
-             out: bool = False) -> Table | None:
+             sendtolayout: bool = False) -> Table | None:
         """Displays the record as a cardinal."""
         
         def config() -> Table:
@@ -903,7 +903,8 @@ class Record:
                 return table
         
         card: Table = display(table=config(), data=source)
-        if out is True:
+        
+        if sendtolayout is True:
             consolecard.print(card)
             return None
         else:
@@ -941,11 +942,8 @@ class Record:
         
         # Switches the flow: returns | print| to stdout
         panel: Panel = config(dimensions=card)
-        if sendtolayout is True:
-            return panel
-        else:
-            consolepane.print(panel)
-            return None
+        
+        return Record.switch(panel, switch=sendtolayout)
     
     def display(self, consoledisplay: Console,
                 sizing: tuple[int, int] = None,
@@ -965,15 +963,8 @@ class Record:
             self.panel(consolepane=consoledisplay,
                        renderable=card,
                        card=sizing)  # noqa
-        # Switches the flow: return to layout | print panel to stdout
-        if sendtolayout is True and panel is not None:
-            return panel
-        elif panel is not None:
-            consoledisplay.print(panel)
-            return None
-        else:
-            click.echo(message="The panel's is printed")
-            return None
+        # Switches the flow: returns | print| to stdout
+        return Record.switch(panel, switch=sendtolayout)
     
     def header(self, consolehead: Console,
                sendtolayout: bool = False,
@@ -981,7 +972,7 @@ class Record:
                subgrid: bool = False) -> Table | None:
         """Displays the header of the record"""
         
-        def config(fit: bool = True) -> Table:
+        def config(fit: bool = False) -> Table:
             """Displays the record as a cardinal."""
             g: Table = Table.grid(expand=fit)
             g.add_column(header="Index",
@@ -1030,57 +1021,56 @@ class Record:
             click.echo(message=f"Outcome: {outcome_value}")
             return gradetable
         
-        def mastergrid(table: Table,
-                       left: Table,
-                       right: Table,
-                       fit: bool) -> Table:
+        def maingrid(table: Table,
+                     left: Table,
+                     right: Table,
+                     fit: bool = gridfit) -> Table:
             """ Display the header grid table"""
-            master: Table = table
-            master.grid(expand=fit)
-            master.add_row(left, right)
-            return master
+            m: Table = table
+            m.grid(expand=fit)
+            m.add_row(left, right)
+            return m
         
         indexpane: Table = indexgrid(expan=subgrid)
         gradepane: Table = gradegrid(expan=subgrid)
-        masterpane: Table = mastergrid(table=config(),
-                                       left=indexpane,
-                                       right=gradepane,
-                                       fit=gridfit)  # noqa
-        if sendtolayout is True:
-            return masterpane
-        else:
-            consolehead.print(masterpane)
-            return None
+        mainpane: Table = maingrid(table=config(),
+                                   left=indexpane,
+                                   right=gradepane,
+                                   fit=gridfit)  # noqa
+        
+        return Record.switch(mainpane, switch=sendtolayout)
     
-    def editable(self, consoleedit: Console,
+    def editable(self, consoleedit: Console | None = None,
                  expand: bool = False,
-                 sendtolayout: bool = False) -> Table | None:
+                 sendtolayout: bool = False,
+                 title: str = 'Current Data') -> Table | None:
         """Displays the record: Use it for Current | Modified Records"""
+        webconsole: Console = consoleedit  # noqa
         
         def config(fit: bool) -> Table:
             """Displays the record as a cardinal."""
             g: Table = Table.grid(expand=fit)
             g.add_column(header="Current",
-                         min_width=45,
+                         min_width=30,
                          ratio=1,
                          vertical='top')  # noqa
             return g
         
-        def currentdata(table: Table, fit: bool) -> Table:
+        def currentdata(table: Table, t: str) -> Table:
             """Display the subtable for Index/Identifiers"""
             currenttable: Table = table
-            currenttable.expand = fit
-            currenttable.title = 'Current Data'
-            todo_label: str = 'To Do: \n'
-            todo_value = f'{self.todo}'
-            criteria_label: str = 'Criteira: \n'
-            criteria_value = f'{self.criteria}'
+            if currenttable.title is None and t is not None:
+                currenttable.title = t
+            todo_label: str = 'To Do:'
+            todo_value = f'{self.todo} \n'
+            criteria_label: str = 'Criteira: '
+            criteria_value = f'{self.criteria} \n\n'
             currenttable.add_section()
-            notes_label: str = 'Notes: \n'
+            notes_label: str = 'Notes: '
             if self.notes is None:
                 notes_value = 'Add a note'
             else:
-                notes_value = f'{self.notes}'
+                notes_value = f'{self.notes} \n'
             # Build rows
             currenttable.add_row(todo_label)
             currenttable.add_row(todo_value)
@@ -1091,13 +1081,8 @@ class Record:
             return currenttable
         
         currentdatapane: Table = \
-            currentdata(table=config(fit=expand),
-                        fit=False)  # noqa
-        if sendtolayout is True:
-            return currentdatapane
-        else:
-            consoleedit.print(currentdatapane)
-            return None
+            currentdata(table=config(fit=expand), t=title)  # noqa
+        return Record.switch(currentdatapane, switch=sendtolayout)
     
     def footer(self, consolefoot: Console,
                sendtolayout: bool = False,
@@ -1123,10 +1108,9 @@ class Record:
                          vertical=vertical)  # noqa
             return g
         
-        def metapane(table: Table, wide: bool) -> Table:
+        def metapane(table: Table) -> Table:
             """Display the subtable for Index/Identifiers"""
             meta: Table = table
-            meta.expand = wide
             meta.title = 'Footer: Project Data'
             meta.add_section()
             tier_label: str = 'Tier: '
@@ -1139,12 +1123,30 @@ class Record:
             meta.add_row(f'Viewed: {dt_string}', '/', '/')
             return meta
         
-        footer: Table = metapane(table=config(fit=expand, vertical=valign),
-                                 wide=expand)  # noqa
-        if sendtolayout is True:
-            return footer
+        footer: Table = metapane(table=config(fit=expand, vertical=valign))  # noqa
+        return Record.switch(footer, switch=sendtolayout)
+    
+    @staticmethod
+    def comparegrid(container: Table,
+                    left: Table,
+                    right: Table,
+                    fit: bool = False,
+                    sendtolayout: bool = False) -> Table | None:
+        """ Display the header grid table"""
+        main: Table = container
+        main.grid(expand=fit)
+        main.add_row(left, right)
+        
+        return Record.switch(main, switch=sendtolayout)
+    
+    @staticmethod
+    def switch(renderable, switch: bool = False) -> Table | None:
+        """Switches between console print or redirecting to a layout"""
+        if switch is True:
+            return renderable
         else:
-            consolefoot.print(footer)
+            c = Console()
+            c.print(renderable)
             return None
 
 
@@ -1295,6 +1297,7 @@ class Editor:
         ----------
         :param notes: The notes to be added to the record.
         :param location: The location of the notes to be added to the record.
+        :param debug: The debug flag for the function.
         :return: None"""
         EDITMODE = 'append'  # noqa
         # See addingnotes() for the PerplexityAI use case as co-Pilot.
