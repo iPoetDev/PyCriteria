@@ -1,15 +1,21 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
+# ruff: noqa: ANN001, I001
 """Module: PyCriteria Terminal App."""
+# Standard Imports
 import dataclasses
 import tracemalloc
 import typing
 import warnings
 
+# 3rd Paty Imports
 import click
 import rich
+from rich import inspect, print as rprint  # type: ignore
+from rich.prompt import Prompt  # type: ignore
 
-from rich import inspect
+# 0.3 Local Imports
+from apptypes import ActionType
 
 
 @dataclasses.dataclass
@@ -49,6 +55,7 @@ class AppValues:
     @dataclasses.dataclass
     class Load:
         """Load Settings.
+        
         :property: intro:str: typer panel/intro.
         :property: help:str: typer help.
         :property: quik:str: typer short_help.
@@ -146,34 +153,40 @@ class AppValues:
 class ProgramUtils:
     """Program Utilities.
 
-    :property: ActionType: Literal["default", "error", "ignore", "always", "module", "once"]
-    :method: inspect_cmd: Inspect a command's context.
+    :property: ActionType:
+        Literal["default", "error", "ignore", "always", "module", "once"]
+    :method: start_memory: Start memory tracing.
+    :method: stop_memory: Stop memory tracing.
+    :method: printmemtrace: Print memory trace.
+    :method: inspectcmd: Inspect a command's context.
+    :method: inspectcontent: Inspect a command's content.
     :method: warn: Warn the user about a command's action.
     """
     
-    ActionType: str = typing.Literal["default", "error", "ignore", "always", "module", "once"]
+    ActionType: list = ActionType  # noqa
     
     @staticmethod
-    def startmemory():
+    def startmemory() -> None:
         """Start memory tracing."""
         tracemalloc.start()
     
     @staticmethod
-    def stopmemory():
+    def stopmemory() -> None:
         """Stop memory tracing."""
         tracemalloc.stop()
     
     @staticmethod
-    def printmemtrace(obj: typing.Any):
+    def printmemtrace(obj: object) -> None:
         """Print memory usage."""
         # inspect(inspect)
-        trace = tracemalloc.get_object_traceback(obj)
+        trace = \
+            tracemalloc.get_object_traceback(obj)  # noqa
         rich.print(f"Memory: {trace}")
         rich.inspect(trace, all=True)
         click.echo(f"Memory: {trace}", err=True)
     
     @staticmethod
-    def inspectcmd(func):
+    def inspectcmd(func) -> None:
         """Inspect a command's context."""
         command: click.Command = click.Command(name=func.__name__)
         context: click.Context = click.Context(command)
@@ -195,7 +208,7 @@ class ProgramUtils:
         inspect(context.obj)
     
     @staticmethod
-    def inspectcontext(ctx):
+    def inspectcontext(ctx) -> None:
         """Inspect a command's context."""
         context: click.Context = ctx
         if context is None:
@@ -210,19 +223,18 @@ class ProgramUtils:
         inspect(context.obj)
     
     @staticmethod
-    def warn(show: bool = True, action: ActionType = "ignore"):
+    def warn(action: ActionType = "ignore") -> None:
         """Configured Python Interpreter warnings.
 
         Added: typing.Literal[str] : Invalid Type
-        Fixme: 'Literal' may be parameterized with literal ints, byte and unicode
+        Fixme: 'Literal' may be parameterised with literal ints, byte and unicode
                 strings, bools, Enum values, None, other literal types, or type
                 aliases to other literal types
 
         Parameters:
         ====================
-        :param show: bool:
-                    True to hide warnings, False to show warnings
-        :param action: Literal["default", "error", "ignore", "always", "module", "once"]:
+        :param action: Literal["default", "error", "ignore",
+                                "always", "module", "once"]:
                     "ignore" to ignore warnings,
                     "default" to show warnings
                     "error" to turn matching warnings into exceptions
@@ -232,6 +244,90 @@ class ProgramUtils:
                     "once" to print only the first occurrence of matching warnings,
                            regardless of location
         """
-        warnings.filterwarnings(action, message=".*deprecated.*", category=DeprecationWarning)
+        trace: str = \
+            "Enable tracemalloc to get the object allocation traceback"  # noqa
+        warnings.filterwarnings(action, message=".*deprecated.*",
+                                category=DeprecationWarning)
         warnings.filterwarnings(action, category=ResourceWarning)
-        warnings.filterwarnings(action, message="Enable tracemalloc to get the object allocation traceback")
+        warnings.filterwarnings(action, message=trace)
+
+
+class Entry:
+    """Entry: Prompt, Input, Confirm."""
+    
+    reference: str
+    criteria: str
+    note: str
+    todo: str
+    topics: list[str]
+    todo_state: typing.Tuple[str, str] = ("unchecked", "checked")
+    
+    def __init__(self):
+        """Init."""
+        self.reference: str = ""
+        self.criteria: str = ""
+        self.note: str = ""
+        self.todo: str = ""
+        # self.topics: list[str] = Topics.load_uniques("CriteriaTopics")
+    
+    @staticmethod
+    def prompt_addreferenece() -> str:
+        """Prompts the user to add a reference.
+
+        Prints a guidance message on how to format the input.
+        Takes only a string input for the reference (type: str].
+        :returns: str: User input for the reference
+        Test elsewhere for the format of the input.
+        """
+        prompttext: str = \
+            ("A criteria reference has a format of x.x.x. \n"
+             + "Example: Uses multi-level list notations. \n"
+             + "1.2.0 is a reference to the second criteria of the first topic.\n"
+             + "Where 1 is the top item, 2 is the sub item, and 0 is the sub.sub item.\n")
+        rprint(prompttext, flush=True)
+        return Prompt.ask("Enter a x.x.x reference for the item?")
+    
+    @staticmethod
+    def prompt_addcriteria():
+        """Prompts the user."""
+        return Prompt.ask("Enter a criteria text to this item?")
+    
+    @staticmethod
+    def prompt_addnote() -> str:
+        """Prompts the user."""
+        return Prompt.ask("Enter a note for this item?")
+    
+    @staticmethod
+    def prompt_selecttopic(topicslist: list[str], is_choices: bool = True) -> str:
+        """Prompts the user to update."""
+        prompttext: str = "\\\\n".join([f"{i}. {topic}"
+                                        for i, topic
+                                        in enumerate(topicslist, 1)])
+        rprint(prompttext, flush=True)
+        rprint("Enter the name, not the number", flush=True)
+        return Prompt.ask("Choose a new topic for the critera?",
+                          choices=topicslist,
+                          default=topicslist[
+                              0], show_choices=is_choices)
+    
+    @staticmethod
+    def prompt_checktodo(state: typing.Tuple[str, str] = todo_state) -> str:
+        """Prompts the user to toggle the todo."""
+        _state: list[str] = [state[0].lower(), state[1].lower()]
+        return Prompt.ask("Choose to check, or not the todo item?",
+                          choices=_state, default=_state[0])
+
+# def main():
+#    """Main."""
+#    # Initilse WebConsole
+#    webconsole: WebConsole = WebConsole(width=configuration.Console.WIDTH,
+#                                        height=configuration.Console.HEIGHT)
+#    mainconsole: Console = webconsole.console
+#    maintable: Table = webconsole.table
+# 0.1: Load the data
+#    data: list[str] = Controller.load_data()
+# 0.2: Display the data
+#    Display.display_table(data,
+#                          mainconsole,
+#                         maintable)
+# 0.3: Upload the data
