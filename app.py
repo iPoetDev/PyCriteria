@@ -150,6 +150,7 @@ class Window:
     def showmodified(editeddata: pd.Series,
                      editor: Editor,
                      commandtype: Literal['insert', 'append', 'clear'],
+                     dataview: Literal['show', 'compare'] = 'show',
                      debug=False) -> None:
         """Display Modified Record."""
         # Display single records
@@ -158,10 +159,15 @@ class Window:
                 if debug:
                     click.echo(message="==========Displaying: Changes=========\n")
                 # 1. Display the Edited record
-                window.showedited(editeddata=editeddata, debug=debug)
-                #
+                if dataview == 'show':
+                    window.showedited(editeddata=editeddata, debug=debug)
+                elif dataview == 'compare':
+                    window.comparedata(editeddata=editeddata,
+                                       editor=editor,
+                                       debug=False)
+                #  [DEBUG]
                 if debug:
-                    click.echo(message="==========Saving: changes made=========\n")
+                    click.echo(message="=== [DEBUG] Saving: changes made [DEBUG]==\n")
                     click.echo(f" Modified: {editor.lastmodified} ")
             else:
                 click.echo(message="No changes made. See above.")
@@ -183,6 +189,40 @@ class Window:
         else:
             click.echo(message="No changes made. Bulk edits not supported.")
             return None
+    
+    @staticmethod
+    def comparedata(editeddata: pd.Series,
+                    editor: Editor,
+                    debug=False) -> None:
+        shown: bool = True
+        if debug:
+            rprint(editeddata)
+            rich.inspect(editeddata)
+        elif editeddata.empty is False and editor.ismodified:
+            oldrecord: Record = editor.record
+            newrecord: Record = Record(series=editor.newresultseries)
+            # 1. Display the Edited record
+            
+            left = oldrecord.editable(
+                    consoleedit=Webconsole.console,
+                    sendtolayout=shown,
+                    title="Original Record")
+            right = newrecord.editable(
+                    consoleedit=Webconsole.console,
+                    sendtolayout=shown,
+                    title="Updated Record")
+            # Compare Old with New, else just show the new
+            if left is not None or right is not None:
+                newrecord.header(consolehead=Webconsole.console,
+                                 gridfit=True)
+                newrecord.comparegrid(container=Webconsole.table,
+                                      left=left,
+                                      right=right,
+                                      fit=True)
+                newrecord.footer(consolefoot=Webconsole.console,
+                                 expand=False)
+            else:
+                window.showedited(editeddata=editeddata, debug=debug)
 
 
 window: Window = Window()
@@ -1004,8 +1044,8 @@ def locate(ctx: click.Context, index: int, searche: str,
 
 run.add_command(locate)
 
-"""CRUD: Create, Read, Update, Delete."""
 
+# CRUD: Create, Read, Update, Delete.
 
 # New (Add) | Create, Add commands -> None: by item, by row
 @run.group("edit🎬", help="🎬 Edit: Enter editing mode. 🎬")
@@ -1022,7 +1062,7 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
     click.echo(message="Working data is now ... rehydrated.")
 
 
-@edit.command("note🆕", help="🆕 Add a note to a row of the record. 🆕 ")
+@edit.command("addnote🆕", help="🆕 Add a note to a row of the record. 🆕 ")
 @click.pass_context
 @click.option('-s', '--searches', 'searche', type=str,
               help='Leave blank if known location/row, i.e. index',
@@ -1043,7 +1083,7 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
 @click.option('-a', '--axis',
               type=click.Choice(['index', 'column', 'row'],
                                 case_sensitive=False),
-              help='Choose axis to seach in/by. Default: row',
+              help='🔎 How to search in/by. Default: by row\'s index',
               default='index',
               prompt="Select by, to focus on: index",
               required=True)
@@ -1053,6 +1093,8 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
 
     Append by a location/coordinate.
     """
+    debugON = True
+    debugOFF = False
     # A) Rehydrtate dataframe from remote
     dataframe: pd.DataFrame = App.get_data()
     # B) Search by index (-i, --index option, default/only choice)
@@ -1068,7 +1110,7 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
             editing = \
                 window.showrecord(data=resultframe,
                                   sendtoeditor=True,
-                                  debug=False)  # noqa
+                                  debug=debugOFF)  # noqa
             # - Send the result to the editor
             if editing is not None:
                 editor = Editor(currentrecord=editing,
@@ -1076,16 +1118,19 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
                 if index is not None:
                     editor.addingnotes(notes=note,
                                        location=index,
-                                       debug=True)
+                                       debug=debugOFF)
                 else:
-                    editor.addingnotes(notes=note, debug=True)
+                    editor.addingnotes(notes=note, debug=debugOFF)
                 # Display Record with Modified Data
                 click.echo(message=f"=====================================")
                 click.echo(message=f"Loading: edited record")
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
                                     commandtype='insert',
-                                    debug=True)
+                                    dataview='compare',
+                                    debug=debugON)
+                App.update_appdata(context=ctx,
+                                   dataframe=editor.newresultframe)
             # Else, exit
             else:
                 click.echo(message=f"Exiting: editing mode")
@@ -1100,30 +1145,31 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
                            "and axes: index")
 
 
-@edit.command("note🔂", help="🔂 Append a note in current record's note 🔂")
+@edit.command("updatenote🔂", help="🔂 Append a note in current record's note 🔂")
 @click.pass_context
 @click.option('-s', '--searches', 'searche', type=str,
-              help='Leave blank if known location/row, i.e. index',
-              prompt="To use this option, enter a search term: ",
+              help='SEARCH TERM:✋ Leave blank if known location/row, i.e. index\n'
+                   '✋ SKIP: Hit Enter. Default:  , a blank string',
+              prompt='✋ SKIP: Hit Enter. Default:  , a blank string: ',
               default='')
 @click.option('-i', '--index',
               type=click.IntRange(
                       min=1,
                       max=len(DataControl.dataframe),
                       clamp=True),
-              help='Optionally leave blank when searching by a string, i.e. searches\n'
+              help='BY ROW: ☑️ MUST: Know the line/row\'s index\'s id \n'
                    f'Select between 1 and {len(DataControl.dataframe)}: ',
-              prompt=f'Select between 1 and {len(DataControl.dataframe)}: ')
+              prompt=f'BY ROW: ☑️ MUST: Select between 1 and {len(DataControl.dataframe)}: ')
 @click.option('-n', '--note', 'note', type=str,
-              help='Add 1st note to the record',
-              prompt="Add a note to the record",
+              help='NOTE: 📝 Updates the note on record',
+              prompt="NOTE: 📝 Updates the note on record",
               required=True)
 @click.option('-a', '--axis',
               type=click.Choice(['index'],
                                 case_sensitive=False),
-              help='Choose axis to seach in/by. Default: row',
+              help='🔎 How to search in/by. Default: by row\'s index',
               default='index',
-              prompt="Select by, to focus on: index",
+              prompt="🔎 Select by, to focus on: index",
               required=True)
 def updateanote(ctx: click.Context, index: int, searche: str, note: str,
                 axis: str = Literal['index']) -> None:  # noqa: ANN101
@@ -1140,20 +1186,21 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
         if Record.checksingle(resultframe) and note is not None:
             editing = \
                 window.showrecord(data=resultframe,
-                                  sendtoeditor=true)  # noqa
+                                  sendtoeditor=True)  # noqa
             if editing is not None:
                 editor = Editor(currentrecord=editing,
                                 sourceframe=resultframe)
                 if index is not None:
-                    editor.addingnotes(notes=note, location=index)
+                    editor.updatingnotes(notes=note,
+                                         location=index)
                 else:
-                    editor.addingnotes(notes=note)
+                    click.echo(message=f"No changes made")
+                    click.echo(message=f"Exiting: editing mode")
                 # Display Record with Modified Data
                 click.echo(message=f"Loading: edited record")
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
-                                    commandtype='append',
-                                    debug=True)
+                                    commandtype='append')
                 App.update_appdata(context=ctx,
                                    dataframe=editor.newresultframe)
             else:
@@ -1167,12 +1214,12 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
                            "and axes: index")
 
 
-@edit.command("note🗑️", help="🗑️Clears the note(s) from a record's line/row🗑️")
+@edit.command("deletenote🗑️", help="🗑️Clears the note(s) from a record's line/row🗑️")
 @click.pass_context
 @click.option('-s', '--searches', 'searche', type=str,
               help='SEARCH TERM:✋ Leave blank if known location/row, i.e. index\n'
                    '✋ SKIP: Hit Enter. Default:  , a blank string',
-              prompt="SEARCH TERM:✋ SKIP: Hit enter, to continue: ",
+              prompt="SEARCH TERM: SKIP: ⬇️ Hit enter, to continue: ",
               default='')
 @click.option('-i', '--index',
               type=click.IntRange(
@@ -1185,8 +1232,8 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
               required=True)
 @click.option('-n', '--note', 'note', type=str,
               help='NOTE: ⭕ Clears the note. Hit Enter. Default:  , a blank string',
-              prompt="NOTE: ⭕ Hit enter, to continue: ",
-              confirmation_prompt="This will delete the note, hit enter, no input:",
+              prompt="NOTE: ⭕ ⬇️ Hit enter, to continue: ",
+              confirmation_prompt="This will delete the note, ⬇️ hit enter, no input:",
               default='',
               show_default=True)
 @click.option('-a', '--axis',
@@ -1194,7 +1241,7 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
                                 case_sensitive=False),
               help='🔎 How to search in/by. Default: by row\'s index',
               default='index',
-              prompt="Hit enter, to continue: index",
+              prompt="⬇️ Hit enter, to continue: index",
               required=True,
               show_default=True)
 def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
@@ -1217,18 +1264,17 @@ def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
                 editor = Editor(currentrecord=editing,
                                 sourceframe=resultframe)  # noqa
                 if index is not None:
-                    editor.addingnotes(notes=note, location=index)
+                    editor.deletingnotes(notes=note, location=index)
                 else:
-                    editor.addingnotes(notes=note)
+                    editor.deletingnotes(notes=note)
                 click.echo(message=f"Loading: edited record")
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
-                                    commandtype='clear',
-                                    debug=True)
+                                    commandtype='clear')
                 App.update_appdata(context=ctx,
                                    dataframe=editor.newresultframe)
             else:
-                click.echo(message=f"Exiting: editing mode")
+                click.echo(message=f"Exiting: editing mode: no deletes made")
         else:
             click.echo(message="The result is not a single record \n"
                                "Try again.", err=True)

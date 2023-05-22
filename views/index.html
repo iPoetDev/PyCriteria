@@ -1,28 +1,31 @@
 <body>
-<button onclick="window.location.reload()">Run Program</button>
+<button onclick="window.location.reload()">Run Program: Start Environment</button>
 <div id="terminal"></div>
 
 <script>
-        var term = new Terminal({
-            cols: 80,
-            rows: 24
-        });
-        term.open(document.getElementById('terminal'));
-        term.writeln('Running startup command: python3 run.py');
-        term.writeln('');
+    var term = new Terminal({
+        cols: 100,
+        rows: 50
+    }); // Modified by author for functionality & design purposes as app requirements needs larger dimensions.
+    term.open(document.getElementById('terminal'));
+    term.writeln('Entering a self contained REPL environment.');
+    // Modified by author for design & informational purposes
+    term.writeln('Running startup command: python3 app.py repl');
+    // Modified by author for design purposes
+    term.writeln('');
 
-        var ws = new WebSocket(location.protocol.replace('http', 'ws') + '//' + location.hostname + (location.port ? (
-            ':' + location.port) : '') + '/');
+    var ws = new WebSocket(location.protocol.replace('http', 'ws') + '//' + location.hostname + (location.port ? (
+        ':' + location.port) : '') + '/');
 
-        ws.onopen = function () {
-            new attach.attach(term, ws);
-        };
+    ws.onopen = function () {
+        new attach.attach(term, ws);
+    };
 
-        ws.onerror = function (e) {
-            console.log(e);
-        };
-        // Set focus in the terminal
-        document.getElementsByClassName("xterm-helper-textarea")[0].focus();
+    ws.onerror = function (e) {
+        console.log(e);
+    };
+    // Set focus in the terminal
+    document.getElementsByClassName("xterm-helper-textarea")[0].focus();
 
 
 </script>
