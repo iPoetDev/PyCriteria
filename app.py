@@ -12,6 +12,8 @@ import rich.panel
 from click_repl import register_repl  # type: ignore
 from pandas import pandas as pd, DataFrame, Series  # type: ignore
 from rich import pretty, print as rprint  # type: ignore
+from rich.panel import Panel  # type: ignore
+from rich.table import Table  # type: ignore
 
 # 3. Local: Note the controller * intentionally imports all from the module
 from commands import AboutUsage, Commands
@@ -77,10 +79,7 @@ class Window:
                    sendtoeditor: bool = False,
                    debug: bool = False) -> Record | None:
         """Display Record."""
-        if debug:
-            rprint("Debug Mode: Show Record\n")
-            rprint(data)
-        elif data.empty is False:
+        if data.empty is False:
             # Individual record holds the singular record, handles displays
             # Selecting different calls on the individual record yields
             # different displays/outputs.
@@ -88,29 +87,46 @@ class Window:
             # Not designed for results >1, unless part of a loop.
             individual = Record(series=data, source=data)
             
-            if not debug:
-                rprint("Trace Mode: Show Record\n")
-                rprint(individual)
+            if debug:
+                rprint("Debug Mode: Show Record")
+                rich.inspect(individual)
             
             if individual.card(consolecard=Webconsole.console) is not None:
-                # panel: rich.panel.Panel = individual.display(
-                # consoledisplay=Webconsole.console,
-                # sizing=dimensions,
-                # sendtolayout=True)
-                # Webconsole.console.print(panel)
-                # Webconsole.terminal.updates(renderable=panel, target="current")
-                # Webconsole.terminal.laidout(Webconsole.console)
-                click.echo("========Displaying Full Card========")
-                click.echo("=====================================")
-                individual.header(Webconsole.console)
-                individual.editable(Webconsole.console)
-                individual.footer(Webconsole.console)
+                
+                banner = Panel("==================================="
+                               "Displaying Full Card"
+                               "======================================")
+                Webconsole.console.print(banner)
+                # Switch to Rich/Terminal display
+                header = individual.header(
+                        consolehead=Webconsole.console,
+                        sendtolayout=True,
+                        gridfit=True)
+                current = individual.editable(
+                        consoleedit=Webconsole.console,
+                        sendtolayout=True)
+                footer = individual.footer(
+                        consolefoot=Webconsole.console, sendtolayout=True)
+                # Group: Renderables
+                
+                # Print: the Panel as a Group of Renderables
+                individual.panel(consolepane=Webconsole.console,
+                                 renderable=header,
+                                 fits=True,
+                                 sendtolayout=False)
+                individual.panel(consolepane=Webconsole.console,
+                                 renderable=current,
+                                 sendtolayout=False)
+                individual.panel(consolepane=Webconsole.console,
+                                 renderable=footer,
+                                 fits=True,
+                                 sendtolayout=False)
                 click.echo("=================END================")
             else:
                 click.echo("Displaying Simple Card")
                 individual.card(consolecard=Webconsole.console)
-            
-            return Window.sendto(individual, sendtoeditor)
+                
+                return Window.sendto(individual, sendtoeditor)
     
     @staticmethod
     def showedited(editeddata: pd.Series | pd.DataFrame,
@@ -394,7 +410,7 @@ class CriteriaApp:
              index: int = None,
              searchterm: str = None,
              strict: bool = False,
-             zero: bool = True) \
+             zero: bool = True, debug: bool = False) \
             -> pd.DataFrame | pd.Series | None:
         """Get the rows from the dataframe.
         
@@ -412,7 +428,8 @@ class CriteriaApp:
             - exact (all), by True, so all muct match
         zero: bool: optional
             Whether to searches for a zero indexed dataset, by default True
-            
+        debug: bool: optional debug flag, by default False
+        
         return pd.DataFrame | None: - Expect a result or None
         """
         result: pd.DataFrame | pd.Series | None
@@ -422,7 +439,8 @@ class CriteriaApp:
             # Search across all columns for the position value
             result = App.search_rows(frame=frame, searchterm=searchterm, exact=strict)
             if result.empty is not False:
-                click.echo(f"Found: {result}")
+                if debug:
+                    click.echo(f"Found: {result}")
             else:
                 click.echo(f"Could not find {search}")
         else:
@@ -434,18 +452,20 @@ class CriteriaApp:
     @staticmethod
     def index(frame: pd.DataFrame,
               index: int = None,
-              zero: bool = True) \
+              zero: bool = True, debug: bool = False) \
             -> pd.DataFrame | pd.Series | None:
         """Get the index from the dataframe."""
         if zero and index is not None:
             result = frame.iloc[index - 1] \
                 if index >= 0 else frame.iloc[index]
-            click.echo(f"Found: {result} for zero index {index - 1}")
+            if debug:
+                click.echo(f"Found: {result} for zero index {index - 1}")
             return result
         elif not zero and index is not None:
             result = frame.iloc[index] \
                 if index > 0 else frame.iloc[index]
-            click.echo(f"Found: {result} for standard index {index}")
+            if debug:
+                click.echo(f"Found: {result} for standard index {index}")
             return result
         else:
             click.echo(f"Could not find index {index}")
@@ -1012,12 +1032,6 @@ def locate(ctx: click.Context, index: int, searche: str,
     if axis.lower() == 'index':
         resultframe = \
             getrowframe(data=dataframe, ix=index, st=searchterm)
-        
-        # if isinstance(resultframe, pd.Series):
-        # click.echo(f"Found: \n {getrowframe(data=dataframe, ix=index, st=searchterm)}")
-        # click.echo(resultframe.values)
-        # rich.inspect(resultframe)
-        # return None
         
         if Record.checksingle(resultframe):
             # Individual record holds the singular record, handles displays
