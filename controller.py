@@ -1117,7 +1117,6 @@ class Record:
             identtable: Table = config(fit=expan,
                                        sides=5,
                                        outline=boxd)
-            identtable.add_
             rowid_label: str = 'Record Name:  '
             rowid_value: str = f'{self.rowid} - {self.series.name}'
             identtable.add_row(rowid_label,
