@@ -1102,12 +1102,6 @@ class Record:
                          ratio=2,
                          header_style=styld.heading(),
                          vertical='top')  # noqa
-            g.add_column(header="Spacer",
-                         width=20,
-                         justify="center",
-                         ratio=1,
-                         style=styld.label(),
-                         vertical='top')  # noqa
             g.add_column(header="Grade",
                          # min_width=30,
                          # max_width=35,
@@ -1123,32 +1117,27 @@ class Record:
             identtable: Table = config(fit=expan,
                                        sides=5,
                                        outline=boxd)
-            rowid_label: str = 'Record Name:'
-            spacer: str = '.....'
+            identtable.add_
+            rowid_label: str = 'Record Name:  '
             rowid_value: str = f'{self.rowid} - {self.series.name}'
             identtable.add_row(rowid_label,
-                               spacer,
                                rowid_value)
-            pos_label: str = 'Position ID:'
+            pos_label: str = 'Position ID:  '
             pos_value: str = f'{self.recordid}'
             identtable.add_row(pos_label,
-                               spacer,
                                pos_value)
             return identtable
         
         def gradegrid(expan: bool, boxd: int = 1) -> Table:
             """Display the subtable for Grade/Performance"""
             gradetable: Table = config(fit=expan, sides=5, outline=boxd)
-            grade_label: str = 'Grade:'
-            spacer: str = '.....'
+            grade_label: str = 'Grade:  '
             grade_value = f'{self.grade}'
-            gradetable.add_row(grade_label, spacer, grade_value)
-            outcome_label: str = 'Outcome:'
-            spacer: str = '.....'
+            gradetable.add_row(grade_label, grade_value)
+            outcome_label: str = 'Outcome:  '
+            
             outcome_value = f'{self.type} | {self.prefix}:{self.reference}'
-            gradetable.add_row(outcome_label, spacer, outcome_value)
-            click.echo(message=f"Grade: {grade_value}")
-            click.echo(message=f"Outcome: {outcome_value}")
+            gradetable.add_row(outcome_label, outcome_value)
             return gradetable
         
         def maingrid(table: Table,
@@ -1163,7 +1152,7 @@ class Record:
             m.grid(expand=fit)
             m.padding = (block, sides)
             m = self.boxed(table=m, style=boxd)
-            m.add_row(left, "___________", right)
+            m.add_row(left, "   ", right)
             return m
         
         indexpane: Table = indexgrid(expan=subgrid)
