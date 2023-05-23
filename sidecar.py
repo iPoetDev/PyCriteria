@@ -1,11 +1,51 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
 # ruff: noqa: ANN001, I001
-"""Module: PyCriteria Terminal App."""
+# noqa: W293 blank line contains whitespace
+# - Without global file level rule, using # noqa: is not possible
+"""Module: Sidecar: App strings values for click commands, and Utilities
+
+Usage:
+-------------------------
+- AppValues.app centralises all strings for app levels settings.
+- ProgramUtilities is a light collection of developer tools, app functions.
+
+Linting:
+-------------------------
+- pylint: disable=trailing-whitespace
+- ruff: noqa:
+      I001:     unsorted-imports
+                Import block is unsorted or unformatted
+      ANN001: 	missing-type-function-argument
+                Missing type annotation for function argument {name}
+
+Critieria:
+LO2.2: Clearly separate and identify code written for the application and
+       the code from external sources (e.g. libraries or tutorials)
+LO2.2.3: Clearly separate code from external sources
+LO2.2.4: Clearly identify code from external sources
+LO6: Use library software for building a graphical user interface,
+or command-line interface, or web application, or mathematical software
+LO6.1 Implement the use of external Python libraries
+LO6.1.1 Implement the use of external Python libraries
+      where appropriate to provide the functionality that the project requires.
+-------------------------
+Standard Libraries
+:imports: dataclasses, typing, tracemalloc, warnings,
+
+3rd Paty Imports
+:imports: click, rich, inspect, Prompt
+
+Custom Authored Libraries
+:imports: apptypes.ActionType
+
+:class: AppValues: Static Class App Strings for each
+:class: ActionType:
+:class: ProgramUtilities:
+"""
 # Standard Imports
 import dataclasses
 import tracemalloc
-import typing
 import warnings
 
 # 3rd Paty Imports
@@ -35,14 +75,6 @@ class AppValues:
     OFF: bool = False
     ON: bool = True
     sep: str = ":: "
-    
-    @dataclasses.dataclass
-    class Start:
-        """Start."""
-        cmd: str = "start"
-        name: str = "PyCriteria"
-        welcome: str = f"Welcome to!{name}"
-        confirm: str = "Start PyCriteria?"
     
     @dataclasses.dataclass
     class Run:
@@ -227,9 +259,6 @@ class ProgramUtils:
         """Configured Python Interpreter warnings.
 
         Added: typing.Literal[str] : Invalid Type
-        Fixme: 'Literal' may be parameterised with literal ints, byte and unicode
-                strings, bools, Enum values, None, other literal types, or type
-                aliases to other literal types
 
         Parameters:
         ====================
@@ -241,8 +270,8 @@ class ProgramUtils:
                     "always" to always print matching warnings
                     "module" to print the first occurrence of matching warnings
                              for each module where the warning is issued
-                    "once" to print only the first occurrence of matching warnings,
-                           regardless of location
+                    "once" to print only the first occurrence
+                           of matching warnings, regardless of location
         """
         trace: str = \
             "Enable tracemalloc to get the object allocation traceback"  # noqa
@@ -250,84 +279,3 @@ class ProgramUtils:
                                 category=DeprecationWarning)
         warnings.filterwarnings(action, category=ResourceWarning)
         warnings.filterwarnings(action, message=trace)
-
-
-class Entry:
-    """Entry: Prompt, Input, Confirm."""
-    
-    reference: str
-    criteria: str
-    note: str
-    todo: str
-    topics: list[str]
-    todo_state: typing.Tuple[str, str] = ("unchecked", "checked")
-    
-    def __init__(self):
-        """Init."""
-        self.reference: str = ""
-        self.criteria: str = ""
-        self.note: str = ""
-        self.todo: str = ""
-        # self.topics: list[str] = Topics.load_uniques("CriteriaTopics")
-    
-    @staticmethod
-    def prompt_addreferenece() -> str:
-        """Prompts the user to add a reference.
-
-        Prints a guidance message on how to format the input.
-        Takes only a string input for the reference (type: str].
-        :returns: str: User input for the reference
-        Test elsewhere for the format of the input.
-        """
-        prompttext: str = \
-            ("A criteria reference has a format of x.x.x. \n"
-             + "Example: Uses multi-level list notations. \n"
-             + "1.2.0 is a reference to the second criteria of the first topic.\n"
-             + "Where 1 is the top item, 2 is the sub item, and 0 is the sub.sub item.\n")
-        rprint(prompttext, flush=True)
-        return Prompt.ask("Enter a x.x.x reference for the item?")
-    
-    @staticmethod
-    def prompt_addcriteria():
-        """Prompts the user."""
-        return Prompt.ask("Enter a criteria text to this item?")
-    
-    @staticmethod
-    def prompt_addnote() -> str:
-        """Prompts the user."""
-        return Prompt.ask("Enter a note for this item?")
-    
-    @staticmethod
-    def prompt_selecttopic(topicslist: list[str], is_choices: bool = True) -> str:
-        """Prompts the user to update."""
-        prompttext: str = "\\\\n".join([f"{i}. {topic}"
-                                        for i, topic
-                                        in enumerate(topicslist, 1)])
-        rprint(prompttext, flush=True)
-        rprint("Enter the name, not the number", flush=True)
-        return Prompt.ask("Choose a new topic for the critera?",
-                          choices=topicslist,
-                          default=topicslist[
-                              0], show_choices=is_choices)
-    
-    @staticmethod
-    def prompt_checktodo(state: typing.Tuple[str, str] = todo_state) -> str:
-        """Prompts the user to toggle the todo."""
-        _state: list[str] = [state[0].lower(), state[1].lower()]
-        return Prompt.ask("Choose to check, or not the todo item?",
-                          choices=_state, default=_state[0])
-
-# def main():
-#    """Main."""
-#    # Initilse WebConsole
-#    webconsole: WebConsole = WebConsole(width=configuration.Console.WIDTH,
-#                                        height=configuration.Console.HEIGHT)
-#    mainconsole: Console = webconsole.console
-#    maintable: Table = webconsole.table
-# 0.1: Load the data
-#    data: list[str] = Controller.load_data()
-# 0.2: Display the data
-#    Display.display_table(data,
-#                          mainconsole,
-#                         maintable)
-# 0.3: Upload the data

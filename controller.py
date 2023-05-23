@@ -1,7 +1,72 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
 # ruff: noqa: ANN101, I001, ARG002
-"""Module: Controller for the Terminal App."""
+"""Module: Controller for the Terminal App.
+
+Usage:
+-------------------------
+- Controller: Controller for the Terminal App.
+- DataController: Data Controller for the Terminal App.
+- ColumnSchema: Column Schema DataViews
+- Headers: Views by Headers selection: READING, LOADING, VIEWS, DISPLAY
+- RICHStyler: Rich.Style Defintions class and methods for the app terminal.
+              Used on each Record
+- Webconsole: Console class and methods for WEB versions of the app.
+- Inner: Inner Terminal layouts, arrangement.Deprecate?  # noqa
+- Record: Record class for displying individual record detials.
+- Editor: C(R)UD Operations, and Editor Controller/Model:
+
+Linting:
+-------------------------
+- pylint: disable=trailing-whitespace
+- ruff: noqa:
+      F841:     unused-variable
+                Local variable {name} is assigned to but never used
+      ARG002:   unused-method-argument
+                Unused method argument: {name}
+      ANN101:   missing-type-self
+                Missing type annotation for {name} in method
+- noqa: W293
+
+Critieria:
+LO2.2: Clearly separate and identify code written for the application and
+       the code from external sources (e.g. libraries or tutorials)
+LO2.2.3: Clearly separate code from external sources
+LO2.2.4: Clearly identify code from external sources
+LO6: Use library software for building a graphical user interface,
+or command-line interface, or web application, or mathematical software
+LO6.1 Implement the use of external Python libraries
+LO6.1.1 Implement the use of external Python libraries
+      where appropriate to provide the functionality that the project requires.
+-------------------------
+Standard Libraries
+:imports: dataclasses
+
+3rd Paty Imports
+:imports: prompt_toolkit.completion
+   :depreaction: Possibly deprecated by use of click_repl, due to use
+                 of completion from prompt_toolkit.
+
+:class: Controller: Controller for the Terminal App.
+:class: ColumnSchema: Column Schema DataViews
+:class: Headers: Views by Headers selection: READING, LOADING, VIEWS, DISPLAY
+:class: RICHStyler: Rich.Style Defintions class and methods for the app.
+:class: WebConsole: Console class and methods for WEB versions of the app.
+:class: Inner: Inner Terminal layouts, arrangement.Deprecate?  # noqa
+:class: Display: Shared Mixed resposnibility with CriteriaApp, and Record
+        Refactor candidates.
+        Evoling design artefact
+:class: Record: Individual Records, and Records Display/Controller/Model:
+:class: Editor: C(R)UD Operations, and Editor Controller/Model:
+
+Global Variables:,
+-------------------------
+:var: connector: connections.GoogleConnector = connections.GoogleConnector()
+:var: configuration: settings.Settings = settings.Settings()
+:var: console: Console = Console()
+:var: stylde: Style = RICHStyleR()
+
+"""
 
 # 0.1 Standard Library Imports
 import dataclasses
@@ -22,7 +87,8 @@ from click import echo  # type: ignore
 from gspread_dataframe import get_as_dataframe as get_gsdf  # type: ignore
 from rich import pretty as rpretty, print as rprint, box  # type: ignore
 from rich.columns import Columns  # type: ignore
-from rich.console import Console, ConsoleDimensions, ConsoleOptions, RenderableType  # type: ignore
+from rich.console import (Console, ConsoleDimensions,
+                          ConsoleOptions, )  # type: ignore
 from rich.layout import Layout  # type: ignore
 from rich.panel import Panel  # type: ignore
 from rich.prompt import Prompt  # type: ignore
@@ -40,12 +106,11 @@ import settings
 # 1.1: Global/Custom Variables
 connector: connections.GoogleConnector = connections.GoogleConnector()
 configuration: settings.Settings = settings.Settings()
-tablesettings: settings.TableSettings = settings.TableSettings()
 console: Console = Console()
 
 
 # 2. Read the data from the sheet by the controller
-# plylint: disable=line-too-long
+
 class Controller:
     """Controller.
 
@@ -87,21 +152,24 @@ class Controller:
     def load_wsheet() -> gspread.Worksheet:
         """Loads a worksheet.
         
-        :return: gspread.Worksheet: The current worksheet to extract the data.
+        :return: gspread.Worksheet:
+            The current worksheet to extract the data.
         """
         # 1.1: Connect to the sheet
-        # -> Move to Instance once the data is loaded is tested and working on heroku
+        # -> Move to Instance once the data is loaded
+        # is tested and working on heroku
         creds: gspread.Client = \
-            connector.connect_to_remote(configuration.CRED_FILE)
-        # rich.print(creds)
+            connector.connect_to_remote(
+                    configuration.CRED_FILE)
         # 1.2: Read the data from the sheet
-        # -> Move to Instance once the data is loaded is tested and working on heroku
+        # -> Move to Instance once the data is
+        # loaded is tested and working on heroku
         spread: gspread.Spreadsheet = \
             connector.get_source(creds,
                                  configuration.SHEET_NAME)
-        # rich.print(spread)
         # 1.3: Return the data from the sheet
-        # -> Move to Instance once the data is loaded is tested and working on
+        # -> Move to Instance once the data is
+        # loaded is tested and working on
         # heroku
         return connector.open_sheet(spread, configuration.TAB_NAME)
     
@@ -200,11 +268,14 @@ class Headers:
                               c.Progress, c.Notes]
     ToDoSimpleView: list[str] = [c.Position, c.Criteria, c.Progress, c.Notes]
     ToDoDoDView: list[str] = [c.Position, c.DoD, c.Criteria, c.Progress]
-    ToDoGradeView: list[str] = [c.Position, c.Criteria, c.Performance, c.DoD]
-    ToDoReviewView: list[str] = [c.Reference, c.Criteria, c.Performance, c.Progress]
+    ToDoGradeView: list[str] = [c.Position, c.Criteria,
+                                c.Performance, c.DoD]
+    ToDoReviewView: list[str] = [c.Reference, c.Criteria,
+                                 c.Performance, c.Progress]
     NotesView: list[str] = [c.Position, c.Criteria, c.Notes]
     ReferenceView: list[str] = [c.Position, c.Reference, c.Related]
-    ViewFilter: list[str] = ["Overview", "Criteria", "Project", "ToDo", "References"]
+    ViewFilter: list[str] = ["Overview", "Criteria",
+                             "Project", "ToDo", "References"]
     ToDoChoices: list[str] = ["All", "Simple", "DoD", "Grade", "Review"]
     HeadersChoices: list[str] = ["Position", "Tier", "Performance",
                                  "Criteria", "Progress", "Notes"]
@@ -215,60 +286,7 @@ class Headers:
 
 
 class DataController:
-    """DataController for the effort of loading the data, fetching it, managing it.
-
-    Links the connector to the app's command:
-
-    CRUD engine + filter, find/searches, show/hide
-    ---------------------------------------------
-    A: READ/FETCH: Loads the data from the sheet to the:
-    - DataModel - NYI
-    - App - WIP
-    - Display - WIP
-    B: CREATE: Inserts new data into the sheet: per item, per row, not per batch
-    C: UPDATE: Updates data in the sheet: per item, per row, not per batch
-    (matching cells, yet)
-    D: DELETE: Deletes data from the sheet: per item, per row, not per batch
-    E: READ/FILTER: Filters the data: per row, column
-    --> Affirmative: "Given me a subset to ETL"
-    F: READ/EXCLUDE: Hides the data: per row, column
-    --> Non-Affirmative: "Hide what I do not want to see"
-    G: SORT: Not doing sorting, thought, APIs have refernece to it.
-
-    Controller is the hub of app tasks/actions; whereas:
-    -----------------------------------------------
-    1. The App handles TUI command logic (Typer) and bundles controller logic
-    into one entry point.
-    2. The WebConsole handles the console Display/logics.
-    3. The DataTransformer handles any Extract, Transform,
-    Load (ETL) logic (load_* tasks are shared with controller)
-    4. The DataModel handles the in memory data structure and
-    data logics (maybe move Topics, Entry to DataModel)
-    5. The Display handles the TUI output Display rendering logics
-    using the console.
-    6. The Connector handles the connection to the remote data source
-    (Google Sheets).
-    7. The Settings handle the configurations of the app/local packages for
-    strings, etc.
-
-
-    Methods:
-    -------
-    :method: refresh: Refreshed entired connection, sheet, worksheet, and data.
-    :method: load_data: Loads the worksheet.
-    :method: load_dataf: Loads the dataframe from the sheet.
-    :method: insert_newrow: Inserts a new row into the worksheet.
-    :method: insert_newitem: Inserts a new item into the worksheet.
-    :method: update_row: Updates a row in the worksheet.
-    :method: update_item: Updates an item in the worksheet.
-    :method: update_items: Updates matching item in the worksheet.
-    :method: delete_row: Deletes a row in the worksheet.
-    :method: delete_item: Deletes an item in the worksheet.
-    :method: filter_rows: Filters the worksheet by row(s).
-    :method: filter_columns: Filters the worksheet by column(s).
-    :method: hide_rows: Hides the worksheet by row(s) --> Display Class?
-    :method: hide_columns: Hides the worksheet by column(s) --> Display Class?
-    """
+    """DataController"""
     
     # https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
     ###
@@ -294,14 +312,16 @@ class DataController:
     # (Default is row 1, column 1.)
     # https://gspread-dataframe.readthedocs.io/en/latest/
     
-    def load_dataframe_wsheet(self, wsheet: gspread.Worksheet) -> pd.DataFrame | None:
+    def load_dataframe_wsheet(self, wsheet: gspread.Worksheet) \
+            -> pd.DataFrame | None:
         """Loads the worksheet into a dataframe.
 
         :param wsheet: gspread.Worksheet: The worksheet to load
         :return: pd.DataFrame | None: The dataframe or None
         """
         if wsheet.get_all_records():
-            dataframe: pd.DataFrame = pd.DataFrame(wsheet.get_all_records())
+            dataframe: pd.DataFrame = \
+                pd.DataFrame(wsheet.get_all_records())
             self.dataframe = dataframe
             return dataframe
         
@@ -310,7 +330,8 @@ class DataController:
     
     def load_dataf(self, wsheet: gspread.Worksheet,
                    filterr: str,
-                   dimensions=None) -> pd.DataFrame:  # noqa: ANN001
+                   dimensions=None) \
+            -> pd.DataFrame:  # noqa: ANN001
         """Load the data into a panda dataframe.
 
         :param wsheet: gspread.Worksheet: The worksheet to load the data from
@@ -501,7 +522,8 @@ class WebConsole:
     
     @staticmethod
     def console_options(width: int = configuration.Console.WIDTH,
-                        height: int = configuration.Console.HEIGHT) -> ConsoleOptions:
+                        height: int = configuration.Console.HEIGHT) \
+            -> ConsoleOptions:
         """Configures the console."""
         max_width: int = width
         max_height: int = height
@@ -533,13 +555,6 @@ class WebConsole:
                                     markup=_on)
         return _console
     
-    @staticmethod
-    def layout_configure() -> None:
-        """Configures the Rich layout.
-
-        Sets a bounding box for the console.
-        """
-    
     @staticmethod  #
     def page_data(dataset: list[str]) -> None | NoReturn:
         """Displays the data."""
@@ -547,7 +562,8 @@ class WebConsole:
             rprint(dataset)
     
     @staticmethod
-    def configure_table(headers: typing.Optional[list[str]]) -> rich.table.Table:
+    def configure_table(
+            headers: typing.Optional[list[str]]) -> rich.table.Table:
         """Configures Rich Console table."""
         consoletable: rich.table.Table = Table()
         
@@ -573,7 +589,8 @@ class WebConsole:
         elif isinstance(dataframe, pd.Series):
             headers: list[str] = dataframe.index.tolist()
         else:
-            raise ValueError("Bad Parameter: Pandas DataFrame or Series object.")
+            raise ValueError("Bad Parameter: Pandas DataFrame"
+                             " or Series object.")
         
         consoletable: Table = WebConsole.configure_table(headers=headers)
         return consoletable
@@ -628,12 +645,16 @@ class Inner:
     
     def updates(self,
                 renderable,
-                target: Literal["header", "editor", "current", "modified", "footer"]) -> None:
+                target:
+                Literal["header", "editor", "current", "modified", "footer"]) \
+            -> None:  # noqa
         """Updates the layout."""
         self.layout[target].update(renderable)
     
     def refresh(self, consoleholder: Console,
-                target: Literal["header", "editor", "current", "modified", "footer"]) -> None:
+                target:
+                Literal["header", "editor", "current", "modified", "footer"]) \
+            -> None:  # noqa
         """Refreshes the layout."""
         if consoleholder is None:
             consoleholder = Console()
@@ -643,7 +664,8 @@ class Inner:
         elif isinstance(consoleholder, Console) and target is not None:
             self.layout.refresh(consoleholder, layout_name=target)
     
-    def laidout(self, consoleholder: Console, output: bool = True) -> Layout | None:
+    def laidout(self, consoleholder: Console, output: bool = True) \
+            -> Layout | None:
         """Returns the layout."""
         if not output:
             return self.layout
@@ -665,35 +687,6 @@ class Display:
         typing.Literal["table", "column", "list", "frame", "pager",
         "tablepage", "columnpage", "listpage", "framepage"]  # noqa
     
-    # pylint: disable=unnecessary-pass
-    @staticmethod
-    def configure_output():
-        """Configures the output."""
-        pass
-    
-    @staticmethod
-    def display_datalist(dataset: list[str], switch: int = 0) -> None:
-        """Displays the data."""
-        separator: str = "||"
-        carriage: str = "\n"
-        flush: typing.List[bool] = [False, True]
-        rprint(dataset, sep=separator, end=carriage, flush=flush[switch])
-    
-    # pylint: disable=unnecessary-pass
-    @staticmethod
-    def display_sheet():
-        """Displays the sheet."""
-        pass
-    
-    @staticmethod
-    def display_pretty(dataset: list[str], switch: int = 0) -> None:
-        """Displays the data."""
-        rpretty.install()
-        separator: str = "||"
-        carriage: str = "\n"
-        flush: typing.List[bool] = [False, True]
-        rprint(dataset, sep=separator, end=carriage, flush=flush[switch])
-    
     @staticmethod
     def display_data(dataframe: pd.DataFrame,
                      consoleholder,  # noqa: ANN001
@@ -706,30 +699,6 @@ class Display:
                               consoletable=consoletable,
                               headerview=Headers.HeadersChoices,
                               title=title)
-    
-    @staticmethod
-    def display_views(dataframe: pd.DataFrame,
-                      consoleholder,  # noqa: ANN001
-                      view: ViewType = "table",
-                      title: str = "PyCriteria") -> None:
-        """Display Data: Wrapper for Any Display."""
-        pass
-    
-    @staticmethod
-    def display_table(dataset: list[str],
-                      consoleholder: Console,
-                      consoletable: Table,
-                      title: str = "PyCriteria") -> None | NoReturn:
-        """Displays the data in a table."""
-        # https://improveandrepeat.com/2022/07/python-friday-132-rich-tables-for-your-terminal-apps/
-        # 1 Set Table
-        consoletable.title = title
-        # 2 Transform Data to Table
-        for row in dataset:
-            consoletable.add_row(*row)
-        # 3 Print Table
-        consoleholder.print(consoletable)
-        return None
     
     @staticmethod
     def display_frame(dataframe: pd.DataFrame,
@@ -760,7 +729,8 @@ class Display:
                          consoleholder: Console | WebConsole,
                          consoletable: Table,
                          headerview: Headers | list[str] | str,
-                         viewfilter: Headers.ViewFilter = "Criteria") -> None | NoReturn:
+                         viewfilter: Headers.ViewFilter = "Criteria") \
+            -> None | NoReturn:
         """Displays the data in a table."""
         # AI refactor put in place these guard conditions for the headerview
         if isinstance(headerview, Headers):
@@ -777,62 +747,6 @@ class Display:
             consoletable.add_row(*[str(row[column])
                                    for column in headers])
         consoleholder.print(consoletable)
-    
-    @staticmethod
-    def display_search(output: tuple,
-                       consoleholder: Console,
-                       consoletable: Table,
-                       title: str = "PyCriteria") -> None | NoReturn:
-        """Displays the searches accoridng to an output's result-set.
-        
-        A ResultSet is a type of tuple that varies in length and component types.
-        A resultset is used to carry the parameters of a searches along
-            with the results of that searches from
-             a) the command's stdin
-             b) to the cli's stdout or stderr.
-        The ResultSet is a tuple of the following types:
-            i) SearchColumnResultType: tuple[str, str, pd.DataFrame]
-                i.e. header, query, dataframe
-            ii) ItemSelectType: tuple[str, str, pd.DataFrame]
-        Parameters:
-        --------------------
-        :param output: tuple: The output of the searches
-        :param consoleholder: Console: The console to print to
-        :param consoletable: Table: The table to print to
-        :param title: str: The title of the table
-        """
-        
-        headers, query, dataframe = output
-        Display.display_frame(dataframe=dataframe,
-                              consoleholder=consoleholder,
-                              consoletable=consoletable,
-                              headerview=Headers.HeadersChoices,
-                              title=title)
-        echo(message=(f"You searched for: Query: {query}"
-                      + f"Against this Header: {headers}")),
-    
-    @staticmethod
-    def display_selection(output: tuple,
-                          consoleholder,  # noqa: ANN001
-                          consoletable: Table,
-                          title: str = "PyCriteria") -> None | NoReturn:  # noqa: ANN001
-        """Displays the selection accoridng to an output's result-set.
-        
-        Parameters:
-        --------------------
-        :param output: tuple: The output of the selection
-        :param consoleholder: Any: The console to print to
-        :param consoletable: Table: The table to print to
-        :param title: str: The title of the table
-        
-
-        Returns:
-        --------------------
-        :return: None | NoReturn: This displays to the stdout/stderr
-        """
-        # Uses the return Data Structure types, i.e, of outputto determine the Display set
-        
-        pass
 
 
 class Record:
@@ -978,13 +892,15 @@ class Record:
                          vertical='top')  # noqa
             return g
         
-        def display(table: Table, data: pd.Series | None = None) -> Table | None:
+        def display(table: Table, data: pd.Series | None = None) \
+                -> Table | None:
             """Populates the card from instance or a from external source"""
             if data is not None and isinstance(data, pd.Series):
                 for label, value in data.items():
                     table.add_row(str(label), str(value))
                 return table
-            elif self.series is not None and isinstance(self.series, pd.Series):
+            elif self.series is not None and \
+                    isinstance(self.series, pd.Series):
                 for label, value in self.series.items():
                     table.add_row(str(label), str(value))
                 return table
@@ -1007,7 +923,9 @@ class Record:
             -> Panel | None:  # noqa
         """Frames the renderable as a panel."""
         
-        def config(dimensions: tuple[int, int], styler: str, safe: bool = False) -> Panel:
+        def config(dimensions: tuple[int, int],
+                   styler: str,
+                   safe: bool = False) -> Panel:
             """Frames the renderable as a panel."""
             width, height = dimensions
             if width == 0 and height == 0:
@@ -1240,16 +1158,20 @@ class Record:
         def metapane(table: Table) -> Table:
             """Display the subtable for Index/Identifiers"""
             meta: Table = table
-            meta.title = 'Footer: Project Data'
+            meta.title = 'Project Data'
             meta.add_section()
             tier_label: str = 'Tier: '
             link_label: str = 'Linked: '
+            topics_label: str = 'Topics: '
             tier_value = f'{self.type}.{self.prefix}.{self.reference}'
-            meta.add_row(f'{tier_label} {tier_value})', f'{link_label} {self.linked}', '')
+            meta.add_row(f'{tier_label}  {tier_value})',
+                         f'{link_label}:  {self.linked}',
+                         f'{topics_label}:  {self.topics}')
             meta.add_section()
             now: datetime = datetime.datetime.now()
             dt_string: str = now.strftime("%d/%m/%Y %H:%M")  # %S
-            meta.add_row(f'Viewed: {dt_string}', '/', '/')
+            meta.add_row(f'Viewed: {dt_string}',
+                         f'{topics_label}:  {self.topics}', ' ')
             return meta
         
         footer: Table = metapane(table=config(fit=expand, vertical=valign))  # noqa
@@ -1271,12 +1193,19 @@ class Record:
         return Record.switch(main, printer=container, switch=sendtolayout)
     
     @staticmethod
-    def switch(renderable, printer: Console | Table, switch: bool = False) -> Table | None:
+    def switch(renderable,
+               printer: Console | Table,
+               switch: bool = False) \
+            -> Table | None:
         """Switches between console print or redirecting to a layout"""
         if switch is True:
             return renderable
         else:
-            printer.print(renderable)
+            if isinstance(printer, Console):
+                printer.print(renderable)
+            elif isinstance(printer, Table):
+                c = Console()
+                c.print(renderable)
             return None
 
 
@@ -1353,8 +1282,10 @@ class Editor:
             # a) returned
             # b) using click.prompt() to ask if the user wants to save the
             #    sourceframe and
-            #    using click.confirm() to ask if the user wants commit to the remote
-            #    commit function is to be defined, as it is destructive/overwrites
+            #    using click.confirm() to ask if the
+            #    user wants commit to the remote
+            #    commit function is to be defined,
+            #    as it is destructive/overwrites
             # THEN:
             # Then I take the AI generated code and
             #    refactor it into several functions for reuse and development.
@@ -1374,7 +1305,8 @@ class Editor:
             editingseries = self.record.series.copy()
             self.lasteditmode = ''  # Clears out the last edit mode, before use
             if self._isempty(editingseries, ColumnSchema.Notes):
-                if click.confirm(f"Please confirm to add/{EDITMODE} your note"):
+                if click.confirm("Please confirm to "
+                                 f"add/{EDITMODE} your note"):
                     self.modifynotes(editingseries,
                                      record=self.record,
                                      notes=notes,
@@ -1435,7 +1367,8 @@ class Editor:
             editingseries = self.record.series.copy()
             self.lasteditmode = ''  # Clears out the last edit mode, before use
             if self._hascontent(editingseries, ColumnSchema.Notes):
-                if click.confirm(f"Please confirm to {EDITMODE} your note"):
+                if click.confirm("Please confirm to"
+                                 f" {EDITMODE} your note"):
                     self.modifynotes(editingseries,
                                      record=self.record,
                                      notes=notes,
@@ -1454,10 +1387,12 @@ class Editor:
                                          location=location,
                                          debug=debug)
                     else:
-                        click.echo(message=f"No Edit Made for  Update {EDITMODE}",
+                        click.echo(message="No Edit Made for  "
+                                           f"Update {EDITMODE}",
                                    err=True)
                 else:
-                    click.echo(f"Exiting editing mode: Update {EDITMODE}")
+                    click.echo("Exiting editing mode:"
+                               f" Update {EDITMODE}")
                     return None
     
     def deletingnotes(self,
@@ -1569,11 +1504,13 @@ class Editor:
                     source=self.newresultframe)
             if debug is True:
                 rich.inspect(self.modified)
-            self.lasteditmode = editmode  # sets the last edit mode for the record
+            # sets the last edit mode for the record
+            self.lasteditmode = editmode
         
         if click.confirm("Do you want to save the updated DataFrame?"):
             # self.sourceframe = updatedframe
-            # TODO: Implement the commit function to save the updated DataFrame remotely
+            # TODO: Implement the commit function to save
+            # the updated DataFrame remotely
             # commit()
             click.echo("TODO: DataFrame saved")
         else:
@@ -1641,7 +1578,8 @@ class Editor:
         # Prompt the user to save the updated DataFrame
         if click.confirm("Do you want to save the updated DataFrame?"):
             self.sourceframe = savedfranme
-            # TODO: Implement the commit function to save the updated DataFrame remotely
+            # TODO: Implement the commit function to
+            # save the updated DataFrame remotely
             # commit()
         else:
             click.echo("Exit editing mode")
@@ -1656,7 +1594,7 @@ class Editor:
         name or index for rows, if either is known or given.
         
         The Editor is a console utility for editing records."""
-        # https://www.perplexity.ai/search/1ae6c535-37ae-4721-bbc8-38aa37cae119?s=c
+        # https://www.perplexity.ai/search/1ae6c535-37ae-4721-bbc8-38aa37cae119?s=c # noqa
         # Use for debuging IndexError: iloc cannot enlarge its target object
         # Not used for developing the pattern below.
         updatedframe = record.sourceframe.copy()
@@ -1674,7 +1612,9 @@ class Editor:
                     # Debuging
                     updatedframe.at[index, column] = value
                     if debug:
-                        click.echo(f"Note Updated at row: by {index} only")
+                        click.echo(
+                                message="Note Updated at row: "
+                                        f"by {index} only")
                         rich.inspect(updatedframe.at[index, column])
                 if not debug:
                     click.echo(f"Note Updated at row: {index} "
@@ -1744,7 +1684,8 @@ class Editor:
     
     @staticmethod
     def timestamp(tostring: bool = True,
-                  stamp: Literal['date', 'time', 'full', 'precise'] = 'full') -> str:
+                  stamp: Literal['date', 'time', 'full', 'precise'] = 'full') \
+            -> str:
         """Returns a timestamp"""
         if tostring:
             fmat: str = "%Y-%m-%d %H:%M:%S.%f"
@@ -1758,7 +1699,9 @@ class Editor:
                 fmat = "%Y-%m-%d %H:%M:%S.%f"
             return datetime.datetime.now().strftime(fmat)
 # End of Controller Module
-# Globals: connector, configuration, tablesettings, console
-# Class: Controller, ColumnSchema, Headers, DataController,  Editor, WebConsole,
+# Globals: connector, configuration, console
+# Class: Controller, ColumnSchema, Headers, DataController,
+#         Editor, WebConsole,
 # Class: Inner, Display, Record, Editor
-# Timestamp: 2022-05-21T16:30, copywrite (c) 2022-2025, see {} for more details.
+# Timestamp: 2022-05-21T16:30, copywrite (c) 2022-2025,
+#       see {} for more details.

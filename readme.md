@@ -96,7 +96,22 @@
 
 ### 6.3 [Static Analysis](#static)
 
-### 6.3.1 [Code Quality](#quality)
+### 6.3.1 Basic Linting
+
+> Code Institute very own autopep8 validator: https://pep8ci.herokuapp.com/
+
+File* |   Date   |                                     Why                                      |        Issue        | Code  |           State           | Links
+-----:|:--------:|:----------------------------------------------------------------------------:|:-------------------:|:-----:|:-------------------------:|:-----
+All | OnGoing  |                                      2                                       | trailing-whitespace | C0303 |         disabled          | Non Critical
+app.py | 23-05-05 |                                                                              |  unnecessary-pass   | C0114 |         disabled          | Temporary
+controller.py | 23-05-05| Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  | Passing <br/>with ignored | _
+apptypes.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  |          Passing          | _
+commands.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  | Passing <br/>with ignored | _
+exceptions.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  |       Passing <br/>with ignored       | _
+settings.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  |       Passing <br/>with ignored        |_
+sidecar.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  |     Passing <br/>with ignored        | -
+
+### 6.3.2 [Code Quality](#quality)
 
 #### 6.3.1.1 Ruff
 
