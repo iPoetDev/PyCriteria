@@ -57,3 +57,5 @@ ruff.log
 /.app/
 /.app/
 /.apps/app.run.xml
+/appv1.py
+/Remote issue

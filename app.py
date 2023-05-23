@@ -663,7 +663,7 @@ class CriteriaApp:
                 if debug:
                     click.echo(f"Found: {result}")
             else:
-                click.echo(f"Could not find {search}")
+                click.echo(f"Could not find {searchterm}")
         else:
             click.echo("Please provide either "
                        "an index or searches term")
@@ -1181,6 +1181,7 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
     with the original record.
     F: Update the local app data.
     
+    https://www.perplexity.ai/search/a8d503cb-8aec-489a-8cf5-7f3e5b573cb7?s=c
     Parameters:
     -----------
     :param ctx: click.Context
@@ -1400,7 +1401,7 @@ def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
     - Uses Results.getrowframe
     B: Check if it is a single result, i.e. a pd.Series,
     C: Create a new record for local display and editing
-    D: Editor modifies the record by ADDING a new note by index
+    D: Editor modifies the record by DELETEING a new note by index
     E: Display the modified record, either alone, or side by side.
     with the original record.
     F: Update the local app data.
