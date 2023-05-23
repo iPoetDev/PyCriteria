@@ -15,7 +15,7 @@ import click
 import gspread  # type: ignore
 import gspread_dataframe  # type: ignore
 import pandas as pd  # type: ignore
-import rich.style  # type: ignore
+import rich
 #
 # 0.2.2 Third Party Modules: Individual, Aliases
 from click import echo  # type: ignore
@@ -26,6 +26,7 @@ from rich.console import Console, ConsoleDimensions, ConsoleOptions, RenderableT
 from rich.layout import Layout  # type: ignore
 from rich.panel import Panel  # type: ignore
 from rich.prompt import Prompt  # type: ignore
+from rich.style import Style  # type: ignore
 from rich.table import Table  # type: ignore
 from rich.text import Text  # type: ignore
 from rich.theme import Theme  # type: ignore
@@ -40,7 +41,7 @@ import settings
 connector: connections.GoogleConnector = connections.GoogleConnector()
 configuration: settings.Settings = settings.Settings()
 tablesettings: settings.TableSettings = settings.TableSettings()
-console: rich.console.Console = Console()
+console: Console = Console()
 
 
 # 2. Read the data from the sheet by the controller
@@ -395,6 +396,92 @@ class DataController:
     def max(dataframe: pd.DataFrame) -> str:
         """Return the maximum value in a row."""
         return str(len(dataframe))
+
+
+class RICHStyler:
+    """Rich Styler for Rich.console Style."""
+    style = Style()
+    
+    def __init__(self) -> None:
+        """Initialises the TUI Styler."""
+        self.style = Style()
+        pass
+    
+    @staticmethod
+    def panel(grey: int, tostring: bool = True) -> Style | str:
+        """Returns the Style for the property.
+        
+        :param grey: int: The grey level
+          https://rich.readthedocs.io/en/stable/appendix/colors.html
+        :param tostring: bool: Whether to return a string or Style
+        """
+        emp: str = "bold"
+        co: str = "white"
+        bg: str = f"grey{str(grey)}"
+        styled: str = f'{emp} {co} on {bg}'
+        if tostring:
+            return styled
+        else:
+            return RICHStyler.style.parse(styled)
+    
+    @staticmethod
+    def label() -> Style:
+        """Style the text."""
+        emp: str = "bold"
+        co: str = "purple4"
+        bg: str = "grey93"
+        styled: str = f'{emp} {co} on {bg}'
+        return RICHStyler.style.parse(styled)
+    
+    @staticmethod
+    def property() -> Style:
+        """Returns the Style for the property."""
+        emp: str = "bold"
+        co: str = "purple4"
+        bg: str = "grey93"
+        styled: str = f'{emp} {co} on {bg}'
+        return RICHStyler.style.parse(styled)
+    
+    @staticmethod
+    def value() -> Style:
+        """Returns the Style for the property."""
+        emp: str = "italic"
+        co: str = "dark_turquoise"
+        bg: str = "black"
+        styled: str = f'{emp} {co} on {bg}'
+        return RICHStyler.style.parse(styled)
+    
+    @staticmethod
+    def modified() -> Style:
+        """Returns the Style for the property."""
+        emp: str = "italic"
+        co: str = "deep_pink3"
+        bg: str = "black"
+        styled: str = f'{emp} {co} on {bg}'
+        return RICHStyler.style.parse(styled)
+    
+    @staticmethod
+    def heading() -> Style:
+        """Returns the Style for the property."""
+        emp: str = "bold italic underline2"
+        co: str = "purple4"
+        bg: str = "grey93"
+        styled: str = f'{emp} {co} on {bg}'
+        return RICHStyler.style.parse(styled)
+    
+    @staticmethod
+    def border(stylestr: bool = True) -> Style | str:
+        """Returns the Style for the property."""
+        emp: str = "bold"
+        bg: str = "grey93"
+        styled: str = f'{emp} {bg}'
+        if stylestr:
+            return styled
+        else:
+            return RICHStyler.style.parse(styled)
+
+
+styld = RICHStyler
 
 
 class WebConsole:
@@ -914,36 +1001,46 @@ class Record:
     def panel(consolepane: Console,
               renderable,
               fits: bool = False,
-              card: tuple[int | None, int | None] | None = None,
-              align: typing.Literal["left", "center", "right"] = "center",
+              card: tuple[int, int] = (0, 0),
+              align: typing.Literal["left", "center", "right"] = "left",
               outline: rich.box = box.SIMPLE, sendtolayout: bool = False) \
             -> Panel | None:  # noqa
         """Frames the renderable as a panel."""
         
-        def config(dimensions: tuple[int, int]) -> Panel:
+        def config(dimensions: tuple[int, int], styler: str, safe: bool = False) -> Panel:
             """Frames the renderable as a panel."""
             width, height = dimensions
-            if width is None and height is None:
+            if width == 0 and height == 0:
                 p: Panel = Panel(renderable=renderable,
                                  expand=fits,
                                  box=outline,
-                                 title=renderable.title,
-                                 title_align=align)
+                                 style=styler,
+                                 safe_box=safe,
+                                 border_style=styld.border(),
+                                 title_align=align,
+                                 highlight=True)
                 return p
             
             p: Panel = Panel(renderable=renderable,
                              expand=fits,
                              width=width,
                              height=height,
+                             style=styler,
                              box=outline,
-                             title=renderable.title,
-                             title_align=align)
+                             safe_box=safe,
+                             border_style=styld.border(),
+                             title_align=align,
+                             highlight=True)
             return p
         
         # Switches the flow: returns | print| to stdout
-        panel: Panel = config(dimensions=card)
+        panel: Panel = config(dimensions=card,
+                              styler=styld.panel(grey=23),
+                              safe=True)
         
-        return Record.switch(panel, switch=sendtolayout)
+        return Record.switch(panel,
+                             printer=consolepane,
+                             switch=sendtolayout)
     
     def display(self, consoledisplay: Console,
                 sizing: tuple[int, int] = None,
@@ -964,7 +1061,26 @@ class Record:
                        renderable=card,
                        card=sizing)  # noqa
         # Switches the flow: returns | print| to stdout
-        return Record.switch(panel, switch=sendtolayout)
+        return Record.switch(panel,
+                             printer=consoledisplay,
+                             switch=sendtolayout)
+    
+    def boxed(self, table, style: int = 1) -> Table:  # noqa
+        """Sets the table box style."""
+        if style == 1:
+            table.box = box.SIMPLE
+        elif style == 2:
+            table.box = box.ROUNDED
+        elif style == 3:
+            table.box = box.HEAVY_HEAD
+        elif style == 4:
+            table.box = box.SIMPLE_HEAD
+        elif style == 5:
+            table.box = box.HORIZONTALS
+        elif style == 6:
+            table.box = box.SQUARE
+        
+        return table
     
     def header(self, consolehead: Console,
                sendtolayout: bool = False,
@@ -972,27 +1088,41 @@ class Record:
                subgrid: bool = False) -> Table | None:
         """Displays the header of the record"""
         
-        def config(fit: bool = False) -> Table:
+        def config(fit: bool = False,
+                   sides: int = 1,
+                   block: int = 0,
+                   outline: int = 1) -> Table:
             """Displays the record as a cardinal."""
             g: Table = Table.grid(expand=fit)
+            g.show_lines = True
+            g.padding = (block, sides)
             g.add_column(header="Index",
-                         min_width=30,
+                         # min_width=30,
+                         # max_width=35,
                          ratio=2,
+                         header_style=styld.heading(),
                          vertical='top')  # noqa
             g.add_column(header="Spacer",
-                         min_width=10,
+                         width=20,
                          justify="center",
                          ratio=1,
+                         style=styld.label(),
                          vertical='top')  # noqa
             g.add_column(header="Grade",
-                         min_width=30,
+                         # min_width=30,
+                         # max_width=35,
                          ratio=2,
+                         header_style=styld.heading(),
                          vertical='top')  # noqa
+            
+            g = self.boxed(table=g, style=outline)
             return g
         
-        def indexgrid(expan: bool) -> Table:
+        def indexgrid(expan: bool, boxd: int = 1) -> Table:
             """Display the subtable for Index/Identifiers"""
-            identtable: Table = config(fit=expan)
+            identtable: Table = config(fit=expan,
+                                       sides=5,
+                                       outline=boxd)
             rowid_label: str = 'Record Name:'
             spacer: str = '.....'
             rowid_value: str = f'{self.rowid} - {self.series.name}'
@@ -1006,15 +1136,15 @@ class Record:
                                pos_value)
             return identtable
         
-        def gradegrid(expan: bool) -> Table:
+        def gradegrid(expan: bool, boxd: int = 1) -> Table:
             """Display the subtable for Grade/Performance"""
-            gradetable: Table = config(fit=expan)
+            gradetable: Table = config(fit=expan, sides=5, outline=boxd)
             grade_label: str = 'Grade:'
-            spacer: str = '..........'
+            spacer: str = '.....'
             grade_value = f'{self.grade}'
             gradetable.add_row(grade_label, spacer, grade_value)
             outcome_label: str = 'Outcome:'
-            spacer: str = '..........'
+            spacer: str = '.....'
             outcome_value = f'{self.type} | {self.prefix}:{self.reference}'
             gradetable.add_row(outcome_label, spacer, outcome_value)
             click.echo(message=f"Grade: {grade_value}")
@@ -1024,11 +1154,16 @@ class Record:
         def maingrid(table: Table,
                      left: Table,
                      right: Table,
+                     boxd: int = 1,
+                     sides: int = 1,
+                     block: int = 0,
                      fit: bool = gridfit) -> Table:
             """ Display the header grid table"""
             m: Table = table
             m.grid(expand=fit)
-            m.add_row(left, right)
+            m.padding = (block, sides)
+            m = self.boxed(table=m, style=boxd)
+            m.add_row(left, "___________", right)
             return m
         
         indexpane: Table = indexgrid(expan=subgrid)
@@ -1036,9 +1171,13 @@ class Record:
         mainpane: Table = maingrid(table=config(),
                                    left=indexpane,
                                    right=gradepane,
+                                   sides=5,
+                                   boxd=3,
                                    fit=gridfit)  # noqa
         
-        return Record.switch(mainpane, switch=sendtolayout)
+        return Record.switch(mainpane,
+                             printer=consolehead,
+                             switch=sendtolayout)
     
     def editable(self, consoleedit: Console | None = None,
                  expand: bool = False,
@@ -1072,17 +1211,19 @@ class Record:
             else:
                 notes_value = f'{self.notes} \n'
             # Build rows
-            currenttable.add_row(todo_label)
-            currenttable.add_row(todo_value)
-            currenttable.add_row(criteria_label)
-            currenttable.add_row(criteria_value)
-            currenttable.add_row(notes_label)
-            currenttable.add_row(notes_value)
+            currenttable.add_row(todo_label, style=styld.label())
+            currenttable.add_row(todo_value, style=styld.value())
+            currenttable.add_row(criteria_label, style=styld.label())
+            currenttable.add_row(criteria_value, style=styld.value())  # noqa
+            currenttable.add_row(notes_label, style=styld.label())
+            currenttable.add_row(notes_value, style=styld.value())
             return currenttable
         
         currentdatapane: Table = \
             currentdata(table=config(fit=expand), t=title)  # noqa
-        return Record.switch(currentdatapane, switch=sendtolayout)
+        return Record.switch(currentdatapane,
+                             printer=consoleedit,
+                             switch=sendtolayout)
     
     def footer(self, consolefoot: Console,
                sendtolayout: bool = False,
@@ -1124,7 +1265,9 @@ class Record:
             return meta
         
         footer: Table = metapane(table=config(fit=expand, vertical=valign))  # noqa
-        return Record.switch(footer, switch=sendtolayout)
+        return Record.switch(footer,
+                             printer=consolefoot,
+                             switch=sendtolayout)
     
     @staticmethod
     def comparegrid(container: Table,
@@ -1137,16 +1280,15 @@ class Record:
         main.grid(expand=fit)
         main.add_row(left, right)
         
-        return Record.switch(main, switch=sendtolayout)
+        return Record.switch(main, printer=container, switch=sendtolayout)
     
     @staticmethod
-    def switch(renderable, switch: bool = False) -> Table | None:
+    def switch(renderable, printer: Console | Table, switch: bool = False) -> Table | None:
         """Switches between console print or redirecting to a layout"""
         if switch is True:
             return renderable
         else:
-            c = Console()
-            c.print(renderable)
+            printer.print(renderable)
             return None
 
 
@@ -1347,6 +1489,7 @@ class Editor:
         ----------
         :param notes: The notes to be added to the record.
         :param location: The location of the notes to be added to the record.
+        :param debug: The debug flag for the function.
         :return: None"""
         EDITMODE = 'clear'  # noqa
         if notes is not None and isinstance(notes, str):
