@@ -986,7 +986,7 @@ def todo(ctx, display: str, selects: str) -> None:
                          viewoption=viewopt(inputs=display, choice=selects))
     except TypeError:
         App.display_todo(dataframe=dataframe)
-        rprint(f"You entered the wrong option: "
+        rprint("You entered the wrong option: "
                f"{display.lower()}\n"
                f"Please try again@ All, Simple, Done, Grade or Review")  # noqa
     
