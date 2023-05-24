@@ -177,7 +177,7 @@ class ManagingExceptions:
         _status: str = f'{_output}'
         _success: str = 'New Cred\'s filename + .json:'
         _prompt: str = f"Enter the new {credentials} #" \
-                       f"name with .json as extension:"
+                       "name with .json as extension:"
         # 3. Prompt User from Console/Std.In
         while True:
             rprint(_status)
