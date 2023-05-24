@@ -187,10 +187,7 @@ class Window:
         :param value: Record - Individual Record to display
         :param switch: bool - Switch to send to the Editor or not.
         """
-        if switch:
-            return value
-        else:
-            return None
+        return value if switch else None
     
     @staticmethod
     def showrecord(data: pd.Series | pd.DataFrame,
@@ -293,11 +290,8 @@ class Window:
                 window.printpanels(record=individual)
             else:
                 individual.card(consolecard=Webconsole.console)
-            
-            if sendtoeditor:
-                return individual
-            else:
-                return None
+
+            return individual if sendtoeditor else None
     
     @staticmethod
     def showmodified(editeddata: pd.Series,
@@ -337,22 +331,21 @@ class Window:
                 click.echo(message="No changes made. See above.")
             #
             if debug:
-                click.echo(message=f"=====================================")
+                click.echo(message="=====================================")
             # Switch confirmation on a command's type
             if commandtype == 'insert':
-                click.echo(message=f"🆕 A new note is now added 🆕 at:"
-                                   + editor.lastmodified)
+                click.echo(message=("🆕 A new note is now added 🆕 at:" + editor.lastmodified))
             elif commandtype == 'append':
                 click.echo(message="A note is updated at:"
                                    + editor.lastmodified)
             elif commandtype == 'clear':
                 click.echo(message="A record's is now deleted at:"
                                    + editor.lastmodified)
-            click.echo(message=f"Exiting: Command completed")
-            return None
+            click.echo(message="Exiting: Command completed")
         else:
             click.echo(message="No changes made. Bulk edits not supported.")
-            return None
+
+        return None
     
     @staticmethod
     def comparedata(editeddata: pd.Series,
@@ -451,19 +444,16 @@ class CriteriaApp:
         :param context: click.Context - Click context
         :return: None
         """
-        root: str = "BASE: Run"
         click.echo(message="Navigation: CLI: > Run > ... "
                            "[Intent] > [Action]\n")
-        if context.info_name is not None:
-            crumb: str = context.info_name
-        else:
-            crumb: str = root
-        
-        text: str = ('Navigation: CLI: > Run > ... > Load'
-                     + f'> {crumb.title()}*\n *: '
-                     + f'You are here: {crumb.title()}\n'
-                     + 'To go up one or two level, enter, each time:  ..  \n'
-                     + 'To Exit: ctrl + d  \n')
+        root: str = "BASE: Run"
+        crumb: str = context.info_name if context.info_name is not None else root
+        text: str = (
+            f'Navigation: CLI: > Run > ... > Load> {crumb.title()}*\n *: '
+            + f'You are here: {crumb.title()}\n'
+            + 'To go up one or two level, enter, each time:  ..  \n'
+            + 'To Exit: ctrl + d  \n'
+        )
         click.echo(
                 message=text)
     
@@ -512,11 +502,7 @@ class CriteriaApp:
         :param label: str - Label to display
         :return: None
         """
-        if view is None:
-            headers: list[str] = Head.OverviewViews
-        else:
-            headers: list[str] = viewer
-        
+        headers: list[str] = Head.OverviewViews if view is None else viewer
         Webconsole.table = Webconsole.configure_table(headers=headers)
         Display.display_subframe(dataframe=dataframe,
                                  consoleholder=Webconsole.console,
@@ -603,8 +589,7 @@ class CriteriaApp:
     @staticmethod
     def search_rows(frame: pd.DataFrame,
                     searchterm: str,
-                    exact: bool = False) \
-            -> pd.DataFrame | None:
+                    exact: bool = False) -> pd.DataFrame | None:
         """Search across all columns for the searches team
         
         :param frame: pd.DataFrame - Dataframe to search
@@ -619,18 +604,14 @@ class CriteriaApp:
         mask = frame.apply(lambda column: column.astype(str).
                            str.contains(searchterm))
         #
-        if exact:
-            return frame.loc[mask.all(axis=1)]
-        
-        return frame.loc[mask.any(axis=1)]
+        return frame.loc[mask.all(axis=1)] if exact else frame.loc[mask.any(axis=1)]
     
     @staticmethod
     def rows(frame: pd.DataFrame,
              index: int = None,
              searchterm: str = None,
              strict: bool = False,
-             zero: bool = True, debug: bool = False) \
-            -> pd.DataFrame | pd.Series | None:
+             zero: bool = True, debug: bool = False) -> pd.DataFrame | pd.Series | None:
         """Get the rows from the dataframe.
         
         Parameters
@@ -659,23 +640,21 @@ class CriteriaApp:
             result = App.search_rows(frame=frame,
                                      searchterm=searchterm,
                                      exact=strict)
-            if result.empty is not False:
-                if debug:
-                    click.echo(f"Found: {result}")
-            else:
+            if result.empty is False:
                 click.echo(f"Could not find {searchterm}")
+            elif debug:
+                click.echo(f"Found: {result}")
         else:
             click.echo("Please provide either "
                        "an index or searches term")
             return None
-        
+
         return result
     
     @staticmethod
     def index(frame: pd.DataFrame,
               index: int = None,
-              zero: bool = True, debug: bool = False) \
-            -> pd.DataFrame | pd.Series | None:
+              zero: bool = True, debug: bool = False) -> pd.DataFrame | pd.Series | None:
         """Get the index from the dataframe.
         
         :param frame: pd.DataFrame - Dataframe to search
@@ -686,14 +665,13 @@ class CriteriaApp:
         """
         if zero and index is not None:
             result = frame.iloc[index - 1] \
-                if index >= 0 else frame.iloc[index]
+                    if index >= 0 else frame.iloc[index]
             if debug:
                 click.echo(f"Found: {result} "
                            f"for zero index {index - 1}")
             return result
         elif not zero and index is not None:
-            result = frame.iloc[index] \
-                if index > 0 else frame.iloc[index]
+            result = frame.iloc[index]
             if debug:
                 click.echo(f"Found: {result} "
                            f"for standard index {index}")
@@ -719,14 +697,13 @@ class CriteriaApp:
             click.echo(message="Plese try again: "
                                f"One of {row}, {column} is blank")
             return None
-        
+
         try:
             if not direct and isinstance(row, int) and isinstance(column, int):
-                if row >= 0 or column >= 0:
-                    result: str = frame.iat[row, column]
-                    return result
-                else:
+                if row < 0 and column < 0:
                     raise IndexError
+                result: str = frame.iat[row, column]
+                return result
             elif direct and isinstance(row, int) and isinstance(column, int):
                 if row >= 0 or column >= 0:
                     result: str = frame.iloc[row, column]
@@ -752,15 +729,12 @@ class CriteriaApp:
         """
         if not exact:
             resultframe: pd.DataFrame | None = \
-                sourceframe.where(filterframe).dropna(how='any') \
-                    .dropna(how='any', axis=axes)  # noqa
-        elif exact:
-            resultframe: pd.DataFrame | None = \
-                sourceframe.where(filterframe).dropna(how='all') \
-                    .dropna(how='all', axis=axes)  # noqa
+                    sourceframe.where(filterframe).dropna(how='any') \
+                        .dropna(how='any', axis=axes)  # noqa
         else:
-            click.echo("Could not find results.")
-            return None
+            resultframe: pd.DataFrame | None = \
+                    sourceframe.where(filterframe).dropna(how='all') \
+                        .dropna(how='all', axis=axes)  # noqa
         #
         return resultframe if not None else filterframe
 
@@ -861,9 +835,8 @@ class Checks:
         empty: str = ''
         if s != empty and isinstance(s, str):
             return s.strip() if s else None
-        else:
-            click.echo(message="Searching by index only. No keywords.")
-            return None
+        click.echo(message="Searching by index only. No keywords.")
+        return None
 
 
 Guard: Checks = Checks()
@@ -883,8 +856,7 @@ class Results:
     
     @staticmethod
     def getrowframe(data: pd.DataFrame,
-                    ix: int, st: str, debug: bool = False) \
-            -> pd.Series | pd.DataFrame | None:
+                    ix: int, st: str, debug: bool = False) -> pd.Series | pd.DataFrame | None:
         """Get a row from a dataframe by index or searches term.
         
         :param data: pd.DataFrame - Dataframe
@@ -895,14 +867,14 @@ class Results:
         """
         if ix and not st:
             result = App.rows(frame=data, index=ix)
-        elif ix and st:
+        elif ix:
             result = App.rows(frame=data, index=ix, searchterm=st)
-        elif not ix and st:
+        elif st:
             result = App.rows(frame=data, searchterm=st)
         else:
             click.echo(f"No Data for row: {ix}")
             return None
-        
+
         if isinstance(result, pd.Series):
             if debug:
                 click.echo(f"GetRowFrame(): Found a record\n")
@@ -914,7 +886,7 @@ class Results:
                 rich.inspect(result)
             return result
         else:
-            click.echo(f"GetRowFrame(): Found something: undefined")
+            click.echo("GetRowFrame(): Found something: undefined")
             if debug:
                 rich.inspect(result)
             return None
@@ -1083,8 +1055,6 @@ def locate(ctx: click.Context, index: int, searche: str,
             Default: index
     :return: None: Display as stdout or stderr
     """
-    # Debugging Flags
-    debugON: bool = True  # noqa
     debugOFF: bool = False  # noqa
     # Get the dataframe
     dataframe: pd.DataFrame = App.get_data()
@@ -1097,19 +1067,19 @@ def locate(ctx: click.Context, index: int, searche: str,
                                 st=Guard.santitise(searche))
         # Check if the result is a single record
         if Record.checksingle(resultframe):
+            # Debugging Flags
+            debugON: bool = True  # noqa
             # Individual record holds the singular record, handles displays
             # Selecting different calls on the individual record yields
             # different displays/outputs.
             # Only displays a pd.Series, implicitly.
             # Not designed for results >1, unless part of a loop. # noqa
-            
+
             # Shows a result
             window.showrecord(data=resultframe,
                               debug=debugON)
-        # If the result is not a single record, then display a message
         else:
             click.echo(message="The result is not a single record")
-    # Additional Axes: by column, by row are not implemented yet.
     else:
         click.echo(message="Command did not run. Axes not implemented", err=True)
     # Update appdata data
@@ -1166,7 +1136,7 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
               prompt="Select by, to focus on: index",
               required=True)
 def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
-                  axis: str = Literal['index']) -> None:  # noqa: ANN101
+                  axis: str = Literal['index']) -> None:    # noqa: ANN101
     """ADDING a new note to a record
 
     A: Find by a location/coordinate:
@@ -1193,11 +1163,10 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
     """
     # Debugging Flags
     debugON = True  # noqa
-    debugOFF = False  # noqa
     # Rehydrtate dataframe from remote
     dataframe: pd.DataFrame = App.get_data()
     # Search by index (-i, --index option, default/only choice)
-    if axis.lower() == 'index' and searche == '':
+    if axis.lower() == 'index' and not searche:
         click.echo(message="🆕 Adding .... a new note to a record 🆕")
         # - Get the record
         resultframe = Results.getrowframe(data=dataframe,
@@ -1205,6 +1174,7 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
                                           st=Guard.santitise(searche))
         # - Check if it is a single record
         if Record.checksingle(resultframe) and note is not None:
+            debugOFF = False  # noqa
             # - Display the found result and - send to the editor
             editing = \
                 window.showrecord(data=resultframe,
@@ -1224,8 +1194,8 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
                     click.echo(message="No changes made")
                     click.echo(message="Exiting: editing mode. No Note Added")
                 # - Display the modified record
-                click.echo(message=f"=====================================")
-                click.echo(message=f"Loading: edited record")
+                click.echo(message="=====================================")
+                click.echo(message="Loading: edited record")
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
                                     commandtype='insert',
@@ -1234,10 +1204,8 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
                 # - Update the local app data
                 App.update_appdata(context=ctx,
                                    dataframe=editor.newresultframe)
-            # Else, exit
             else:
                 click.echo(message="Exiting: editing mode: Adding a Note")
-    # Features Flag: Text Searches Branch. Future to implement.
     else:
         click.echo(message="Text searches is not yet implemented\n"
                            "Use searches with no input\n"
@@ -1275,7 +1243,7 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
               prompt="🔎 Select by, to focus on: index",
               required=True)
 def updateanote(ctx: click.Context, index: int, searche: str, note: str,
-                axis: str = Literal['index']) -> None:  # noqa: ANN101
+                axis: str = Literal['index']) -> None:    # noqa: ANN101
     """UPDATING to a NOTE
     
     A: Find by a location/coordinate:
@@ -1302,7 +1270,6 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
     Append by a location/coordinate.
     """
     debugON = True  # noqa
-    debugOFF = False  # noqa
     # Fetch the dataframe
     dataframe: pd.DataFrame = App.get_data()
     # Search by index (-i, --index option, default/only choice)
@@ -1314,6 +1281,7 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
                                           st=Guard.santitise(searche))
         # Check if it is a single record
         if Record.checksingle(resultframe) and note is not None:
+            debugOFF = False  # noqa
             # Display the found record and - send to the editor
             editing = \
                 window.showrecord(data=resultframe,
@@ -1328,13 +1296,12 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
                     editor.updatingnotes(notes=note,
                                          location=index,
                                          debug=debugOFF)
-                # Else, exit (No changes made, as no location to update)
                 else:
-                    click.echo(message=f"No changes made")
+                    click.echo(message="No changes made")
                     click.echo(message="Exiting: editing mode. "
                                        "No Note Updated")
                 # Display Record with Modified Data
-                click.echo(message=f"Loading: edited record")
+                click.echo(message="Loading: edited record")
                 # Display the modified record
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
@@ -1346,8 +1313,7 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
                                    dataframe=editor.newresultframe)
             else:
                 # Else, exit (No changes made, as no record to edit)
-                click.echo(message=f"Exiting: editing mode")
-    # Features Flag: Text Searches Branch. Future to implement.
+                click.echo(message="Exiting: editing mode")
     else:
         click.echo(message="Text searches is not yet implemented\n"
                            "Use searches with no input\n"
@@ -1391,7 +1357,7 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
               required=True,
               show_default=True)
 def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
-                axis: str = Literal['index']) -> None:  # noqa: ANN101
+                axis: str = Literal['index']) -> None:    # noqa: ANN101
     """DELETE a note from a record
     
     A: Find by a location/coordinate:
@@ -1417,11 +1383,10 @@ def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
     """
     # Debugging Flags
     debugON = True  # noqa
-    debugOFF = False  # noqa
     # Rehydrtate dataframe from remote
     dataframe: pd.DataFrame = App.get_data()
     # Search by index (-i, --index option, default/only choice)
-    if axis.lower() == 'index' and searche == '':
+    if axis.lower() == 'index' and not searche:
         click.echo(f"🗑️ Deleting a Note, in {index}...🗑️")
         # - Get the record
         resultframe = Results.getrowframe(data=dataframe,
@@ -1447,7 +1412,8 @@ def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
                                        "No Note Deleted")
                 # - Display the modified record
                 click.echo(message="=====================================")
-                click.echo(message=f"Loading: edited record")
+                click.echo(message="Loading: edited record")
+                debugOFF = False  # noqa
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
                                     commandtype='clear',
@@ -1456,10 +1422,8 @@ def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
                 # - Update the local app data
                 App.update_appdata(context=ctx,
                                    dataframe=editor.newresultframe)
-            # Else, exit
             else:
-                click.echo(message=f"Exiting: editing mode: no deletes made")
-    # Features Flag: Text Searches Branch. Future to implement.
+                click.echo(message="Exiting: editing mode: no deletes made")
     else:
         click.echo(message="Text searches is not yet implemented\n"
                            "Use searches with no input\n"

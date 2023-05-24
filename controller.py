@@ -426,7 +426,6 @@ class RICHStyler:
     def __init__(self) -> None:
         """Initialises the TUI Styler."""
         self.style = Style()
-        pass
     
     @staticmethod
     def panel(grey: int, tostring: bool = True) -> Style | str:
@@ -438,12 +437,9 @@ class RICHStyler:
         """
         emp: str = "bold"
         co: str = "white"
-        bg: str = f"grey{str(grey)}"
+        bg: str = f"grey{grey}"
         styled: str = f'{emp} {co} on {bg}'
-        if tostring:
-            return styled
-        else:
-            return RICHStyler.style.parse(styled)
+        return styled if tostring else RICHStyler.style.parse(styled)
     
     @staticmethod
     def label() -> Style:
@@ -496,10 +492,7 @@ class RICHStyler:
         emp: str = "bold"
         bg: str = "grey93"
         styled: str = f'{emp} {bg}'
-        if stylestr:
-            return styled
-        else:
-            return RICHStyler.style.parse(styled)
+        return styled if stylestr else RICHStyler.style.parse(styled)
 
 
 styld = RICHStyler
@@ -633,15 +626,8 @@ class Inner:
                editorshow: bool = True) -> None:
         """Toggles Layouts."""
         
-        if headershow:
-            self.layout["header"].visible = True
-        else:
-            self.layout["header"].visible = False
-        
-        if editorshow:
-            self.layout["editor"].visible = True
-        else:
-            self.layout["editor"].visible = False
+        self.layout["header"].visible = headershow
+        self.layout["editor"].visible = editorshow
     
     def updates(self,
                 renderable,
@@ -653,15 +639,12 @@ class Inner:
     
     def refresh(self, consoleholder: Console,
                 target:
-                Literal["header", "editor", "current", "modified", "footer"]) \
-            -> None:  # noqa
+                Literal["header", "editor", "current", "modified", "footer"]) -> None:    # noqa
         """Refreshes the layout."""
         if consoleholder is None:
             consoleholder = Console()
             self.layout.refresh(consoleholder, layout_name=target)
         elif isinstance(consoleholder, Console):
-            self.layout.refresh(consoleholder, layout_name=target)
-        elif isinstance(consoleholder, Console) and target is not None:
             self.layout.refresh(consoleholder, layout_name=target)
     
     def laidout(self, consoleholder: Console, output: bool = True) \
@@ -707,15 +690,11 @@ class Display:
                       headerview: list[str] | str,
                       title: str = "PyCriteria") -> None | NoReturn:
         """Displays the data in a table."""
-        if isinstance(headerview, list):
-            headers: list = headerview
-        else:
-            headers: list = [headerview]
-        
+        headers: list = headerview if isinstance(headerview, list) else [headerview]
         consoletable.title = title
-        
+
         filteredcolumns: pd.DataFrame = \
-            dataframe.loc[:, dataframe.columns.isin(values=headers)]
+                dataframe.loc[:, dataframe.columns.isin(values=headers)]
         # for column in headerview:
         for _index, row in filteredcolumns.iterrows():
             consoletable.add_row(*[str(row[column])
@@ -861,17 +840,15 @@ class Record:
         if isinstance(single, pd.DataFrame):
             if single.ndim == Record.length and single.empty is False:
                 return True
-            else:
-                click.echo(message="The DataFrame must be a single row.",
-                           err=True)
-                return False
-        
-        if isinstance(single, pd.Series) and single.empty is False:
-            return True
-        else:
-            click.echo(message="The Series must be a single row.",
+            click.echo(message="The DataFrame must be a single row.",
                        err=True)
             return False
+
+        if isinstance(single, pd.Series) and single.empty is False:
+            return True
+        click.echo(message="The Series must be a single row.",
+                   err=True)
+        return False
     
     def card(self, consolecard: Console,
              source: pd.Series | None = None,
@@ -891,23 +868,23 @@ class Record:
                          ratio=2,
                          vertical='top')  # noqa
             return g
-        
+
         def display(table: Table, data: pd.Series | None = None) \
-                -> Table | None:
+                    -> Table | None:
             """Populates the card from instance or a from external source"""
             if data is not None and isinstance(data, pd.Series):
                 for label, value in data.items():
                     table.add_row(str(label), str(value))
                 return table
             elif self.series is not None and \
-                    isinstance(self.series, pd.Series):
+                        isinstance(self.series, pd.Series):
                 for label, value in self.series.items():
                     table.add_row(str(label), str(value))
                 return table
-        
+
         card: Table = display(table=config(), data=source)
-        
-        if sendtolayout is True:
+
+        if sendtolayout:
             consolecard.print(card)
             return None
         else:
@@ -1091,7 +1068,7 @@ class Record:
                  title: str = 'Current Data') -> Table | None:
         """Displays the record: Use it for Current | Modified Records"""
         webconsole: Console = consoleedit  # noqa
-        
+
         def config(fit: bool) -> Table:
             """Displays the record as a cardinal."""
             g: Table = Table.grid(expand=fit)
@@ -1100,7 +1077,7 @@ class Record:
                          ratio=1,
                          vertical='top')  # noqa
             return g
-        
+
         def currentdata(table: Table, t: str) -> Table:
             """Display the subtable for Index/Identifiers"""
             currenttable: Table = table
@@ -1112,10 +1089,7 @@ class Record:
             criteria_value = f'{self.criteria} \n\n'
             currenttable.add_section()
             notes_label: str = 'Notes: '
-            if self.notes is None:
-                notes_value = 'Add a note'
-            else:
-                notes_value = f'{self.notes} \n'
+            notes_value = 'Add a note' if self.notes is None else f'{self.notes} \n'
             # Build rows
             currenttable.add_row(todo_label, style=styld.label())
             currenttable.add_row(todo_value, style=styld.value())
@@ -1124,9 +1098,9 @@ class Record:
             currenttable.add_row(notes_label, style=styld.label())
             currenttable.add_row(notes_value, style=styld.value())
             return currenttable
-        
+
         currentdatapane: Table = \
-            currentdata(table=config(fit=expand), t=title)  # noqa
+                currentdata(table=config(fit=expand), t=title)  # noqa
         return Record.switch(currentdatapane,
                              printer=consoleedit,
                              switch=sendtolayout)
@@ -1195,18 +1169,16 @@ class Record:
     @staticmethod
     def switch(renderable,
                printer: Console | Table,
-               switch: bool = False) \
-            -> Table | None:
+               switch: bool = False) -> Table | None:
         """Switches between console print or redirecting to a layout"""
-        if switch is True:
+        if switch:
             return renderable
-        else:
-            if isinstance(printer, Console):
-                printer.print(renderable)
-            elif isinstance(printer, Table):
-                c = Console()
-                c.print(renderable)
-            return None
+        if isinstance(printer, Console):
+            printer.print(renderable)
+        elif isinstance(printer, Table):
+            c = Console()
+            c.print(renderable)
+        return None
 
 
 class Editor:
@@ -1265,9 +1237,6 @@ class Editor:
         :return: None
         """
         
-        # Perplexity AI was used to build out this function, based on below.
-        # https://www.perplexity.ai/search/a8d503cb-8aec-489a-8cf5-7f3e5b573cb7?s=c
-        EDITMODE = 'insert'  # noqa
         if notes is not None and isinstance(notes, str):
             # PROMPT USE, as an exmaple, for user by PerplexityAI
             # copy old result series to a new result series with added notes
@@ -1301,10 +1270,13 @@ class Editor:
             # As the design pattern is formed, then it is adapted for similar.
             # -----------------------------------------------------------------
             # Update the record's series with the new notes
-            
+
             editingseries = self.record.series.copy()
             self.lasteditmode = ''  # Clears out the last edit mode, before use
             if self._isempty(editingseries, ColumnSchema.Notes):
+                # Perplexity AI was used to build out this function, based on below.
+                # https://www.perplexity.ai/search/a8d503cb-8aec-489a-8cf5-7f3e5b573cb7?s=c
+                EDITMODE = 'insert'  # noqa
                 if click.confirm("Please confirm to "
                                  f"add/{EDITMODE} your note"):
                     self.modifynotes(editingseries,
@@ -1361,12 +1333,12 @@ class Editor:
         :param location: The location of the notes to be added to the record.
         :param debug: The debug flag for the function.
         :return: None"""
-        EDITMODE = 'append'  # noqa
         # See addingnotes() for the PerplexityAI use case as co-Pilot.
         if notes is not None and isinstance(notes, str):
             editingseries = self.record.series.copy()
             self.lasteditmode = ''  # Clears out the last edit mode, before use
             if self._hascontent(editingseries, ColumnSchema.Notes):
+                EDITMODE = 'append'  # noqa
                 if click.confirm("Please confirm to"
                                  f" {EDITMODE} your note"):
                     self.modifynotes(editingseries,
@@ -1414,7 +1386,6 @@ class Editor:
         :param location: The location of the notes to be added to the record.
         :param debug: The debug flag for the function.
         :return: None"""
-        EDITMODE = 'clear'  # noqa
         if notes is not None and isinstance(notes, str):
             # Backup User's input into current record
             # Create a transitory single data series from record
@@ -1422,6 +1393,7 @@ class Editor:
             self.lasteditmode = ''  # Clears out the last edit mode, before use
             # Check if the series has notes
             if self._hascontent(editingseries, ColumnSchema.Notes):
+                EDITMODE = 'clear'  # noqa
                 # Confirm if the user wants to proceed.
                 # It is a CLI and not a GUI, and thus keywboard driven.
                 if click.confirm("Please confirm to clear your note?"):
@@ -1551,24 +1523,21 @@ class Editor:
         :return: str
         """
         _cleared = ''
-        if nodestroy and series[column] is _cleared:
+        if (
+            nodestroy
+            and series[column] is _cleared
+            or not nodestroy
+            and series[column] is _cleared
+        ):
             click.echo(message="No notes to delete")
             return series[column]
-        elif nodestroy and series[column] is not _cleared:
+        elif nodestroy:
             click.echo(message="Exitsing notes present. No change")
             return series[column]
-        elif not nodestroy and series[column] is not _cleared:
+        else:
             click.echo(message="Cleared")
             cleared = series[column] = ''
             return cleared
-        elif not nodestroy and series[column] is _cleared:
-            click.echo(message="No notes to delete")
-            return series[column]
-        elif value not in series[column]:
-            return series[column]
-        else:
-            click.echo(message="Replaced")
-            return series[column].replace(value, '')
     
     # Editor's Record Actions
     def save(self, savedfranme: pd.DataFrame) -> None:
@@ -1633,26 +1602,19 @@ class Editor:
               index: int | None = None,
               cleared: bool = True) -> pd.DataFrame:
         """ Clears by column, using the Record."""
-        _empty = ''
         _noned = None
-        if cleared:
-            value = _empty
-        else:
-            value = _noned
-        
         updatedframe = record.sourceframe.copy()
         if click.confirm(text="Do you want to clear the notes?. \n"
                               "Importantly clears all notes"):
+            value = '' if cleared else _noned
             if index is None and column is not None:
                 updatedframe.loc[record.series.name, column] = value
             elif isinstance(index, int) and column is not None:
                 if isinstance(record.series.name, int):
                     if index == record.series.name:
                         updatedframe.iloc[index, column] = value
-                    elif index != record.series.name:
-                        updatedframe.iloc[index - 1, column] = value
                     else:
-                        updatedframe.iloc[index, column] = value
+                        updatedframe.iloc[index - 1, column] = value
                 else:
                     click.echo(message="Series.name is not an int", err=True)
                     updatedframe.iloc[index, column] = value
@@ -1661,26 +1623,18 @@ class Editor:
         else:
             click.echo("Nothing cleared")
             click.echo("Exiting editing mode")
-        
+
         # Note: If no changes were made, then a copy of original is returned
         return updatedframe
     
     # Editor Utilities
     @staticmethod
     def _isempty(series: pd.Series, column: str) -> bool:
-        if series[column] == '' or \
-                series[column] is None:
-            return True
-        
-        return False
+        return series[column] == '' or series[column] is None
     
     @staticmethod
     def _hascontent(series: pd.Series, column: str) -> bool:
-        if series[column] != '' or \
-                series[column] is not None:
-            return True
-        
-        return False
+        return series[column] != '' or series[column] is not None
     
     @staticmethod
     def timestamp(tostring: bool = True,
