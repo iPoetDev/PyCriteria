@@ -581,7 +581,7 @@ class CriteriaApp:
         
         if echos:
             click.echo(
-                    message=f'The rows with "{searches}" in column\'s'
+                    message=f'The rows with "{searchstr}" in column\'s'
                             f' "{label}" are:\n {searchresult}')
         
         return searchresult
