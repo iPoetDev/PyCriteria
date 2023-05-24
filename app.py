@@ -1331,7 +1331,7 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
                 # Else, exit (No changes made, as no location to update)
                 else:
                     click.echo(message=f"No changes made")
-                    click.echo(message=f"Exiting: editing mode. "
+                    click.echo(message="Exiting: editing mode. "
                                        f"No Note Updated")
                 # Display Record with Modified Data
                 click.echo(message=f"Loading: edited record")
