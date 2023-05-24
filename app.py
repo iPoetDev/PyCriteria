@@ -1236,7 +1236,7 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
                                    dataframe=editor.newresultframe)
             # Else, exit
             else:
-                click.echo(message=f"Exiting: editing mode: Adding a Note")
+                click.echo(message="Exiting: editing mode: Adding a Note")
     # Features Flag: Text Searches Branch. Future to implement.
     else:
         click.echo(message="Text searches is not yet implemented\n"
