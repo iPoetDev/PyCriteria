@@ -1261,7 +1261,7 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
                       clamp=True),
               help='BY ROW: ☑️ MUST: Know the line/row\'s index\'s id \n'
                    f'Select between 1 and {len(DataControl.dataframe)}: ',
-              prompt=f'BY ROW: ☑️ MUST: Select between 1 and '
+              prompt='BY ROW: ☑️ MUST: Select between 1 and '
                      f'{len(DataControl.dataframe)}: ')
 @click.option('-n', '--note', 'note', type=str,
               help='NOTE: 📝 Updates the note on record',
