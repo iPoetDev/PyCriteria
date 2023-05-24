@@ -1442,7 +1442,7 @@ def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
                     editor.deletingnotes(notes=note, location=index)
                 # Else, exit (No changes made, as no location to update)
                 else:
-                    click.echo(message=f"No changes made")
+                    click.echo(message="No changes made")
                     click.echo(message=f"Exiting: editing mode. "
                                        f"No Note Deleted")
                 # - Display the modified record
