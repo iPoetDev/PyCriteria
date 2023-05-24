@@ -1371,7 +1371,7 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
                       clamp=True),
               help='BY ROW: ☑️ MUST: Know the line/row\'s index\'s id \n'
                    f'Select between 1 and {len(DataControl.dataframe)}: ',
-              prompt=f'BY ROW: ☑️ Select between 1 and '
+              prompt='BY ROW: ☑️ Select between 1 and '
                      f'{len(DataControl.dataframe)}: ',
               required=True)
 @click.option('-n', '--note', 'note', type=str,
