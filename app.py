@@ -1221,7 +1221,7 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
                                        debug=debugOFF)
                 # Else, exit (No changes made, as no location to update)
                 else:
-                    click.echo(message=f"No changes made")
+                    click.echo(message="No changes made")
                     click.echo(message=f"Exiting: editing mode. No Note Added")
                 # - Display the modified record
                 click.echo(message=f"=====================================")
