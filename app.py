@@ -1446,7 +1446,7 @@ def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
                     click.echo(message="Exiting: editing mode. "
                                        "No Note Deleted")
                 # - Display the modified record
-                click.echo(message=f"=====================================")
+                click.echo(message="=====================================")
                 click.echo(message=f"Loading: edited record")
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
