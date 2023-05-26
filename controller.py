@@ -639,7 +639,7 @@ class Inner:
     
     def refresh(self, consoleholder: Console,
                 target:
-                Literal["header", "editor", "current", "modified", "footer"]) -> None:    # noqa
+                Literal["header", "editor", "current", "modified", "footer"]) -> None:  # noqa
         """Refreshes the layout."""
         if consoleholder is None:
             consoleholder = Console()
@@ -692,9 +692,9 @@ class Display:
         """Displays the data in a table."""
         headers: list = headerview if isinstance(headerview, list) else [headerview]
         consoletable.title = title
-
+        
         filteredcolumns: pd.DataFrame = \
-                dataframe.loc[:, dataframe.columns.isin(values=headers)]
+            dataframe.loc[:, dataframe.columns.isin(values=headers)]  # noqa
         # for column in headerview:
         for _index, row in filteredcolumns.iterrows():
             consoletable.add_row(*[str(row[column])
@@ -843,7 +843,7 @@ class Record:
             click.echo(message="The DataFrame must be a single row.",
                        err=True)
             return False
-
+        
         if isinstance(single, pd.Series) and single.empty is False:
             return True
         click.echo(message="The Series must be a single row.",
@@ -868,22 +868,22 @@ class Record:
                          ratio=2,
                          vertical='top')  # noqa
             return g
-
+        
         def display(table: Table, data: pd.Series | None = None) \
-                    -> Table | None:
+                -> Table | None:  # noqa
             """Populates the card from instance or a from external source"""
             if data is not None and isinstance(data, pd.Series):
                 for label, value in data.items():
                     table.add_row(str(label), str(value))
                 return table
             elif self.series is not None and \
-                        isinstance(self.series, pd.Series):
+                    isinstance(self.series, pd.Series):
                 for label, value in self.series.items():
                     table.add_row(str(label), str(value))
                 return table
-
+        
         card: Table = display(table=config(), data=source)
-
+        
         if sendtolayout:
             consolecard.print(card)
             return None
@@ -1068,7 +1068,7 @@ class Record:
                  title: str = 'Current Data') -> Table | None:
         """Displays the record: Use it for Current | Modified Records"""
         webconsole: Console = consoleedit  # noqa
-
+        
         def config(fit: bool) -> Table:
             """Displays the record as a cardinal."""
             g: Table = Table.grid(expand=fit)
@@ -1077,7 +1077,7 @@ class Record:
                          ratio=1,
                          vertical='top')  # noqa
             return g
-
+        
         def currentdata(table: Table, t: str) -> Table:
             """Display the subtable for Index/Identifiers"""
             currenttable: Table = table
@@ -1098,9 +1098,9 @@ class Record:
             currenttable.add_row(notes_label, style=styld.label())
             currenttable.add_row(notes_value, style=styld.value())
             return currenttable
-
+        
         currentdatapane: Table = \
-                currentdata(table=config(fit=expand), t=title)  # noqa
+            currentdata(table=config(fit=expand), t=title)  # noqa
         return Record.switch(currentdatapane,
                              printer=consoleedit,
                              switch=sendtolayout)
@@ -1270,7 +1270,7 @@ class Editor:
             # As the design pattern is formed, then it is adapted for similar.
             # -----------------------------------------------------------------
             # Update the record's series with the new notes
-
+            
             editingseries = self.record.series.copy()
             self.lasteditmode = ''  # Clears out the last edit mode, before use
             if self._isempty(editingseries, ColumnSchema.Notes):
@@ -1524,10 +1524,10 @@ class Editor:
         """
         _cleared = ''
         if (
-            nodestroy
-            and series[column] is _cleared
-            or not nodestroy
-            and series[column] is _cleared
+                nodestroy
+                and series[column] is _cleared
+                or not nodestroy
+                and series[column] is _cleared
         ):
             click.echo(message="No notes to delete")
             return series[column]
@@ -1623,7 +1623,7 @@ class Editor:
         else:
             click.echo("Nothing cleared")
             click.echo("Exiting editing mode")
-
+        
         # Note: If no changes were made, then a copy of original is returned
         return updatedframe
     

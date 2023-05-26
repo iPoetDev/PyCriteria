@@ -290,7 +290,7 @@ class Window:
                 window.printpanels(record=individual)
             else:
                 individual.card(consolecard=Webconsole.console)
-
+            
             return individual if sendtoeditor else None
     
     @staticmethod
@@ -344,7 +344,7 @@ class Window:
             click.echo(message="Exiting: Command completed")
         else:
             click.echo(message="No changes made. Bulk edits not supported.")
-
+        
         return None
     
     @staticmethod
@@ -447,13 +447,13 @@ class CriteriaApp:
         click.echo(message="Navigation: CLI: > Run > ... "
                            "[Intent] > [Action]\n")
         root: str = "BASE: Run"
-        crumb: str = context.info_name if context.info_name is not None else root
+        crumb: str = context.info_name if context.info_name \
+                                          is not None else root  # noqa
         text: str = (
-            f'Navigation: CLI: > Run > ... > Load> {crumb.title()}*\n *: '
-            + f'You are here: {crumb.title()}\n'
-            + 'To go up one or two level, enter, each time:  ..  \n'
-            + 'To Exit: ctrl + d  \n'
-        )
+                f'Navigation: CLI: > Run > ... > Load> {crumb.title()}*\n *: '
+                + f'You are here: {crumb.title()}\n'
+                + 'To go up one or two level, enter, each time:  ..  \n'
+                + 'To Exit: ctrl + d  \n')
         click.echo(
                 message=text)
     
@@ -604,14 +604,16 @@ class CriteriaApp:
         mask = frame.apply(lambda column: column.astype(str).
                            str.contains(searchterm))
         #
-        return frame.loc[mask.all(axis=1)] if exact else frame.loc[mask.any(axis=1)]
+        return frame.loc[mask.all(axis=1)] if exact \
+            else frame.loc[mask.any(axis=1)]
     
     @staticmethod
     def rows(frame: pd.DataFrame,
              index: int = None,
              searchterm: str = None,
              strict: bool = False,
-             zero: bool = True, debug: bool = False) -> pd.DataFrame | pd.Series | None:
+             zero: bool = True, debug: bool = False) \
+            -> pd.DataFrame | pd.Series | None:
         """Get the rows from the dataframe.
         
         Parameters
@@ -648,13 +650,14 @@ class CriteriaApp:
             click.echo("Please provide either "
                        "an index or searches term")
             return None
-
+        
         return result
     
     @staticmethod
     def index(frame: pd.DataFrame,
               index: int = None,
-              zero: bool = True, debug: bool = False) -> pd.DataFrame | pd.Series | None:
+              zero: bool = True, debug: bool = False) \
+            -> pd.DataFrame | pd.Series | None:
         """Get the index from the dataframe.
         
         :param frame: pd.DataFrame - Dataframe to search
@@ -665,7 +668,7 @@ class CriteriaApp:
         """
         if zero and index is not None:
             result = frame.iloc[index - 1] \
-                    if index >= 0 else frame.iloc[index]
+                if index >= 0 else frame.iloc[index]
             if debug:
                 click.echo(f"Found: {result} "
                            f"for zero index {index - 1}")
@@ -697,7 +700,7 @@ class CriteriaApp:
             click.echo(message="Plese try again: "
                                f"One of {row}, {column} is blank")
             return None
-
+        
         try:
             if not direct and isinstance(row, int) and isinstance(column, int):
                 if row < 0 and column < 0:
@@ -729,12 +732,12 @@ class CriteriaApp:
         """
         if not exact:
             resultframe: pd.DataFrame | None = \
-                    sourceframe.where(filterframe).dropna(how='any') \
-                        .dropna(how='any', axis=axes)  # noqa
+                sourceframe.where(filterframe).dropna(how='any') \
+                    .dropna(how='any', axis=axes)  # noqa
         else:
             resultframe: pd.DataFrame | None = \
-                    sourceframe.where(filterframe).dropna(how='all') \
-                        .dropna(how='all', axis=axes)  # noqa
+                sourceframe.where(filterframe).dropna(how='all') \
+                    .dropna(how='all', axis=axes)  # noqa
         #
         return resultframe if not None else filterframe
 
@@ -856,7 +859,8 @@ class Results:
     
     @staticmethod
     def getrowframe(data: pd.DataFrame,
-                    ix: int, st: str, debug: bool = False) -> pd.Series | pd.DataFrame | None:
+                    ix: int, st: str, debug: bool = False) \
+            -> pd.Series | pd.DataFrame | None:
         """Get a row from a dataframe by index or searches term.
         
         :param data: pd.DataFrame - Dataframe
@@ -874,7 +878,7 @@ class Results:
         else:
             click.echo(f"No Data for row: {ix}")
             return None
-
+        
         if isinstance(result, pd.Series):
             if debug:
                 click.echo(f"GetRowFrame(): Found a record\n")
@@ -1074,7 +1078,7 @@ def locate(ctx: click.Context, index: int, searche: str,
             # different displays/outputs.
             # Only displays a pd.Series, implicitly.
             # Not designed for results >1, unless part of a loop. # noqa
-
+            
             # Shows a result
             window.showrecord(data=resultframe,
                               debug=debugON)
@@ -1136,7 +1140,7 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
               prompt="Select by, to focus on: index",
               required=True)
 def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
-                  axis: str = Literal['index']) -> None:    # noqa: ANN101
+                  axis: str = Literal['index']) -> None:  # noqa: ANN101
     """ADDING a new note to a record
 
     A: Find by a location/coordinate:
@@ -1243,7 +1247,7 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
               prompt="🔎 Select by, to focus on: index",
               required=True)
 def updateanote(ctx: click.Context, index: int, searche: str, note: str,
-                axis: str = Literal['index']) -> None:    # noqa: ANN101
+                axis: str = Literal['index']) -> None:  # noqa: ANN101
     """UPDATING to a NOTE
     
     A: Find by a location/coordinate:
@@ -1357,7 +1361,7 @@ def updateanote(ctx: click.Context, index: int, searche: str, note: str,
               required=True,
               show_default=True)
 def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
-                axis: str = Literal['index']) -> None:    # noqa: ANN101
+                axis: str = Literal['index']) -> None:  # noqa: ANN101
     """DELETE a note from a record
     
     A: Find by a location/coordinate:

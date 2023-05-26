@@ -1,3 +1,5 @@
+<!-- markdownlint-enable -->
+<!-- markdownlint-disable -->
 # Project Criteria
 
 ## 1.0 [Introduction](#introduction)
@@ -615,6 +617,67 @@ H --> I[ View Record by \n Comparing Old/New];
 
 ### 6.3 [User Acceptance](#user_acceptance_testing)
 
+#### 6.3.1 [Participants and Controls](#feature-actor-controls)
+#### 6.3.1.1 [Actors](#feature-actors)
+
+ Actor | Description 
+ ---: | :--------------------------
+CLI (app):  | The app, as an algorithm, without user interaction.
+Google:  | The remote host/API providers/Data respoitory 
+REPL | External Library (Cick REPL) functions, not authored
+User | User for the CLI who interfaces/uses the commands/subcommands
+
+#### 6.3.1.2 [Controls](#feature-controls)
+
+- The user is presented with a application level custom prompt (i.e. the *main prompt*) in an *application level REPL* environment. 
+- The **main prompt** is configured to autocomplete the users input and ...
+  - Each command/sub command is autopopulated in the auto complete, by the line/function in app.py: `register_repl(run)` which is `from click_repl import register_repl` library.
+  - **Command Controls**:
+    - **`tab`** - completes the users typing of the auto populated command per level
+    - **`space`** - function testing has found that hiting space bar after an autocomplete is the safest trigger to the next level of autocomplete
+    - **Up, down arrows** help the user navigate the autocomplete sub menu choices in the terminal window.
+- The main prompt matches all the commands of the all from the 2nd level (the INTENT) commands (i.e inert parent containers), and subseqently, 3rd level (the ACTION) sub commands. 
+- Each **sub command** has configured *options*, that either take in *flagged option/value* pairs as input or *prompted option/value* pairs as input (hitting enter each time). 
+  1. For <ins>single line `option/value`</ins>, or *`flagged option/value`*: 
+     - Each options follows 1 of 2 formats: 
+       1. `-o <value>`, which is a a shortcut variant of ...  
+       2.  `--option  <value>`, where option is the name of the option linked to the subcommand. 
+    - Each option either takes in a value or the autocomplete if the user does not hit enter and stays on a command line, then hits enter.
+  2.  For <ins>prompted option/value pairs</ins>, like the above:
+      - Once the user presses enter after selecting a sub command, and if configured, the command enters a sub-prompt
+      - Each option is then listed in sequence, awaiting the user inputed value
+      - The user presses enter to continue, the last hit enter runs the sub0command,
+- Running a subcommand, i.e. an ACTION, executes some or all of the following:
+  1. Any effects for the sub command algorithim,
+  2. Any command level internal prompts
+  3. Any command level confirmation (prompts): y/N.
+  4. Output to the stdout according to the command INTENT/ACTION i.e. its TASK. 
+
+
+#### 6.3.2 [Feature Acceptance Testing](#feature-testing)
+
+|    Epic | User Story |                            Feature |                                                                                         Actions | Actor(s)        | Effects or Absence of Side Effects                                                 | Outcome                                                            | Acceptance, Date |
+| ------: | :--------- | ---------------------------------: | ----------------------------------------------------------------------------------------------: | :-------------- | :--------------------------------------------------------------------------------- | :----------------------------------------------------------------- | :--------------- |
+| 1. Init | 1.1/1.1.1  |                  Connect to remote |                                                             Automated, On Program Run/init/main | CLI/Google      | No Authetentication Error, Silent                                                  | Authorised                                                         |                  |
+| 1. Init | 1.1.2      |                         Fetch Data |                                                             Automated, On Program Run/init/main | CLI/Google      | No Connection Error, Silent                                                        | File access, data loaded                                           |                  |
+| 1. Init | 1.3        |          Load to CLI/Local Dataset |                                                             Automated, On Program Run/init/main | CLI             | Silent, no visual feedback expected, no errors                                     | Main prompt blinking                                               |                  |
+|  2. Cmd | 2.1        |                   CLI autocomplete |      Autocomplete, auto populate command labels, as a selectable, and key input driven CLI menu | REPL/User       | Display CLI commands as only accepted choices                                      | List available commmands                                           |                  |
+|  2. Cmd | 2.2        |                           CLI Help |                              Options to display help text for each command and option with ease | CLI/REPL/User   | Display builtin help for the command's option                                      | List short descriptions                                            |                  |
+|  2. Cmd | 2.2.1      |                    Commands --help |                                          Runs at BASE level, on star, or when User types --help | CLI/User        | Display builtin help for the linked, nested commands                               | List short descriptions                                            |                  |
+|  2. Cmd | 2.2.1      |                   Per options help | When a user is typing an option, the autocomplete <br> may show the `help text` for that option | REPL/User       | Display builtin help for the command's option                                      | List short descriptions                                            |                  |
+| 3. Load | 3.1        |        Intent: Load  & "Load Mode" | Loads, and affirms connectivity, the bulk of the data in whole table or selected views of table | User, CLI       | Display a total bulk or filtered view (table) of data                              | `Nothing to do`, bar `--help` and the sub commands help text       |                  |
+| 3. Load | 3.2        |        Command/Action: Load > ToDo |                                              User selects a the TODO subcommand, and/or options | User            | Display a filtered view (table) of Todo                                            | Displays a filtered subset of columns related to TODO-ing tasks    |                  |
+| 3. Load | 3.3        |       Command/Action: Load > Views |                                      User selects a the VIEW subcommand, and or display options | User            | Display a filtered view (table) other Views                                        | Displays a filtered subset of columns of predefIned VIEWS          |                  |
+| 4. Find | 4.1        |         Intent: Find & "Find Mode" |                                  User uses a FIND INTENT/ACTION pair to find individual records | User            | Display a located individual record(s0) by index etc                               | `Nothing to do`, bar `--help` and the sub commands help text       |                  |
+| 4. Find | 4.2        |      Command/Action: Find > Locate |                                          User locates a record and it is display in card format | User            | Display a individual record as a card view/layout                                  | After a prompted set of values, displays a indvividual record card |                  |
+| 4. Find | 4.2.1      |  Command/Action: Locate > By Index |      User locates a record by a known record ident/numerical value, in the range of the dataset | User            | Display a individual record as a card view/layout                                  | Displays a individual record card, when a location id is known     |                  |
+| 5. Edit | 5.1        |         Intent: Edit & "Edit Mode" |                                                 User uses Edit INTENT/ACTION to enter edit mode | User            | Enters an edit mode, uses locate, displays/compares record, saves record to remote | `Nothing to do`, bar `--help` and the sub commands help text       |                  |
+| 5. Edit | 5.1.1      |          "Edit Mode" & Find/Locate |                                        Edit Mode reuses Locate (4.2,4.2.1) for each EDIT ACTION | CLI             | Locates an individual record(s) by index, displays the found/current/wanted record | Locates, silently, and builds the a record to be edited            |                  |
+| 5. Edit | 5.2.1      |    Command/Action: Edit > Add Note |                                                      User selects Add Note to insert a new note | User            | Locates a note, inserts new value, compares old/new, saves (54) changes            | On locating, displays a current and edited record, with value      |                  |
+| 5. Edit | 5.2.2      | Command/Action: Edit > Update Note |                                           User selects Add Note to append more to existing note | User            | Locates a note, appends value, compares old/new, saves (5.4) changes               | On locating, displays a current and edited record, with value      |                  |
+| 5. Edit | 5.2.3      | Command/Action: Edit > Delete Note |                                          User selects Add Note to clear all of an existing note | User            | Locates a note, clears value, compares old/new, saves (5.4) changes                | On locating, displays a current and edited record, with value      |                  |
+| 5. Edit | 5.3        | Command/Action: Edit > Toggle Todo |                    User selects a choice (Todo, WIP, Done) to toggle teh field's PROGRESS state | User            | Locates a note, toggles value, compares old/new, saves (5.4) changes               | On locating, displays a current and edited record, with value      |                  |
+| 5. Edit | 5.4        | SharedFunction: Edit > Save Change |           Edit Mode/Shared, commits saved changed to remote, in common with Add, Update, Delete | User/CLI/Google | User confirmation, data transforms and opens connection to update remote datatset  | Finally, the user is asked to confirm saving the record to remote  |                  |
 ====
 ====
 
