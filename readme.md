@@ -39,6 +39,7 @@
 ![AddScreenshot]()
 
 ----
+> |
 ----
 
 ## 2.0 [Plan](#plan)
@@ -171,6 +172,7 @@ In the future, this application could be extended to include, in increasing orde
 The application was designed for future development and testing in mind; however, times and the minimum viable product were the overriding priorities and constraints. This includes a nascent `debug` mode being encoded into the design as *a developer feature*, as the application's complexity increased, using alternate Rich's print/inspect or Clicks' echo, for checking dataflow and object constancy. This could be used in a developer mode and set by global settings in future future variants of the code base, and enabled by a flag at command level.
 
 ----
+> |
 ----
 
 ## 3.0 [Design](#design)
@@ -178,6 +180,21 @@ The application was designed for future development and testing in mind; however
 ### 3.1 [Business Logic](#business)
 
 ![](.docs/flowchart-design.png)
+
+#### 3.1.1. Key / Business Logic Guide
+
+- `ENTER THE REPL/APP`
+   - 1: INTENT: connection, via remote access and API authorisation, from API Provider on run() 
+- `LOAD READ VIEW MODE`
+  - 2: INTENT: Loading data, via two ACTIONS (e.g. Todo, Views) from the Datasource (e.g. Worksheet.Local DataFrame) as a complete | filtered dataset AND display of such ina table or paged display in the CLI
+  - 3 & 4: INTENT: Finding data, via one ACTION (e.g. Locate(rows)) and two OPTION/VALUE inputs (e.g. Search (disabled), Index (row Id)) from Datasource (e.g. Worksheet/ Local DataFrame) as a invidual record AND displayed in a individual record card as a card format in the CLI'S terminal
+- `EDITING MODE`
+  - 5 & 3: INTENT: Edit Mode & Locate (3 & 4): Edit mode depend on Find/Locate logic0 
+  - 6, 7 & 8: INTENT: Finding data, via four ACTIONs (e.g. Add Note, Update Note, Delete Note, Toggle Todo (an Update variant)) and two OPTION/VALUE inputs per action (e.g. Search (disabled), Index (row Id)) from Datasource (e.g. Worksheet/ Local DataFrame) as a individual record AND displayed in a invidual record card as a card format, either side by side or as final edited record view in the CLI'S terminal
+- `COMMAND MODES`
+  - --help is provided on run and at each command level (Intent or Action), as well as per option.
+  - Automcomplete aids the users's navigation, using **`tab`**, **`space`**
+  - Additional `aborted`, `interupt` actions by the user are **`ctl + d`**, **`ctl + c`**, althought the last two may force the application and user to start over; **by design**.
 
 ### 3.2 [Application Context](#app-context)
 
@@ -256,6 +273,7 @@ H --> I[ View Record by \n Comparing Old/New];
 > Screenshots
 
 ----
+> |
 ----
 
 ## 4.0 [Build](#build)
@@ -327,7 +345,7 @@ H --> I[ View Record by \n Comparing Old/New];
 
 - `pandas>=2.0.1` | [PyPi](https://pypi.org/project/pandas/ "pandas 2.0.1") | [GitHub](https://github.com/pandas-dev/pandas) | [Homepage](https://pandas.pydata.org/) | [Docs](https://pandas.pydata.org/docs/index.html)  
 
-##### Google API/DATA Libraries
+##### C: Google API/DATA Libraries
 
 > Google API/DATA Libraries and Interfaces.
 
@@ -338,9 +356,9 @@ H --> I[ View Record by \n Comparing Old/New];
 - `gspread>=5.8.0` | [PyPi]() | [GitHub]() | [Homepage]()  
 - `gspread_dataframe>=3.0.8` | [PyPi]() | [GitHub]() | [Homepage]()  
 
-##### Environment
+##### D: Environment
 
-> Environment Variables Management.
+> Environment variable management.
 
 - `python-dotenv>=1.0.0` | [PyPi]() | [GitHub]() | [Homepage]()  
 
@@ -353,19 +371,21 @@ H --> I[ View Record by \n Comparing Old/New];
 
 #### 4.4.2 [GitHub Apps](#github-apps)
 
-> - As cyber security informed, secure code as code quality matter, hence the use of CodeQl and Synk.
+> - As cyber security informed professional, secure code as code quality matter, hence the use of CodeQl and Synk.
 
-##### 4.4.2.1 [Pull Requests](pr-checks)
+##### 4.4.2.1 *[Pull Requests](pr-checks)*
 
-- GitHub CodeQL:
-  - CodeQL / Analyze (javascript) (dynamic)
-  - CodeQL / Analyze (python) (dynamic) 
+- GitHub CodeQL:  GitHub's Security Scanner : CodeQL / Analyze:
+    - `(javascript) (dynamic)` | [JavaScript CodeQL](https://codeql.github.com/docs/codeql-overview/supported-languages-and-frameworks/#javascript-and-typescript-built-in-support) | [Homepage](https://codeql.github.com/)
+    - `(python) (dynamic)`  | [Python CodeQL](https://codeql.github.com/docs/codeql-overview/supported-languages-and-frameworks/#python-built-in-support) | [Homepage](https://codeql.github.com/)
 - Synk:
-  - security/snyk | synk-bot (iPoetDev)
-- Code Review Doctor | [Example](https://codereview.doctor/code-review-doctor/a-quick-example/django-and-python) | [Homepage](https://codereview.doctor/)
-- codebeat | [Docs: PullRequests](https://hub.codebeat.co/docs/pull-requests#section-tracked-branches) | [Homepage](https://hub.codebeat.co/)
-- Sourcery
-  - sourcery-ai: Code Refactoring
+  - `security/snyk` | `synk-bot` (iPoetDev) | [GitHub](https://docs.snyk.io/integrations/git-repository-scm-integrations/github-integration) |  [Docs](https://docs.snyk.io/) | [Homepage](https://snyk.io/)
+- Code Review Doctor: 
+  - `django-doctor` | [Example](https://codereview.doctor/code-review-doctor/a-quick-example/django-and-python) | [Homepage](https://codereview.doctor/)
+- codebeat: 
+  - `codebeat`| [Docs: PullRequests](https://hub.codebeat.co/docs/pull-requests#section-tracked-branches) | [Homepage](https://hub.codebeat.co/)
+- Sourcery:
+  - `sourcery-ai`: Code Refactoring | [Docs]() | [Homepage](https://sourcery.ai/)
 
 #### 4.4.3 [AI Codex Agents](#ai-codex-agents)
 
@@ -388,7 +408,7 @@ H --> I[ View Record by \n Comparing Old/New];
   - Primary use case: code completion.
   - *Does not provides attribution for sources.*
 
-###### Code Generation: Perplexity
+#### 4.4.3 **[Code Generation](#ai-code-gen): <ins>Perplexity</ins>**
 
 - Role: Code Pilot and Code (Sample/Example) Generation
 - The author opted for PerplexityAI on the grounds of:
@@ -408,7 +428,7 @@ H --> I[ View Record by \n Comparing Old/New];
 > <sub><strong>Media</strong>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[YouTube: Machine Learning Street Talk: Perplexity AI](https://www.youtube.com/watch?v=_vMOWw3uYvk " Machine Learning Street Talk: 'PERPLEXITY AI - The future of search.'.  8 May 2023, First accessed: 10 May 2023")</sub> 
 > <sub><strong>References</strong> &nbsp;[Standford University: Evaluating Verifiability in Generative Search Engines](https://arxiv.org/abs/2304.09848 "Nelson F. Liu, Tianyi Zhang, Percy Liang, 'Evaluating Verifiability in Generative Search Engines', 19 Apr 2023, Last accessed: 23 May 2023]") ||  [Download: PDF](https://arxiv.org/pdf/2304.09848.pdf)</sub>
 
-###### Benefits
+#### **4.4.3.1 [Benefits](#ai-benefits)**
 
 - Alternative solution to search engines and partials answers over 20 different tabs, impacting attention, focus and ability to executive process the information.
     - *Benefit*: Have a question about a coding, or 20, and your candidate drill down using generic examples
@@ -427,7 +447,7 @@ H --> I[ View Record by \n Comparing Old/New];
   - *Benefit*: Improvements in accuracy, speed, and quality of the code generated by the AI Agent, as a co-pilot/partner, is a game changer.
 - Improved to self care as a developer, and wellbeing, by lowering of cognitive load, stress and anxiety; by reducing information over-saturation.
 
-###### Risks
+#### 4.4.3.2 [Risks](#ai-risks)
 
 - Being accused of plagiarism unintentionally.
 - Not showing one's work and sources of the external code as attributions.
@@ -435,7 +455,7 @@ H --> I[ View Record by \n Comparing Old/New];
 - Improper handling and use of the generated code without attribution, referencing and accreditation.
 - Lack of discernment and critical thinking insight when usings AI Codex agents.
 
-###### Mitigation
+#### 4.4.3.3 [Mitigation](#ai-mitigations)
 
 - As a developer, the author keep all his responses from each prompt and the generated code in a separate file/location.
 - As the author, it is important to have a process of reviewing the generated code and comparing it to the author's code, by requesting generic examples.
@@ -446,7 +466,7 @@ H --> I[ View Record by \n Comparing Old/New];
         - e.g. The author has a function that is not working and wanted to see how the AI Agent would write it.
         - e.g. The author has a function that gotten out of control with design and seeks to reduce code with improvement/recommendations by the AI Agent.
     - NOTE: The author is constantly refactoring the code improving his own source of re-organizing mhy own code without any AI agent. 
-- Where The author has used AI Agent contributions to start off the new coding process, the author include the links of the generated code, Perplexity, and he then:
+- Where the author has used AI Agent contributions to start off the new coding process, the author include the links of the generated code, Perplexity, and he then:
     - i. Uses the generated code as a starting point for his own code.
     - ii.Then the author refactor and reorganize the code to his own style and design, breaking it out and down into new functions and smaller code blocks..
     - iii. The author then add comments and annotations to the code to explain the code and his own thinking.
@@ -457,6 +477,7 @@ H --> I[ View Record by \n Comparing Old/New];
       >        location: int | None = None,
       >        debug: bool = False) -> None:
       >```
+      > **<small>Sample function signature that was started by ai code generation</small>**
 
 ---
 - By making the code declarations and being open about his use of AI Agent, the author is able to be transparent and hold his integrity and ethics to the highest standards; while still using emergent technologies with reasonable care and due diligence.
@@ -476,6 +497,7 @@ H --> I[ View Record by \n Comparing Old/New];
 - The author retains all generated enquiries from all sources for inspection and audit.
 
 ----
+> |
 ----
 
 ## 5.0 [Code](#code)
@@ -557,6 +579,9 @@ H --> I[ View Record by \n Comparing Old/New];
 
 #### 5.2.2 gspread v pandas
 
+----
+> |
+----
 
 ## 6.0 [Features & Users  Acceptance](#features-users-acceptance)
 
@@ -678,8 +703,10 @@ User | User for the CLI who interfaces/uses the commands/subcommands
 | 5. Edit | 5.2.3      | Command/Action: Edit > Delete Note |                                          User selects Add Note to clear all of an existing note | User            | Locates a note, clears value, compares old/new, saves (5.4) changes                | On locating, displays a current and edited record, with value      |                  |
 | 5. Edit | 5.3        | Command/Action: Edit > Toggle Todo |                    User selects a choice (Todo, WIP, Done) to toggle teh field's PROGRESS state | User            | Locates a note, toggles value, compares old/new, saves (5.4) changes               | On locating, displays a current and edited record, with value      |                  |
 | 5. Edit | 5.4        | SharedFunction: Edit > Save Change |           Edit Mode/Shared, commits saved changed to remote, in common with Add, Update, Delete | User/CLI/Google | User confirmation, data transforms and opens connection to update remote datatset  | Finally, the user is asked to confirm saving the record to remote  |                  |
-====
-====
+
+----
+> |
+----
 
 ## 7.0 [Reliability](#qa)
 
@@ -839,6 +866,10 @@ File |   Date    | LN | Issue | Fix   |  State  | Note
         - Dependabot security updates: Automatically open pull requests for security updates. ``Enable``
     - Secret scanning: Receive alerts on GitHub for detected secrets, keys, or other tokens. ``Enable``
 
+----
+> |
+----
+
 ## 8.0 [Deploy](#deploy)
 
 ### 8.1 [Features](#features)
@@ -978,6 +1009,7 @@ User | Profile | Repo | Link                                   | Visibility | Is
       herokuapp.com/")
 
 ----
+> |
 ----
 
 ## 9.0 [Assessment](#assessment)
@@ -1041,9 +1073,13 @@ app.py | 1470 | Click_repl | www.perplexity.ai/search/085c28b9-d6e8-4ea2-8234-78
 
 #### 9.2.4 [GitHub](#repos-github)
 
-> The author spend time and lot of time in the source code of 3rd party libraries.
+> The author spends time and lot of time in the source code of 3rd party libraries.
 
 ** CODE**
 
 - Click: REPL: https://github.com/click-contrib/click-repl
 - Rich: https://github.com/Textualize/rich
+
+----
+> |
+----
