@@ -8,10 +8,6 @@
 - In these use cases, performances is everything and using an non-graphical interface is more optimal than a GUI driven one.
 - This is a simple example of a command line interface that models after the popular `aws cli` by being command and options, i.e. user controls, driven over an nested command structure to manipulate the data in a google sheets as a simple Project Management format managing Code Institute's own project assignments and criteria.
 
-> - <small> Presents a clear rationale for development of project: LO8.4.1(Merit)
-> - Has a clear and well defined purpose: LO8.4.2 (Merit)
-> - Purpose for addressing critical goals: LO8.4.3 (Merit)</small>
-
 ### 1.0.1 [Goals](#project-goals)
 
 
@@ -38,6 +34,10 @@
 <!-- todo #2: add image link-->
 ![AddScreenshot]()
 
+
+> - <small><small> Presents a clear rationale for development of project: LO8.4.1(Merit)
+> - Has a clear and well defined purpose: LO8.4.2 (Merit)
+> - Purpose for addressing critical goals: LO8.4.3 (Merit)</small></small>
 ----
 > |
 ----
@@ -65,20 +65,20 @@
 - A CLI command, an *ACTION* to be nested, i.e, grouped by it organizing *INTENT*, in the following schema, e.g.
   ![](.docs/nested-cmd.png)  
 - The CLI commands and options should allow the user to complete their objectives as simply as possible.
-    - **These tasks are be to:**
-      A. **Load** the data from the remote source.
-    - B. **Select** *different views* of the data, and refining the quantity of the views, either
-        1. By reducing the number of columns in the view - selecting from options of a preset views of columns.
-        2. By reducing the number of rows, due to the constraints of the terminal window, so to **page** (i.e., to **browse**) across larger data sets.
-    - C. **Find** the data by row identifier, as gleamed from their viewing of the larger data set.
-        1. **Locating** by row identifier for an exact match.
-        2. *[Future feature]* Searching by querying all the data in the data set for a partial match or exact match.
-        3. *[Future feature]* Filtering data viewed in the data set for a partial match or exact match.
-    - D. **Edit** the data in the row, by one of the 4 following tasks:
-        1. **Add** a note to the record, at the location
-        2. **Update** the note in the record
-        3. **Delete** the note in the record, by clearing the location
-        4. **Toggle** to TODO in the individual records
+    - **These tasks (`intent`/`actions`/`options`/`values`) are be to:**<br>
+      - A. **Load** the data from the remote source.
+      - B. **Select** *different views* of the data, and refining the quantity of the views, either
+          - 1. By reducing the number of columns in the view - selecting from options of a preset views of columns.
+          - 2. By reducing the number of rows, due to the constraints of the terminal window, so to **page** (i.e., to **browse**) across larger data sets.
+      - C. **Find** the data by row identifier, as gleamed from their viewing of the larger data set.
+          - 3. **Locating** by row identifier for an exact match.
+          - 4. *[Future feature]* Searching by querying all the data in the data set for a partial match or exact match.
+          - 5. *[Future feature]* Filtering data viewed in the data set for a partial match or exact match.
+      - D. **Edit** the data in the row, by one of the 4 following tasks:
+          - 6. **Add** a note to the record, at the location
+          - 7. **Update** the note in the record
+          - 8. **Delete** the note in the record, by clearing the location
+          - 9. **Toggle** to TODO in the individual records
 - The CLI should allow the user to manage their projects from the CLI, while they are developing other CLI apps and, so can update their projects achievements by adding notes and checking off of TODOs per project learning objective and criteria.
 - This CLI application only reached MVP level and therefore has potential for more development effort to be planned for.
 
@@ -578,6 +578,37 @@ H --> I[ View Record by \n Comparing Old/New];
   - Not Implemented: Logging (Python: Loguru, standard Logging), Own rate limit metrics, and reporting for app design flaws. 
 
 #### 5.2.2 gspread v pandas
+
+
+### 5.3 [Code Security](#code-security)
+
+> Secrets Management <br>
+>  Securing data at rest
+
+1. **<ins>Local Secrets and Credentials</ins>**
+
+- Must be ignored and in be .gitignored. Here is evidence.
+- The author's repository is in GitHub and is public. Even secrets in private repositories are highly discouraged incase of secrets leakage.
+
+![](.docs/Creds%20Ignored.png)
+
+2. **<ins>Remote</ins>**
+
+- These are manually tranfered to Heroku's ConfigVars name/value pair interface, which sits behind Multi factor authenticaion and private login access.
+- Then a script recreates these into the secure and private Heroku repository, and are using in the build and deployment of the app on Heroku.
+- These are never exposed on the open/public user's GitHub or the submission's fork.
+
+### 5.4 [Transport Security](#transport-security)
+
+> Securing data in transit
+
+- While the infrastruture security is top notch and all best practices are followed, there be concerns about the immaturity of application level security.
+- App level security was not in the scope of the assignment.
+- However, warnings from the Python interpreters raised unfixed issues with
+  - a) Not closing implicitly open SSL connections and this causing ResourceWarnings, which could be ignored. However, these are caused by implicit openinng of HTTPS API connections with Google, and as such, if a malactor intercepts these connections, the remote provider could block and protect their API services from improperly conifigured student developed app with not precaution preconfigured into the assignment's supplied template. SSL is outside of the modules scope.
+  - b) If one did, and the author did for a while, configure the defacto SSL Sockets, these use SSLv1.1 or an insecure. The Synk-bot created alerts for this insecure library for managing open SSL Sockets, and again this is outside the scope of the module.
+
+> AUTHOR'S NOTE: The author, given more time and scope, would devote resources to developing best in class transport security. However this constraint of time and delivery was an overiding priority and scoping constraint for the size and scale of the assignment and solution.
 
 ----
 > |
