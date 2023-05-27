@@ -1510,7 +1510,7 @@ class Editor:
                     column: str,
                     value: str,
                     nodestroy: bool = False) -> str:
-        """Deletes notes from the existing notes if flag: nodestroy/destroy
+        """Deletes complete/all notes from the existing record/row if flag: nodestroy/destroy
         
         Parameters
         ----------
@@ -1522,22 +1522,23 @@ class Editor:
                Potentially flagged by user from a CLI command option.
         :return: str
         """
-        _cleared = ''
-        if (
-                nodestroy
-                and series[column] is _cleared
-                or not nodestroy
-                and series[column] is _cleared
-        ):
-            click.echo(message="No notes to delete")
-            return series[column]
-        elif nodestroy:
-            click.echo(message="Exitsing notes present. No change")
-            return series[column]
+        if value != '':
+            click.echo("Do not supply a value. Try again.")
         else:
-            click.echo(message="Cleared")
-            cleared = series[column] = ''
-            return cleared
+            _cleared = ''
+            if (nodestroy
+                    and series[column] is _cleared
+                    or not nodestroy
+                    and series[column] is _cleared):
+                click.echo(message="No notes to delete")
+                return series[column]
+            elif nodestroy:
+                click.echo(message="Exitsing notes present. No change")
+                return series[column]
+            else:
+                click.echo(message="Cleared")
+                cleared = series[column] = ''
+                return cleared
     
     # Editor's Record Actions
     def save(self, savedfranme: pd.DataFrame) -> None:
