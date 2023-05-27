@@ -116,16 +116,20 @@ from rich import pretty, print as rprint  # type: ignore
 from rich.panel import Panel  # type: ignore
 from rich.table import Table  # type: ignore
 
-# 3. Local: Note the controller * intentionally imports all from the module
 from commands import Commands
 from controller import (Controller, DataController, ColumnSchema, Headers,
                         Display, WebConsole, configuration, gspread,
                         Record, Inner, Editor, )
+# 3. Local: Note the controller * intentionally imports all from the module
+from logging import AppLogger  # type: ignore
 from sidecar import AppValues, ProgramUtils
 
 # Note: Move third-party import `gspread` into a type-checking block
 
 # Global Modules/Objects
+# 1.0 Logging
+Logs: AppLogger = AppLogger(httprequest=AppLogger.httpget,
+                            socket=AppLogger.socket)
 # 1.1 Commands.py
 Commands: Commands = Commands()
 # 1.2 Controller.py
@@ -1441,6 +1445,7 @@ register_repl(run)
 
 if __name__ == "__main__":
     utils.warn()
+    Logs.log(message="Starting PyCriteria")
     # Opening Introduction
     click.echo(
             message="PyCriteria: A simple CLI for managing"
