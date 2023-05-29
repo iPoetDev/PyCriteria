@@ -7,21 +7,22 @@ Usage: Commands and REPL
 -------------------------
 - Multi-line level nested commands structure.
     - Run - Core/BASE command AND ANCHORED command.
+        - Clear             - SUB COMMAND, nested under Run: to clear REPL/screen.
         - Load              - TOP INTENT, nested under Run
             - Views         - SUB COMMAND, nested under Load
                               Switches between sub-views of the data
             - ToDo          - SUB COMMAND, nested under Load
-                              Switches between sub-views of the todo tasks
+                              Switches between sub-views of the ToDo tasks
         - Find              - TOP INTENT, nested under Run
             - Locate        - SUB COMMAND, nested under Find
                               Locate a record by ID (row)
                               Future by column value, or row search term
         - Edit              - TOP INTENT, nested under Run
                               Core activity/action of the app for user
-            - AddNote       - SUB COMMAND, nested under Edit
-            - UpdateNote    - SUB COMMAND, nested under Edit
-            - DeleteNote    - SUB COMMAND, nested under Edit
-            - TooggleTodo   - SUB COMMAND, nested under Edit
+            - Note          - SUB COMMAND, under Edit: Edits a note
+                - Mode      - Option, nested with Note: to enter an edit mode
+                              Bundles add, update and delete under one command
+            - ToDo          - SUB COMMAND, under Edit: Edits a ToDo field
         - Exit - TOP INTENT, nested under Run
 
 If Time, merge the Note commands into one command,
@@ -87,83 +88,293 @@ Classes
 
 Global Variables:,
 -------------------------
-:var: Commands: Commands.py - Commands values
-:var: Actions: Controller.py - Controller / Hub logic
-:var: AppValues: sidecar.py - AppValues
+:var: Logs: Logging.py - Logging.py for app.py
 :var: DataControl: Controller.py - DataController for DataModel, shared, alias
-:var: Columns: Controller.py - DataModel schema
-:var: Head: Controller.py - Header Views for Views filters
-:var: Display: Controller.py - Duplicate effort with CriteriaApp, and Record
 :var: Webconsole: Controller.py - WebConsole for WEB versions of the app.
-:var: utils: sidecar.py - ProgramUtils, miscellaneous functions
-:var: view: app.py - Simialr to Head, but for the app.py commands choices.
-                    Possible Duplicate
 :var: window: app.py - Window class for Terminal Layouts, Panels, Cards.
 :var: App: app.py - Key DataConrtooler/Controller.py
-:var: Guard: app.py - Validation of inputs, and guards conditions/tests.
 
 """
 # 1. Std Lib
-from typing import Literal
+from typing import Literal, Tuple
 
 import click  # type: ignore
 # 2. 3rd Party
-import rich
-import rich.panel
 from click_repl import register_repl  # type: ignore
 from pandas import pandas as pd, DataFrame, Series  # type: ignore
-from rich import pretty, print as rprint  # type: ignore
+from rich import inspect as inspector, pretty, print as rprint  # type: ignore
+from rich.console import Console
 from rich.panel import Panel  # type: ignore
 from rich.table import Table  # type: ignore
 
-from commands import Commands
-from controller import (Controller, DataController, ColumnSchema, Headers,
-                        Display, WebConsole, configuration, gspread,
-                        Record, Inner, Editor, )
 # 3. Local: Note the controller * intentionally imports all from the module
-from logging import AppLogger  # type: ignore
-from sidecar import AppValues, ProgramUtils
-
-# Note: Move third-party import `gspread` into a type-checking block
+from clilogging import AppLogger  # type: ignore
+from controller import (Controller as Actions, DataController,
+                        Display, Results, WebConsole,
+                        configuration, gspread, Record, Inner, Editor, )
+from modelview import (Views, Head, )  # type: ignore
+from sidecar import (AppValues as Val, ProgramUtils as utils,
+                     CliStyles as styles, Checks as Guard, )
 
 # Global Modules/Objects
-# 1.0 Logging
+# 1.1 logging.py
 Logs: AppLogger = AppLogger(httprequest=AppLogger.httpget,
                             socket=AppLogger.socket)
-# 1.1 Commands.py
-Commands: Commands = Commands()
-# 1.2 Controller.py
-Actions: Controller = Controller()
-AppValues: AppValues = AppValues()
+# 1.2 controller.py
 DataControl: DataController = DataController(Actions.load_wsheet())
-Columns: ColumnSchema = ColumnSchema()
-Head: Headers = Headers(labels=Columns)
-Display: Display = Display()
+
 Webconsole: WebConsole = WebConsole(configuration.Console.WIDTH,
                                     configuration.Console.HEIGHT)
 Webconsole.terminal = Inner()
-# 1.3 Sidecar.py
-utils: ProgramUtils = ProgramUtils()
+# 1.3 sidecar.py
 pretty.install()
 
 
-class View:
-    """View.
-    
-    :property: View.Load
-    :property: View.Todo
-    """
-    
-    Load: list[str] = ["Load", "Begins", "Project", "Criteria",
-                       "ToDo", "Reference", "Refresh"]
-    Todo: list[str] = ["ToDo", "All", "Simple", "Done", "Grade", "Review"]
+class Valid:
+    """Command/Input Validation"""
     
     def __init__(self):
         """Initialize."""
         pass
+    
+    @staticmethod
+    def index(ctx, param, value) -> int:  # noqa Parameters uses in callbacks
+        """Check if value is in range."""
+        # If None, Raise BadParameter
+        if value is None:
+            raise click.BadParameter('Try again, '
+                                     'enter an (numerical) value.')
+        # If not an integer, Raise BadParameter
+        if not isinstance(value, int):
+            raise click.BadParameter('Index must be an number.')
+        # If not in range, Raise BadParameter, as Index starts at 1
+        if value <= 0 or value > App.get_range:
+            raise click.BadParameter('Index must be '
+                                     f'between 0 and {App.get_range}.')
+        return value
+    
+    @staticmethod
+    def santitise(ctx, param, value) \
+            -> str | None:  # noqa Contexts, Parameters uses in callbacks
+        
+        """Sanitise strings: by validating input - empty or not string.
 
-
-view: View = View()
+        :param ctx: click.Context - Click Context
+        :param param: click.Parameter - Click Parameter
+        :param value: str - String to sanitised
+        :return: str | None - Sanitised string or None
+        """
+        empty: str = ''
+        # Check if value is empty or not a string
+        if value == empty or not isinstance(value, str):
+            click.secho(message="Exiting Editing Mode. "
+                                "Must be a text or string. "
+                                "Try again.",
+                        fg=styles.invalidfg,
+                        bold=styles.invalidbold)
+            return None
+        # Return trimmed value if not empty
+        return value.strip() if value else empty
+    
+    @staticmethod
+    def mode(ctx, param, value) \
+            -> str | None:  # noqa Contexts, Parameters uses in callbacks
+        """Check the mode."""
+        if isinstance(value, str) and value.lower() is not None:
+            # Enter Add Edit Mode: To insert, create, new inputs to a record.
+            if value.lower() == 'add':
+                click.secho(message="Adding to the record: .......",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Enter Update Edit Mode: To append, update, new inputs to existing.
+            elif value.lower() == 'update':
+                click.secho(message=f"Updating the record: .......",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Enter Delete Edit Mode: To clear, remove existing record's value.
+            elif value.lower() == 'delete':
+                click.secho(message=f"Deleting from the record: .......",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Exit Edit Mode: Automatically exit Editing Mode.
+            else:
+                click.secho(message="Exiting Editing Mode. "
+                                    "Try again.",
+                            fg=styles.invalidfg, bold=styles.invalidbold)
+                return None
+        else:
+            click.secho(message="Exiting Editing Mode. Invalid entry.",
+                        fg=styles.invalidfg, bold=styles.invalidbold)
+            return None
+    
+    @staticmethod
+    def correctaxis(ctx, param, value) \
+            -> str | None:  # noqa Contexts, Parameters uses in callbacks
+        """Check valid choice of axis.
+        
+        Dimensions: across rows or columns or by index; depends on the Pandas.
+        """
+        if isinstance(value, str) and value.lower() is not None:
+            # Current feature: Implemented: DataFrames have these dimensions.
+            if value.lower() == 'index':
+                return value
+            # Future feature: Not Implemented: DataFrames have these dimensions.
+            elif value.lower() == 'row':
+                return value
+            # Future feature: Not Implemented: DataFrames have these dimensions.
+            elif value.lower() == 'column':
+                return value
+            else:
+                click.secho(message="Exiting Editing Mode. "
+                                    "Wrong axis. "
+                                    "Try again.",
+                            fg=styles.invalidfg, bold=styles.invalidbold)
+                return None
+        # Exit Edit Mode: Automatically exit Editing Mode due to invalid entry.
+        else:
+            click.secho(message="Exiting Editing Mode. Invalid entry.",
+                        fg=styles.invalidfg, bold=styles.invalidbold)
+            return None
+    
+    @staticmethod
+    def selectviews(ctx, param, value) \
+            -> str | None:  # noqa Contexts, Parameters uses in callbacks
+        """Check valid choice of view."""
+        allview, projectview, criteriaview, todoview, referenceview = \
+            Views.Load
+        click.echo(f"\n")
+        if isinstance(value, str) and value.lower() is not None:
+            # Select All View: Display all records in the sheet.
+            if value.lower() == allview.lower():
+                click.secho(message="Displaying Assignment's Criteria"
+                                    f" {value} View: \n",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Select Project View: Display all records in the sheet.
+            elif value.lower() == projectview.lower():
+                click.secho(message="Displaying Assignment's "
+                                    f" {value} View: \n",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Select Criteria View: Display all records in the sheet.
+            elif value.lower() == criteriaview.lower():
+                click.secho(message="Displaying Assignment's "
+                                    f" {value} View: \n",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Select Todo View: Display all records in the sheet.
+            elif value.lower() == todoview.lower():
+                click.secho(message="Displaying Assignment's "
+                                    f" {value} View: \n",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Select Reference View: Display all records in the sheet.
+            elif value.lower() == referenceview.lower():
+                click.secho(message="Displaying Assignment's "
+                                    f" {value} View: \n",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Exit Edit Mode: Automatically exit Editing Mode.
+            else:
+                click.secho(message="Exiting Editing Mode. "
+                                    "No View selected. "
+                                    "Try again.",
+                            fg=styles.invalidfg, bold=styles.invalidbold)
+                return None
+        # Exit Edit Mode: Automatically exit Editing Mode due to invalid entry.
+        else:
+            click.secho(message="Exiting Editing Mode. Invalid entry.",
+                        fg=styles.invalidfg, bold=styles.invalidbold)
+            return None
+    
+    @staticmethod
+    def selecttodo(ctx, param, value) \
+            -> str | None:  # noqa Contexts, Parameters uses in callbacks
+        """Check Valid Todo Views."""
+        allview, simpleview, notesview, dodview, gradeview, reviewview = \
+            Views.Todo
+        click.echo(f"\n")
+        if isinstance(value, str) and value.lower() is not None:
+            # Select All View: Display all records in the sheet.
+            if value.lower() == allview.lower():
+                click.secho(message=f"Displaying Todo's {value} View: \n",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Select Simple View: Display a reduced view of records.
+            elif value.lower() == simpleview.lower():
+                click.secho(message=f"Displaying Todo's {value} View: \n",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Select Notes View: Display a reduced view of records for notes.
+            elif value.lower() == notesview.lower():
+                click.secho(message=f"Displaying Todo's {value} View: \n",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Select Definition of Done View: Display progression of records.
+            elif value.lower() == dodview.lower():
+                click.secho(message=f"Displaying Todo's {value} View: \n",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Select Grades View: Display a grade focused view of records.
+            elif value.lower() == gradeview.lower():
+                click.secho(message=f"Displaying Todo's {value} View: \n",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Select Review View: Display review of the records; a quick review.
+            elif value.lower() == reviewview.lower():
+                click.secho(message=f"Displaying Todo's {value} View: \n",
+                            fg=styles.infofg, bold=styles.infobold)
+                return value
+            # Exit Edit Mode: Automatically exit Editing Mode.
+            else:
+                click.secho(message="Exiting Editing Mode. "
+                                    "No View selected. Try again.",
+                            fg=styles.invalidfg, bold=styles.invalidbold)
+                return None
+        # Exit Edit Mode: Automatically exit Editing Mode due to invalid entry.
+        else:
+            click.secho(message="Exiting Editing Mode. Invalid entry.",
+                        fg=styles.invalidfg, bold=styles.invalidbold)
+            return None
+    
+    @staticmethod
+    def checktoggle(edits) -> str | None:
+        """Check the mode."""
+        if isinstance(edits, str):
+            # Add
+            if edits.lower() == 'toggle':
+                return edits
+            else:
+                click.secho(message="Exiting Editing Mode. Invalid Mode. Try again.",
+                            fg=styles.invalidfg, bold=styles.invalidbold)
+        else:
+            click.secho(message="Exiting Editing Mode. Try again.",
+                        fg=styles.invalidfg, bold=styles.invalidbold)
+            return None
+    
+    @staticmethod
+    def checkstatus(state) -> str | None:
+        """Check the status."""
+        if isinstance(state, str):
+            # Add
+            if state.lower() == 'todo':
+                click.echo(message=f"🆕 ToDo Status, {state} 🆕")
+                return state
+            # Update
+            elif state.lower() == 'wip':
+                click.echo(message=f"🆕 ToDo Status, {state} 🆕")
+                return state
+            # Delete
+            elif state.lower() == 'done':
+                click.echo(message=f"🆕 ToDo Status, {state} 🆕")
+                return state
+            elif state.lower() == 'missing':
+                click.echo(message=f"🆕 ToDo Status, {state} 🆕")
+                return state
+            # None, Other
+            else:
+                click.echo(message="Exiting Editing Mode. Try again.")
+                return None
 
 
 class Window:
@@ -214,7 +425,7 @@ class Window:
             
             if debug:
                 rprint("Debug Mode: Show Record")
-                rich.inspect(individual)
+                inspector(individual)
             
             if individual.card(consolecard=Webconsole.console) is not None:
                 window.printpanels(record=individual)
@@ -225,11 +436,11 @@ class Window:
             return Window.sendto(individual, sendtoeditor)
     
     @staticmethod
-    def printpane(panel: str, printer: rich.Console) -> None:
+    def printpane(panel: str, printer: Console) -> None:
         """Print Pane.
         
         :param panel: str - Panel to print
-        :param printer: rich.Console - Console to print to
+        :param printer: Console - Console to print to
         :return: None
         """
         if panel == 'bannerfull':
@@ -338,7 +549,8 @@ class Window:
                 click.echo(message="=====================================")
             # Switch confirmation on a command's type
             if commandtype == 'insert':
-                click.echo(message=("🆕 A new note is now added 🆕 at:" + editor.lastmodified))
+                click.echo(message=("🆕 A new note is now added "
+                                    "🆕 at:" + editor.lastmodified))
             elif commandtype == 'append':
                 click.echo(message="A note is updated at:"
                                    + editor.lastmodified)
@@ -365,7 +577,7 @@ class Window:
         shown: bool = True
         if debug:
             rprint(editeddata)
-            rich.inspect(editeddata)
+            inspector(editeddata)
         elif editeddata.empty is False and editor.ismodified:
             oldrecord: Record = editor.record
             newrecord: Record = Record(series=editor.newresultseries)
@@ -412,9 +624,6 @@ class Window:
                 window.showedited(editeddata=editeddata, debug=debug)
 
 
-window: Window = Window()
-
-
 class CriteriaApp:
     """PyCriteria Terminal App.
     
@@ -435,31 +644,24 @@ class CriteriaApp:
     :method: get_results
     """
     
-    values: AppValues
+    values: Val
+    views: Views
+    guard: Guard
+    appdata: DataController
+    data: pd.DataFrame
+    range: int
+    editmode: list[str] = ['none', 'add', 'update', 'delete']
+    editaction: list[str] = ['insert', 'append', 'clear']
+    CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
     
-    def __init__(self, values: AppValues):
+    def __init__(self, applicationdata: DataController) -> None:
         """Initialize."""
-        self.values = values
-    
-    @staticmethod
-    def crumbs(context: click.Context) -> None:
-        """Display the command navigation crumbs.
-        
-        :param context: click.Context - Click context
-        :return: None
-        """
-        click.echo(message="Navigation: CLI: > Run > ... "
-                           "[Intent] > [Action]\n")
-        root: str = "BASE: Run"
-        crumb: str = context.info_name if context.info_name \
-                                          is not None else root  # noqa
-        text: str = (
-                f'Navigation: CLI: > Run > ... > Load> {crumb.title()}*\n *: '
-                + f'You are here: {crumb.title()}\n'
-                + 'To go up one or two level, enter, each time:  ..  \n'
-                + 'To Exit: ctrl + d  \n')
-        click.echo(
-                message=text)
+        self.values = Val()
+        self.views = Views()
+        self.guard = Guard()
+        self.appdata = applicationdata
+        self.data = self.appdata.dataframe
+        self.range = len(self.data)
     
     @staticmethod
     def get_data() -> pd.DataFrame:
@@ -472,595 +674,452 @@ class CriteriaApp:
             DataControl.load_dataframe_wsheet(wsheet=wsheet)
         return dataframe
     
-    @staticmethod
-    def display_data(dataframe: pd.DataFrame) -> None:
-        """Display the dataframe.
+    @property
+    def get_range(self) -> int:
+        """Get the range of the dataframe.
+        
+        :param self
+        :return: int - Range of the dataframe
+        """
+        self.range = len(self.data)
+        return self.range
+    
+    # Depends on ToDo command
+    def command_todo(self, dataframe: pd.DataFrame,
+                     todoview: str = 'All',
+                     label: str = "Progress") -> None:
+        """Display the dataframe by view option/choice.
         
         :param dataframe: pd.DataFrame - Dataframe to display
-        :return: None
-        """
-        WebConsole.table = Webconsole.set_datatable(dataframe=dataframe)
-        Display.display_frame(dataframe=dataframe,
-                              consoleholder=Webconsole.console,
-                              consoletable=Webconsole.table,
-                              headerview=Head.OverviewViews)
-    
-    @staticmethod
-    def update_appdata(context, dataframe: pd.DataFrame) -> None:
-        """Update the app data.
-        
-        :param context: click.Context - Click context
-        :param dataframe: pd.DataFrame - Dataframe to update
-        """
-        context.obj = dataframe
-        DataControl.dataframe = dataframe
-    
-    @staticmethod
-    def display_view(dataframe: pd.DataFrame,
-                     viewer: list[str] = None,
-                     label: str = 'Overview') -> None:
-        """Display the dataframe.
-        
-        :param dataframe: pd.DataFrame - Dataframe to display
-        :param viewer: list[str] - List of views to display
+        :param todoview: str - View option
         :param label: str - Label to display
-        :return: None
-        """
-        headers: list[str] = Head.OverviewViews if view is None else viewer
-        Webconsole.table = Webconsole.configure_table(headers=headers)
-        Display.display_subframe(dataframe=dataframe,
-                                 consoleholder=Webconsole.console,
-                                 consoletable=Webconsole.table,
-                                 headerview=headers,
-                                 viewfilter=label)
-        click.echo(message='Your data is refreshed/rehydrated')
-    
-    @staticmethod
-    def display_todo(dataframe: pd.DataFrame, viewoption: str = 'All') -> None:
-        """Display the dataframe by view option.
+        :return: None """
         
-        :param dataframe: pd.DataFrame - Dataframe to display
-        :param viewoption: str - View option
-        :return: None
-        """
-        
-        def select_view(viewss: str) -> list[str]:
-            """Select the view."""
-            if viewss.lower() == 'All'.lower():
+        # Select the view
+        def vues(choice: str) -> list[str]:
+            """Select the (predefined) view -> Header. Columns
+            
+            :param choice: str - View option
+            :return: list[str] - Columns """
+            #
+            if choice.lower() == self.views.All.lower():
                 headers: list[str] = Head.ToDoAllView
-            elif viewss.lower() == 'Simple'.lower():
-                headers: list[str] = Head.ToDoDoDView
-            elif viewss.lower() == 'Done'.lower():
+            elif choice.lower() == self.views.Simple.lower():
+                headers: list[str] = Head.ToDoSimpleView
+            elif choice.lower() == self.views.Notes.lower():
+                headers: list[str] = Head.ToDoNotesView
+            elif choice.lower() == self.views.Done.lower():
+                headers: list[str] = Head.ToDoProgressView
+            elif choice.lower() == self.views.Grade.lower():
                 headers: list[str] = Head.ToDoGradeView
-            elif viewss.lower() == 'Grade'.lower():
+            elif choice.lower() == self.views.Review.lower():
                 headers: list[str] = Head.ToDoReviewView
-            elif viewss.lower() == 'Review'.lower():
-                headers: list[str] = Head.ToDoGradeView
             else:
                 headers: list[str] = Head.ProjectView
             return headers
         
-        Webconsole.table = Webconsole.configure_table(
-                headers=select_view(viewoption))
-        Display.display_subframe(dataframe=dataframe,
+        # Configure the bulk ouput as Table
+        self.output(data=dataframe, cols=vues(todoview), title=label)
+    
+    #
+    def command_view(self, dataframe: pd.DataFrame,
+                     viewer: list[str] = None,
+                     label: str = 'Overview') -> None:
+        """Display the dataframe.
+
+        :param dataframe: pd.DataFrame - Dataframe to display
+        :param viewer: list[str] - List of views to display
+        :param label: str - Label to display
+        :return: None """
+        # Select the view's header
+        headers: list[str] = Head.OverviewViews if viewer is None else viewer
+        # Configure the bulk ouput as Table
+        self.output(data=dataframe, cols=headers, title=label)
+    
+    #
+    @staticmethod
+    def output(data: pd.DataFrame,
+               cols: list[str],
+               title: str) -> None:
+        """Command Output flow. Shared by common commands
+        
+        :param data: pd.DataFrame - Dataframe to display
+        :param cols: list[str] - List of columns to display
+        :param title: str - Title to display
+        :return: None """
+        # Configure the bulk ouput as Table with headers
+        Webconsole.table = Webconsole.configure_table(headers=cols)
+        # Display the sub frame dataview
+        Display.display_subframe(dataframe=data,
                                  consoleholder=Webconsole.console,
                                  consoletable=Webconsole.table,
-                                 headerview=select_view(viewoption),
-                                 viewfilter='ToDo')
+                                 headerview=cols,
+                                 viewfilter=title)
+        # Signal from completion of command
+        click.echo(message='Your data is refreshed/rehydrated')
     
-    @staticmethod
-    def query_data(dataframe: pd.DataFrame,
-                   querystring: str,
-                   case: bool = False) -> pd.DataFrame:
-        """Query the dataframe.
-        
-        :param dataframe: pd.DataFrame - Dataframe to query
-        :param querystring: str - Query string
-        :param case: bool - Case sensitive
-        :return: pd.DataFrame - Query result
-        """
-        subsetframe: pd.DataFrame = \
-            dataframe.apply(lambda x: x.astype(str).str.contains(querystring,
-                                                                 case=case))
-        return subsetframe
-    
-    @staticmethod
-    def search_data(frame: pd.DataFrame,
-                    label: str,
-                    searchstr: str,  # noqa
-                    case: bool = False, echos: bool = False) \
-            -> pd.DataFrame:  # noqa
-        """Search the dataframe.
-        
-        :param frame: pd.DataFrame - Dataframe to search
-        :param label: str - Label to search
-        :param searchstr: str - Search string
-        :param case: bool - Case sensitive
-        :param echos: bool - Echo the result
-        :return: pd.DataFrame - Search result
-        """
-        searchresult: pd.DataFrame = \
-            frame[frame[label].astype(str).str.contains(searchstr,
-                                                        case=case)]
-        
-        if echos:
-            click.echo(
-                    message=f'The rows with "{searchstr}" in column\'s'
-                            f' "{label}" are:\n {searchresult}')
-        
-        return searchresult
-    
-    @staticmethod
-    def search_rows(frame: pd.DataFrame,
-                    searchterm: str,
-                    exact: bool = False) -> pd.DataFrame | None:
-        """Search across all columns for the searches team
-        
-        :param frame: pd.DataFrame - Dataframe to search
-        :param searchterm: str - Search term
-        :param exact: bool - Exact match
-        :return: pd.DataFrame - Search result
-    
-        """
-        if searchterm is None or isinstance(searchterm, str):
-            return None
-        # Search across all columns for the searches text/str value
-        mask = frame.apply(lambda column: column.astype(str).
-                           str.contains(searchterm))
-        #
-        return frame.loc[mask.all(axis=1)] if exact \
-            else frame.loc[mask.any(axis=1)]
-    
-    @staticmethod
-    def rows(frame: pd.DataFrame,
-             index: int = None,
-             searchterm: str = None,
-             strict: bool = False,
-             zero: bool = True, debug: bool = False) \
-            -> pd.DataFrame | pd.Series | None:
-        """Get the rows from the dataframe.
-        
-        Parameters
-        ----------
-        frame: pd.DataFrame: Data to searches by rows
-            The dataframe to searches.
-        index: int: optional
-            The index to searches for, by default None
-        searchterm: str: optional
-            The searches term to searches for, by default None
-        strict: bool: optional
-            Whether to searches for
-            - a non-exact (any) match, by default False, so any can match
-            - exact (all), by True, so all muct match
-        zero: bool: optional
-            Whether to searches for a zero indexed dataset, by default True
-        debug: bool: optional debug flag, by default False
-        
-        return pd.DataFrame | None: - Expect a result or None
-        """
-        result: pd.DataFrame | pd.Series | None
-        if index:
-            result = App.index(frame=frame, index=index, zero=zero)  # noqa
-        elif searchterm:
-            # Search across all columns for the position value
-            result = App.search_rows(frame=frame,
-                                     searchterm=searchterm,
-                                     exact=strict)
-            if result.empty is False:
-                click.echo(f"Could not find {searchterm}")
-            elif debug:
-                click.echo(f"Found: {result}")
-        else:
-            click.echo("Please provide either "
-                       "an index or searches term")
-            return None
-        
-        return result
-    
-    @staticmethod
-    def index(frame: pd.DataFrame,
-              index: int = None,
-              zero: bool = True, debug: bool = False) \
-            -> pd.DataFrame | pd.Series | None:
-        """Get the index from the dataframe.
-        
-        :param frame: pd.DataFrame - Dataframe to search
-        :param index: int - Index to search
-        :param zero: bool - Zero index
-        :param debug: bool - Debug flag
-        :return: pd.DataFrame - Index result
-        """
-        if zero and index is not None:
-            result = frame.iloc[index - 1] \
-                if index >= 0 else frame.iloc[index]
-            if debug:
-                click.echo(f"Found: {result} "
-                           f"for zero index {index - 1}")
-            return result
-        elif not zero and index is not None:
-            result = frame.iloc[index]
-            if debug:
-                click.echo(f"Found: {result} "
-                           f"for standard index {index}")
-            return result
-        else:
-            click.echo(f"Could not find index {index}")
-            return None
-    
-    @staticmethod
-    def value(frame: pd.DataFrame | pd.Series,
-              row: int = None,
-              column: int | str = None,
-              direct: bool = False) -> str | None:
-        """Get the value from the dataframe.
-        
-        :param frame: pd.DataFrame - Dataframe to search
-        :param row: int - Row to search
-        :param column: int - Column to search
-        :param direct: bool - Direct search
-        :return: str - Value result
-        """
-        if row is None or column is None:
-            click.echo(message="Plese try again: "
-                               f"One of {row}, {column} is blank")
-            return None
-        
-        try:
-            if not direct and isinstance(row, int) and isinstance(column, int):
-                if row < 0 and column < 0:
-                    raise IndexError
-                result: str = frame.iat[row, column]
-                return result
-            elif direct and isinstance(row, int) and isinstance(column, int):
-                if row >= 0 or column >= 0:
-                    result: str = frame.iloc[row, column]
-                    return result
-                else:
-                    raise IndexError
-        except IndexError:
-            click.echo("No value found.")
-            return None
-    
-    @staticmethod
-    def get_results(sourceframe: pd.DataFrame,
-                    filterframe: pd.DataFrame,
-                    exact: bool = False,
-                    axes=1) -> pd.DataFrame | None:
-        """Get the results from the query.
-        
-        :param sourceframe: pd.DataFrame - Source dataframe
-        :param filterframe: pd.DataFrame - Filter dataframe
-        :param exact: bool - Exact match
-        :param axes: int - Axis to search
-        :return: pd.DataFrame - Result dataframe
-        """
-        if not exact:
-            resultframe: pd.DataFrame | None = \
-                sourceframe.where(filterframe).dropna(how='any') \
-                    .dropna(how='any', axis=axes)  # noqa
-        else:
-            resultframe: pd.DataFrame | None = \
-                sourceframe.where(filterframe).dropna(how='all') \
-                    .dropna(how='all', axis=axes)  # noqa
-        #
-        return resultframe if not None else filterframe
+    #
+    def update_appdata(self, context, dataframe: pd.DataFrame) -> None:
+        """Update the app data.
+
+        :param context: click.Context - Click context
+        :param dataframe: pd.DataFrame - Dataframe to update
+        :return: None """
+        # Update the context
+        context.obj = dataframe
+        # Update the appdata
+        DataControl.dataframe = dataframe
+        self.appdata.dataframe = dataframe
+        self.data = dataframe
 
 
-App: CriteriaApp = CriteriaApp(values=AppValues)
+App: CriteriaApp = CriteriaApp(applicationdata=DataControl)
+window: Window = Window()
 
 
-class Checks:
-    """Checks.
-    
-    :meth: isnot_context
-    :meth: has_dataframe
-    :meth: isnot_querytype
-    :meth: is_querycomplete
-    :meth: compare_frames
-    :meth: santitise
-    """
-    
-    def __init__(self):
-        """Initialize."""
-        pass
-    
-    @staticmethod
-    def isnot_context(ctx: click.Context) -> bool:
-        """Tests dataframe context.
-        
-        :param ctx: click.Context - Click context
-        :return: bool - True if not context
-        """
-        return not (ctx and isinstance(ctx, click.Context))
-    
-    @staticmethod
-    def has_dataframe(ctx: click.Context) -> bool:
-        """Tests dataframe context.
-        
-        Hinted by Sourcery
-        - Lift code into else after jump in control flow,
-        - Replace if statement with if expression,
-        - Swap if/else branches of if expression to remove negation
-        
-        Refactored from: Perplexity
-        www.perplexity.ai/searches/a2f9c214-11e8-4f7d-bf67-72bfe08126de?s=c
-        
-        :param ctx: click.Context - Click context
-        :return: bool - True if it has a dataframe
-        """
-        return isinstance(ctx, pd.DataFrame) if True else False
-    
-    @staticmethod
-    def isnot_querytype(header: str,
-                        query: str) -> bool:
-        """Tests Search Query.
-        
-        :header: str - Header
-        :query: str - Query
-        :return: bool - True if not query
-        """
-        return not isinstance(header, str) or not isinstance(query, str)
-    
-    @staticmethod
-    def is_querycomplete(header: str,
-                         query: str) -> bool:
-        """Tests for Empty Serach.
-        
-        :header: str - Header
-        :query: str - Query
-        :return: bool - True if header or query is not empty
-        """
-        return header is not None or query is not None
-    
-    @staticmethod
-    def compare_frames(olddata: pd.DataFrame,
-                       newdata: pd.DataFrame) -> bool:
-        """Compare dataframes.
-        
-        :param olddata: pd.DataFrame - Old dataframe
-        :param newdata: pd.DataFrame - New dataframe
-        :return: bool - True if no changes
-        """
-        diff = olddata.compare(newdata,
-                               keep_shape=True,
-                               keep_equal=True)
-        if not diff.empty:
-            click.echo(message="Updated refreshed/rehydrated data")
-            rprint(diff, flush=True)
-            return False
-        
-        click.echo(message="No changes in refreshed/rehydrated data")
-        return True
-    
-    @staticmethod
-    def santitise(s: str) -> str | None:
-        """Sanitise strings.
-        
-        :param s: str - String to sanitised
-        :return: str | None - Sanitised string or None
-        """
-        empty: str = ''
-        if s != empty and isinstance(s, str):
-            return s.strip() if s else None
-        click.echo(message="Searching by index only. No keywords.")
-        return None
+# ########################################################################### #
+# App Commands
+# - Run
+#   - load
+#       - todo      -s | --select: Choose a sub view
+#       - views     -s | --select: Choose a sub view
+#   - find
+#       - locate    -i -a | --index --axis
+#                   index: input range
+#                   axis: index search focus
+#   - edit
+#       - note      -m -i -n -a | --mode --index --note --axis
+#                   mode: editmode: add, update, delete
+#                   index: input range
+#                   note: input note
+#                   axis: index search focus
+#       - progress  -m -i -n -a | --mode --index --note --axis
+#                   mode: editmode: toggle
+#                   index: input range
+#                   note: input note
+#                   axis: index search focus
+# ########################################################################### #
 
 
-Guard: Checks = Checks()
-
-
-class Results:
-    """Results.
-    
-    Critical for all index and search results for rows.
-    
-    :meth: getrowframe: Get a row from a dataframe by an index or a search term.
-    """
-    
-    def __init__(self):
-        """Initialize."""
-        pass
-    
-    @staticmethod
-    def getrowframe(data: pd.DataFrame,
-                    ix: int, st: str, debug: bool = False) \
-            -> pd.Series | pd.DataFrame | None:
-        """Get a row from a dataframe by index or searches term.
-        
-        :param data: pd.DataFrame - Dataframe
-        :param ix: int - Index
-        :param st: str - Search term - Not yet implemented, critical to design
-        :param debug: bool - Debug
-        :return: pd.Series | pd.DataFrame | None - Row or rows
-        """
-        if ix and not st:
-            result = App.rows(frame=data, index=ix)
-        elif ix:
-            result = App.rows(frame=data, index=ix, searchterm=st)
-        elif st:
-            result = App.rows(frame=data, searchterm=st)
-        else:
-            click.echo(f"No Data for row: {ix}")
-            return None
-        
-        if isinstance(result, pd.Series):
-            if debug:
-                click.echo(f"GetRowFrame(): Found a record\n")
-                rich.inspect(result)
-            return result
-        elif isinstance(result, pd.DataFrame):
-            if debug:
-                click.echo("GetRowFrame(): Found a set of records")
-                rich.inspect(result)
-            return result
-        else:
-            click.echo("GetRowFrame(): Found something: undefined")
-            if debug:
-                rich.inspect(result)
-            return None
-
-
-@click.group(name=AppValues.Run.cmd)
+# 0. Run: Base Command: Anchors all Intent and Actions
+# Does not to anything but command achitecture/infrastructure and --help
+@click.group(name=App.values.Run.cmd,
+             context_settings=App.CONTEXT_SETTINGS)
 @click.pass_context
 def run(ctx: click.Context) -> None:  # noqa
     """Level: Run. Type: about to learn to use this CLI.
     
+    \f
     :param ctx: click.Context
     :return: None: Produces stdout --help text
     """
 
 
+# 0.1 Run: Base Command: Clear
+# Clears the REPL using click.clear()
+@run.command("clear", help="Clear the screen")
+@click.pass_context
+def clear(ctx: click.Context) -> None:  # noqa
+    """Clear the screen."""
+    click.echo("Screen cleared")
+    click.clear()
+
+
 # 1. Load Data: Have the user load the data:
-# A) The app pulls the remote Google connection;
-# B) Loads Intent intentionally allows the user to load the data.
-@run.group(name=AppValues.Load.cmd)
+# READ of CRUD Ops (Create, _READ_, Update, Delete)
+# Load intents/actions does the bulk data loading
+# Uses App.values.x.x(.x) String values for configuration.
+@run.group(name=App.values.Load.cmd)
 @click.pass_context
 def load(ctx: click.Context) -> None:  # noqa
-    """Load data from the current context, intentionally.
-    
+    """INTENT: Load: => ACTIONS/Commands: todo, views:
+
+    === === === === === === === === === === === === ===\n
+    \b
+    Start Typing:
+    - Use 'tab' to autocomplete the current menu option,
+    - Then 'space' to start the sub-menu.
+    - Then 'tab' or 'enter' to complete \n
+    ___\n
+    \b
+    Hit 'enter' to enter the prompt sequence for option.
+    Can use the, e.g., `-o` on same line as command.
+    However the , prompt entery is preferred.\n.
+    ===\n
+    \b
+    ACTIONS/Commands:
+    - todo
+    ....'-s' selects | default: All.
+    - views
+    ....'-s' selects | default: Overview \n
+    === === === === === === === === === === === === ===\n
+    \f
     a) Get the dataframe from remote
     b) Check context for dataframe if is/is not present
     c) Display dataframe accoridngly
     
+
     :param ctx: click.Context
     :return: None: Produces stdout --help text
     """
+    click.secho(
+            message="====================LOADING MODE=======================\n",
+            fg='magenta', bg='white', bold=True)
+    click.secho(
+            message="========Load & Show All/Bulk Records (Table)===========\n",
+            fg='magenta', bold=True)
+    click.secho(
+            message="==========Select Views: Show Selected Tasks============\n",
+            fg='magenta', bold=True)
+    click.secho(
+            message="Entering loading & reading mode for all records.",
+            fg='magenta', bg='white', bold=True)
+    click.secho(
+            message="Steps: \n"
+                    "  1. Enter an load mode:                               \n"
+                    "  2. Select Todo or Views task/action:                 \n"
+                    "  3. For Todo: -= Tasks Zone for the Project           \n"
+                    "     3.1 Choose All: Complete list an overview.        \n"
+                    "     3.2 Choose Simple: A simple list of Todo.         \n"
+                    "     3.3 Choose Notes: A list of Notes.                \n"
+                    "     3.4 Choose Notes: A Todos that are Done.          \n"
+                    "     3.5 Choose Grade: A Todos that are by Grade.      \n"
+                    "     3.5 Choose Review...........................      \n"
+                    "     ............................................      \n"
+                    "  4. For Views: -=Review the Assignement & Criterias=- \n"
+                    "     4.1 Choose Overview: Complete list an overview.   \n"
+                    "     4.2 Choose Project: A view of projects. data.     \n"
+                    "     4.3 Choose Criteria: A view of criteria.          \n"
+                    "     4.4 Choose ToDos: A view of ToDos.                \n"
+                    "     4.5 Choose References: An index of references.    \n"
+                    "  5. Exits mode automatically.                         \n",
+            fg='magenta', bold=styles.infobold, underline=True)
+    click.secho(
+            message="Prompts are available for each input. Hit: 'Enter'")
+    App.update_appdata(context=ctx, dataframe=App.get_data())
+    click.secho(
+            message="Working data is now ... rehydrated.",
+            blink=True)
+    click.secho(
+            message=f"You have rows 1 to {App.get_range} to work with",
+            bold=styles.infobold)
 
 
-@load.command("todo", help="Load todo list. Select views to Display.")
+# 2.1 Load Data: ToDo (Sub) Views
+# Uses App.values.x.x(.x) String values for configuration.
+@load.command(App.values.Todo.cmd,
+              help=App.values.Todo.help)
 @click.pass_context
-@click.option('-d', '--Display',
-              type=str,
-              default='All',
-              show_default=True,
-              help="Choose a Display: from All, Simple, Done, Grade, Review")
-@click.option('-s', '--selects',
-              type=click.Choice(choices=Head.ToDoChoices),
-              default='All',
-              show_default=True,
-              help="Choose a option: from All, Simple, Done, Grade, Review")
-def todo(ctx, display: str, selects: str) -> None:
-    """Load todos, and Display different filters/views.
+@click.option(f'-selects', 'selects',
+              type=click.Choice(choices=App.views.Todo,
+                                case_sensitive=App.values.case),
+              default=App.values.Todo.Selects.default,
+              show_default=App.values.shown,
+              prompt=App.values.Todo.Selects.prompt,
+              help=App.values.Todo.Selects.help)
+def todo(ctx, selects: str) -> None:
+    """Load todos, and display different filters/views.
     
+    \f
     :param ctx: click.Context
-    :param display: str: Views options by text input
     :param selects: str: Views options to select by choice
     :return: None: Produces stdout --help text
     """
+    # Get Data
     dataframe: pd.DataFrame = App.get_data()
     
-    def viewopt(inputs: str, choice: str) -> str:
-        """Choose a view input source to Display."""
-        if inputs == choice:
-            return choice
-        elif inputs is not None:
-            return inputs
-        elif choice is not None:
+    # Guard Clause Checks Choice
+    def checkchoice(choice: str) -> str:
+        """Guard Clause."""
+        if choice is not None and isinstance(choice, str):
             return choice
         else:
-            return choice
+            click.secho(message="Your selected option is not possible.\n "
+                                "Try the commanď with one of these options: \n"
+                                "Help: --help\n"
+                                "Choices: All, Simple, Done, Grade, Review",
+                        fg=styles.invalidfg,
+                        bold=styles.invalidbold)  # noqa
     
     # Display
     try:
-        App.display_todo(dataframe=dataframe,
-                         viewoption=viewopt(inputs=display, choice=selects))
+        App.command_todo(dataframe=dataframe,
+                         todoview=checkchoice(choice=selects))
     except TypeError:
-        App.display_todo(dataframe=dataframe)
-        rprint("You entered the wrong option: "
-               f"{display.lower()}\n"
-               f"Please try again@ All, Simple, Done, Grade or Review")  # noqa
-    
+        App.command_todo(dataframe=dataframe)
     finally:
         App.update_appdata(context=ctx, dataframe=dataframe)
 
 
-load.add_command(todo)
-
-
-@load.command("views", help="Load views. Select bluk data to view to Display.")
-@click.option('-d', '--Display',
-              type=click.Choice(choices=view.Load),
-              default='All', show_default=True)
+# 2.2 Load Data: Views (Sub) Views - These are assignments levels views
+# Uses App.values.x.x(.x) String values for configuration.
+@load.command(App.values.Views.cmd,
+              help=App.values.Views.help)
+@click.option('-selects', 'selects',
+              type=click.Choice(choices=App.views.Load,
+                                case_sensitive=App.values.case),
+              default=App.values.Views.Selects.default,
+              show_default=App.values.shown,
+              prompt=App.values.Views.Selects.prompt,
+              help=App.values.Views.Selects.help)
 @click.pass_context
-def views(ctx, display) -> None:
+def views(ctx, selects) -> None:
     """Load Reference/Index.
     
+    \f
     :param ctx: click.Context
-    :param display: str: Views options by choice options inpyt
+    :param selects: str: Select views options by choice options input
     :return: None: Produces stdout --help text
     """
+    # Get Data
     dataframe: pd.DataFrame = App.get_data()
-    if display == 'All':
-        App.display_view(dataframe=dataframe,
-                         viewer=Head.OverviewViews,
-                         label="Overview")  # noqa
-    elif display == 'Project':
-        App.display_view(dataframe=dataframe,
-                         viewer=Head.ProjectView,
-                         label="Project")
-    elif display == 'Criteria':
-        App.display_view(dataframe=dataframe,
-                         viewer=Head.CriteriaView,
-                         label="Criteria")
-    elif display == 'ToDo':
-        App.display_view(dataframe=dataframe,
-                         viewer=Head.ReferenceView,
-                         label="Todos")
-    elif display == 'Reference':
-        App.display_view(dataframe=dataframe,
-                         viewer=Head.ReferenceView,
-                         label="Reference/Index")
-    else:
-        rich.print(f"No dataloaded for: {display}")
     
+    # Guard Clause Checks Choice
+    def checks(choice: str) -> str:
+        """Guard Clause for View Choice
+        
+        :param choice: str: Choice
+        :return: str: Choice else a styled invalid message
+        """
+        if choice is not None and isinstance(choice, str):
+            return choice
+        else:
+            click.secho(message="Your selected option is not possible.\n "
+                                "Try the commanď with one of these options: \n"
+                                "Help: --help\n"
+                                "Choices: All, Project, Criteria, "
+                                "ToDo, Reference",
+                        fg=styles.invalidfg,
+                        bg=styles.invalidbg)  # noqa
+    
+    # Select the General Views
+    def chooseviews(data: pd.DataFrame, choice: str) -> None:
+        """Select the General Views.
+        
+        :param data: pd.DataFrame: Dataframe
+        :param choice: str: Choice
+        :return: None: Produces stdout"""
+        if checks(choice) == App.views.Overviews:
+            App.command_view(dataframe=data,
+                             viewer=Head.OverviewViews,
+                             label="Overview")  # noqa
+        elif checks(choice) == App.views.Project:
+            App.command_view(dataframe=data,
+                             viewer=Head.ProjectView,
+                             label="Project")
+        elif checks(choice) == App.views.Criteria:
+            App.command_view(dataframe=data,
+                             viewer=Head.CriteriaView,
+                             label="Criteria")
+        elif checks(choice) == App.views.ToDos:
+            App.command_view(dataframe=data,
+                             viewer=Head.ToDoAllView,
+                             label="Todos")
+        elif checks(choice) == App.views.Reference:
+            App.command_view(dataframe=data,
+                             viewer=Head.ReferenceView,
+                             label="Reference/Index")
+        else:
+            click.secho(message="No data viewable "
+                                f"for the chosen option: {selects}",
+                        fg=styles.warnfg,
+                        bold=styles.warnbg)
+    
+    # Display The View Choice
+    chooseviews(data=dataframe, choice=selects)
+    # Update Global Data
     App.update_appdata(context=ctx, dataframe=dataframe)
 
 
-# 2. Find
-@run.group(AppValues.Find.cmd)
+# 3.0 Find: Locate: individual records from the bulk data
+# Uses App.values.x.x(.x) String values for configuration.
+@run.group(App.values.Find.cmd)
 @click.pass_context
 def find(ctx: click.Context) -> None:  # noqa
-    """Find: Find item, row(s), column(s).
+    """INTENT: Find: => ACTIONS/Commands: locate:
     
+    === === === === === === === === === === === === ===\n
+    \b
+    Start Typing:
+    - Use 'tab' to autocomplete the current menu option.
+    - Then 'space' to start the sub-menu.
+    - Then 'tab' or 'enter' complete. \n
+    ___\n
+    \b
+    Hit 'enter' to enter the prompt sequence for option.
+    Can use, e.g., `-o` flag on same line as command.
+    However, prompt entery is preferred.\n
+    ===\n
+    \b
+    ACTIONS/Commands:
+    - locate
+    ....'-i' index (range: 1 to last) | number only
+    ....'-a' axis (default: index) | choose
+    ===\n
+    \b
+    FUTURE: text search by 'column', 'row'.\n
+    === === === === === === === === === === === === ===\n
+    \f
     :param ctx: click.Context
     :return: None: Produces stdout --help text
     """
+    
+    click.secho(
+            message="=====================FINDING MODE======================\n",
+            fg='cyan', bg='white', bold=True)
+    click.secho(
+            message="===========Locate & Show Individual Records============\n",
+            fg='cyan', bold=True)
+    click.secho(
+            message="Entering finding & reading mode for records.",
+            fg='cyan', bg='white', bold=True)
+    click.secho(message="Steps: \n"
+                        "  1. Enter an find mode:                           \n"
+                        "  2. Find a record:                                \n"
+                        "  3. Enter a row's record index id, position nos.: \n"
+                        "     Knowing a index/position is required.         \n"
+                        "     Use Load -> ToDo or Load -> Views to id a row \n"
+                        "  4. View an individual record, in a card format   \n"
+                        "  5. Exits automatically.                          \n",
+                fg='cyan', bold=styles.infobold, underline=True)
+    click.secho(
+            message="Prompts are available for each input.")
+    App.update_appdata(context=ctx, dataframe=App.get_data())
+    click.secho(
+            message="Working data is now ... rehydrated.",
+            blink=True)
+    click.secho(
+            message=f"You have rows 1 to {App.get_range} to work with",
+            bold=styles.infobold)
 
 
-@find.command(name="locate", help="🔎 Locate row(s), via index only. "
-                                  "Soon: by column, row.")
-@click.option('-s', '--searches', 'searche', type=str,
-              help='SEARCH TERM:✋ Leave blank if known location/row, '
-                   'i.e. index\n'
-                   '✋ SKIP: Hit Enter. Default:  , a blank string',
-              prompt='✋ SKIP: Hit Enter. Default:  , a blank string: ',
-              default='')
-@click.option('-i', '--index',
+# 3.1 Find: Locate: Index locations of an individual record
+@find.group(name=App.values.Find.Locate.cmd)
+@click.option('--index', 'index',
               type=click.IntRange(
                       min=1,
-                      max=len(DataControl.dataframe),
-                      clamp=True),
-              help='BY ROW: ☑️ MUST: Know the line/row\'s index\'s id \n'
-                   f'Select between 1 and {len(DataControl.dataframe)}: ',
-              prompt='BY ROW: ☑️ MUST: Select between 1 and '
-                     f'{len(DataControl.dataframe)}: ')
-@click.option('-a', '--axis',
-              type=click.Choice(['index'],
+                      max=App.get_range,
+                      clamp=App.values.Find.Index.clamp),
+              callback=Valid.index,
+              help=f'{App.values.Find.Index.help}{App.get_range}: ',
+              prompt=f'{App.values.Find.Index.help}{App.get_range}: ')
+# Only one of these options is required, & search focus by index is the only feature.
+# Future maintainability: for expanding search focuses: column, row.
+@click.option('-a', '--axis', 'axis',
+              type=click.Choice(choices=['index'],
                                 case_sensitive=False),
-              help='🔎 How to search in/by. Default: by row\'s index',
               default='index',
-              prompt="🔎 Select by, to focus on: index",
+              prompt=True,
               required=True)
 @click.pass_context
-def locate(ctx: click.Context, index: int, searche: str,
-           axis: str = Literal['index', 'column', 'row']) -> None:
+def locate(ctx: click.Context, index: int,
+           axis: str = Literal['index']) -> None:
     """Locate: a row: by index or searches term via index, column or row.
     
+    \f
     :param ctx: click.Context
     :param index: int: The index of the row to locate
-    :param searche: str: The search term to locate.
-    :param axis: str: The axis to search in.
-            Default: index
+    :param axis: str: The axis to search in: Default: index
     :return: None: Display as stdout or stderr
     """
     debugOFF: bool = False  # noqa
@@ -1070,9 +1129,8 @@ def locate(ctx: click.Context, index: int, searche: str,
     if axis.lower() == 'index':
         # Get the result source
         resultframe = \
-            Results.getrowframe(data=dataframe,
-                                ix=index,
-                                st=Guard.santitise(searche))
+            Results.getrowdata(data=dataframe,
+                               ix=index)
         # Check if the result is a single record
         if Record.checksingle(resultframe):
             # Debugging Flags
@@ -1087,100 +1145,170 @@ def locate(ctx: click.Context, index: int, searche: str,
             window.showrecord(data=resultframe,
                               debug=debugON)
         else:
-            click.echo(message="The result is not a single record")
+            click.secho(message="The result is not a single record",
+                        fg=styles.warnfg,
+                        bold=styles.warnbold)  # noqa
     else:
-        click.echo(message="Command did not run. Axes not implemented", err=True)
+        click.secho(message="Command did not run. Axes not implemented",
+                    err=styles.toerror,
+                    fg=styles.errfg,
+                    bold=styles.errbold)  # noqa
     # Update appdata data
     App.update_appdata(context=ctx, dataframe=dataframe)
 
 
-run.add_command(locate)
-
-
-# CRUD: Create, Read, Update, Delete.
+# 4. Edit: CUD Ops: Create, Read, Update, Delete.
 # New (Add) | Create, Add commands -> None: by item, by row
-@run.group("edit🎬", help="🎬 Edit: Enter editing mode. 🎬")
+@run.group(App.values.Edit.cmd)
 @click.pass_context
 def edit(ctx: click.Context) -> None:  # noqa: ANN101
     """Editing mode: enter editing for notes, todos, etc.
     
+    === === === === === === === === === === === === ===\n
+    \b
+    Start Typing:
+    - Use 'tab' to autocomplete the current menu option,
+    - Then 'space' to start the sub-menu.
+    - Then 'tab' or 'enter' to complete \n
+    ___\n
+    \b
+    Hit 'enter' to enter the prompt sequence for option.
+    Can use the, e.g., `-o` on same line as command.
+    However the , prompt entery is preferred.\n.
+    ===\n
+    \b
+    ACTIONS/Commands (and Options, Values):
+    - note
+    ....'-m' mode | choose: add, update, delete | required
+    ....'-i' index | (range: 1 to last) | number only
+    ....'-n' note | Enter short note, no limit. | required
+    ....'-a' axis | choose: index | default: index
+    - todo
+    ....'-m' mode | choose: update | required
+    ....'-i' index | (range: 1 to last) | number only
+    ....'-s' status | choose: todo, not done | wip | done | required
+    ....'-a' axis | choose: index | default: index
+    \f
     :param ctx: click.Context
     :return: None: Display as stdout --help or when subcommands is called
     """
-    click.echo(message="Entering editing mode for notes, todos, etc.")
-    click.echo(message="Steps: \n  1. Find a record: \n"
-                       "  2. Enter it's index id:\n"
-                       "  3. Edit by: adding, updating, deleting, \n"
-                       "  4. Save changes, \n  5. Exits automatically.")
-    click.echo(message="Prompts & Confirms used for a step by step process.")
+    click.secho(
+            message="===================EDITING MODE========================\n",
+            fg='blue', bold=True)
+    click.secho(
+            message="=====Find, Show & Edit, Save Individual Reccords=======\n",
+            fg='blue', bold=True)
+    click.secho(message="Entering editing mode for notes, todos, etc.         ",
+                fg='blue', bg='white', bold=True)
+    click.secho(message="Steps: \n"
+                        "  1. Enter an edit mode:                           \n"
+                        "  2. Find a record:                                \n"
+                        "  3. Enter a row's record index id, position nos.: \n"
+                        "     Knowing a index/position is required.         \n"
+                        "     Use Load -> ToDo or Load -> Views to id a row \n"
+                        "  4. Edit -> Notes by: add, update, delete or .....\n"
+                        "  4. Edit -> Progress by: toggle: "
+                        "ToDo, WIP, Done, Missed                            \n"
+                        "  5. Save changes,                                 \n"
+                        "  6. Exits automatically.                          \n",
+                fg='blue', bold=styles.infobold,
+                underline=True)
+    click.secho(message="Prompts & Confirms used for a step by step process.")
     App.update_appdata(context=ctx, dataframe=App.get_data())
-    click.echo(message="Working data is now ... rehydrated.")
+    click.secho(message="Working data is now ... rehydrated.", blink=True)
+    click.secho(message=f"You have rows 1 to {App.get_range} to work with",
+                bold=styles.infobold)
 
 
-@edit.command("addnote🆕", help="🆕 Add a note to a row of the record. 🆕 ")
+# 4.1 Edit: CRUD Ops: Read, Create Update, Delete:
+# A Individual Record's Notes
+@edit.command(App.values.Edit.Note.cmd)
 @click.pass_context
-@click.option('-s', '--searches', 'searche', type=str,
-              help='Leave blank if known location/row, i.e. index',
-              prompt="To use this option, enter a search term: ",
-              default='')
-@click.option('-i', '--index',
+# Edit Mode: add, update, delete
+@click.option('--mode', 'mode',
+              type=click.Choice(App.editmode,
+                                case_sensitive=
+                                App.values.Edit.Note.Mode.case),
+              help=App.values.Edit.Note.Mode.help,
+              callback=Valid.mode,
+              prompt=App.values.Edit.Note.Mode.prompt,
+              required=App.values.Edit.Note.Mode.required)
+# Edit Mode: Row recorď to edit
+@click.option('--index', 'index',
               type=click.IntRange(
-                      min=1,
-                      max=len(DataControl.dataframe),
-                      clamp=True),
-              help='Optionally leave blank when searching '
-                   'by a string, i.e. searches\n'
-                   f'Select between 1 and {len(DataControl.dataframe)}: ',
-              prompt=f'Select between 1 and {len(DataControl.dataframe)}: ')
-@click.option('-n', '--note', 'note', type=str,
-              help='Add 1st note to the record',
-              prompt="Add a note to the record",
-              required=True)
-@click.option('-a', '--axis',
-              type=click.Choice(['index', 'column', 'row'],
+                      min=App.values.Find.Index.min,
+                      max=App.get_range,
+                      clamp=App.values.Find.Index.clamp),
+              callback=Valid.index,
+              help=f'{App.values.Find.Index.help}{App.get_range}: ',
+              prompt=f'{App.values.Find.Index.help}{App.get_range}: ')
+# Edit Mode: Note to link/append/clear to Row recorď on edit
+@click.option('--note', 'note', type=str,
+              help=App.values.Edit.Note.help,
+              callback=Valid.santitise,
+              prompt=App.values.Edit.Note.prompt,
+              required=App.values.Edit.Note.required)
+# Edit Mode: Axis, or searchg focus, to locate record on.
+@click.option('-a', '--axis', 'axis',
+              type=click.Choice(choices=['index'],
                                 case_sensitive=False),
-              help='🔎 How to search in/by. Default: by row\'s index',
               default='index',
-              prompt="Select by, to focus on: index",
+              prompt=True,
               required=True)
-def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
-                  axis: str = Literal['index']) -> None:  # noqa: ANN101
-    """ADDING a new note to a record
-
-    A: Find by a location/coordinate:
-    1) Index only searches by index
-    2) Searches term - Not implemented, User hits enter to skip
-    3) Index and Search Term - Not implemented, skips the search term on input.
-    - Uses Results.getrowframe
-    B: Check if it is a single result, i.e. a pd.Series,
-    C: Create a new record for local display and editing
-    D: Editor modifies the record by ADDING a new note by index
-    E: Display the modified record, either alone, or side by side.
-    with the original record.
-    F: Update the local app data.
+def notepad(ctx,
+            index: int,
+            note: str,
+            mode: str = Literal['add', 'update', 'delete'],
+            axis: str = Literal['index', 'column', 'row']) -> None:
+    """EDIT MODE: Notepad: Add, Update, Delete notes.
     
-    https://www.perplexity.ai/search/a8d503cb-8aec-489a-8cf5-7f3e5b573cb7?s=c
-    Parameters:
-    -----------
+    \b
+    ACTIONS/Commands (and Options, Values):
+    - note
+    ....'-m' mode | choose: add, update, delete | required
+    ....'-i' index | (range: 1 to last) | number only
+    ....'-n' note | Enter short note, no limit. | required
+    ....'-a' axis | choose: index | default: index
+    \f
     :param ctx: click.Context
-    :param index: int: The index of the row to add a note to
-    :param searche: str: The search term to find the row to add a note to
-    :param note: str: The note to add to the row
-    :param axis: str: The axis to search by, default: index
-    :return: None: Display as stdout, or with --help
+    :param index: int: The index of the row to edit: 1 to Last row.
+    :param note: str: The note to add, update, delete.
+    :param mode: str: The mode to add, update, delete.
+    :param axis: str: The axis to search in.
+    :return: None: Display as stdout or stderr
     """
     # Debugging Flags
     debugON = True  # noqa
     # Rehydrtate dataframe from remote
     dataframe: pd.DataFrame = App.get_data()
-    # Search by index (-i, --index option, default/only choice)
-    if axis.lower() == 'index' and not searche:
-        click.echo(message="🆕 Adding .... a new note to a record 🆕")
+    
+    # Mode Switch
+    def checkmode(edits):
+        """Check the mode."""
+        if isinstance(edits, str):
+            # Add
+            if edits.lower() == 'add':
+                click.echo(message="🆕 Adding note"
+                                   f", in {index} 🆕")
+                return edits
+            # Update
+            elif edits.lower() == 'update':
+                click.echo(message="🔂 Updating a Note"
+                                   f", in {index}...🔂")
+                return edits
+            # Delete
+            elif edits.lower() == 'delete':
+                click.echo(message="🗑️ Deleting a Note"
+                                   f", in {index}...🗑️")
+                return edits
+            # None, Other
+            else:
+                click.echo(message="Exiting Editing Mode. Try again.")
+                return None
+    
+    if axis.lower() == 'index' and note:
         # - Get the record
-        resultframe = Results.getrowframe(data=dataframe,
-                                          ix=index,
-                                          st=Guard.santitise(searche))
-        # - Check if it is a single record
+        resultframe = Results.getrowdata(data=dataframe, ix=index)
         if Record.checksingle(resultframe) and note is not None:
             debugOFF = False  # noqa
             # - Display the found result and - send to the editor
@@ -1192,18 +1320,27 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
             if editing is not None:
                 editor = Editor(currentrecord=editing,
                                 sourceframe=resultframe)
-                # - Add the note to the record
+                # - Edit note field of the record
                 if index is not None:
-                    editor.addingnotes(notes=note,
-                                       location=index,
-                                       debug=debugOFF)
-                # Else, exit (No changes made, as no location to update)
+                    click.secho(message="=====================================",
+                                bg='white',
+                                bold=True)
+                    click.secho(message="Enter: edited mode: Notes",
+                                blink=True)
+                    # Edit Mode for Notes:
+                    # Action/Tasks: Add/Insert, Update/Append, Delete/Clear
+                    editor.editnote(edits=checkmode(edits=mode),
+                                    index=index,
+                                    notepad=note,
+                                    debug=debugOFF)
                 else:
-                    click.echo(message="No changes made")
-                    click.echo(message="Exiting: editing mode. No Note Added")
+                    click.secho(message="No changes made")
+                    click.secho(message="Exiting: editing mode. No Note Added")
                 # - Display the modified record
-                click.echo(message="=====================================")
-                click.echo(message="Loading: edited record")
+                click.secho(message="=====================================",
+                            bg='white', bold=True)
+                click.secho(message="Loading: edited record",
+                            blink=True)
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
                                     commandtype='insert',
@@ -1212,231 +1349,129 @@ def addsinglenote(ctx: click.Context, index: int, searche: str, note: str,
                 # - Update the local app data
                 App.update_appdata(context=ctx,
                                    dataframe=editor.newresultframe)
-            else:
-                click.echo(message="Exiting: editing mode: Adding a Note")
+        else:
+            click.secho(message="Exiting: editing mode: Adding a Note",
+                        fg='bright_yellow',
+                        bg='white',
+                        bold=True)
+        click.secho(message="=====================================",
+                    bg='white', bold=True)
     else:
-        click.echo(message="Text searches is not yet implemented\n"
-                           "Use searches with no input\n"
-                           "Try again, using -i/--index and a number value"
-                           "and axes: index")
+        click.secho(message="Try again, and use: \n"
+                            "-m/--mode and select edit action: "
+                            "add, update, delete\n"
+                            "-i/--index and a number value\n"
+                            "and axes: index",
+                    fg='bright_yellow', bold=True)
 
 
-@edit.command("updatenote🔂", help="🔂 Append a note in "
-                                  "current record's note 🔂")
+# 4.1 Edit: CRUD Ops: Read, Create Update, Delete:
+# A Individual Record's ToDo Status
+@edit.command(App.values.Edit.ToDo.cmd)
 @click.pass_context
-@click.option('-s', '--searches', 'searche', type=str,
-              help='SEARCH TERM:✋ Leave blank if known location/row, '
-                   'i.e. index\n'
-                   '✋ SKIP: Hit Enter. Default:  , a blank string',
-              prompt='✋ SKIP: Hit Enter. Default:  , a blank string: ',
-              default='')
-@click.option('-i', '--index',
+@click.option('--index', 'index',
               type=click.IntRange(
-                      min=1,
-                      max=len(DataControl.dataframe),
-                      clamp=True),
-              help='BY ROW: ☑️ MUST: Know the line/row\'s index\'s id \n'
-                   f'Select between 1 and {len(DataControl.dataframe)}: ',
-              prompt='BY ROW: ☑️ MUST: Select between 1 and '
-                     f'{len(DataControl.dataframe)}: ')
-@click.option('-n', '--note', 'note', type=str,
-              help='NOTE: 📝 Updates the note on record',
-              prompt="NOTE: 📝 Updates the note on record",
-              required=True)
-@click.option('-a', '--axis',
-              type=click.Choice(['index'],
+                      min=App.values.Find.Index.min,
+                      max=App.get_range,
+                      clamp=App.values.Find.Index.clamp),
+              callback=Valid.index,
+              help=f'{App.values.Edit.ToDo.indexhelp}{App.get_range}: ',
+              prompt=f'{App.values.Edit.ToDo.indexhelp}{App.get_range}: ')
+@click.option('-status', 'status',
+              type=click.Choice(choices=App.values.Edit.ToDo.Statuses,
+                                case_sensitive=
+                                App.values.Edit.ToDo.Status.case),
+              help=App.values.Edit.ToDo.Status.help,
+              prompt=App.values.Edit.ToDo.Status.prompt,
+              required=App.values.Edit.ToDo.Status.required)
+@click.option('-a', '--axis', 'axis',
+              type=click.Choice(choices=['index'],
                                 case_sensitive=False),
-              help='🔎 How to search in/by. Default: by row\'s index',
               default='index',
-              prompt="🔎 Select by, to focus on: index",
+              prompt=True,
               required=True)
-def updateanote(ctx: click.Context, index: int, searche: str, note: str,
-                axis: str = Literal['index']) -> None:  # noqa: ANN101
-    """UPDATING to a NOTE
-    
-    A: Find by a location/coordinate:
-    1) Index only searches by index
-    2) Searches term - Not implemented, User hits enter to skip
-    3) Index and Search Term - Not implemented, skips the search term on input.
-    - Uses Results.getrowframe
-    B: Check if it is a single result, i.e. a pd.Series,
-    C: Create a new record for local display and editing
-    D: Editor modifies the record by UPDATING a new note by index
-    E: Display the modified record, either alone, or side by side.
-    with the original record.
-    F: Update the local app data.
-    
-    Parameters:
-    -----------
-    :param ctx: click.Context
-    :param index: int: The index of the row to add a note to
-    :param searche: str: The search term to find the row to add a note to
-    :param note: str: The note to add to the row
-    :param axis: str: The axis to search by, default: index
-    :return: None: Display as stdout, or with --help
-
-    Append by a location/coordinate.
+def progress(ctx: click.Context,
+             index: int,
+             status: str = Literal['Todo', 'WIP', 'Done', 'Missed'],
+             axis: str = Literal['index', 'column', 'row']):
     """
+    Edit a ToDo Status by index.
+    
+    
+    \f
+    :param ctx: click.Context: The click context
+    :param index: int: The index of the record to edit
+    :param status: str: The status of the ToDo: Todo, WIP, Done, Missed
+    :param axis: str: The axis of the edit: index, column, row
+    :return: None
+    """
+    # Debugging Flags
     debugON = True  # noqa
-    # Fetch the dataframe
     dataframe: pd.DataFrame = App.get_data()
-    # Search by index (-i, --index option, default/only choice)
-    if axis.lower() == 'index':
-        # Fetch the data by index
-        click.echo(f"🗑🔂 Updating a Note, in {index}...🔂")
-        resultframe = Results.getrowframe(data=dataframe,
-                                          ix=index,
-                                          st=Guard.santitise(searche))
-        # Check if it is a single record
-        if Record.checksingle(resultframe) and note is not None:
+    # Deprecated the --mode click.option from note, and parked the value here.
+    mode = Tuple['toggle']
+    # Mode Switch
+    
+    if axis.lower() == 'index' and status:
+        # - Get the record
+        resultframe = Results.getrowdata(data=dataframe, ix=index)
+        if Record.checksingle(resultframe) \
+                and Valid.checkstatus(status) is not None:
             debugOFF = False  # noqa
-            # Display the found record and - send to the editor
+            # - Display the found result and - send to the editor
             editing = \
                 window.showrecord(data=resultframe,
                                   sendtoeditor=True,
                                   debug=debugOFF)  # noqa
-            # Send the result to the editor
-            if editing is not None:
-                editor = Editor(currentrecord=editing,
-                                sourceframe=resultframe)
-                # Update the note by index
-                if index is not None:
-                    editor.updatingnotes(notes=note,
-                                         location=index,
-                                         debug=debugOFF)
-                else:
-                    click.echo(message="No changes made")
-                    click.echo(message="Exiting: editing mode. "
-                                       "No Note Updated")
-                # Display Record with Modified Data
-                click.echo(message="Loading: edited record")
-                # Display the modified record
-                window.showmodified(editeddata=editor.newresultseries,
-                                    editor=editor,
-                                    commandtype='append',
-                                    dataview='compare',
-                                    debug=debugOFF)
-                # Update the local app data
-                App.update_appdata(context=ctx,
-                                   dataframe=editor.newresultframe)
-            else:
-                # Else, exit (No changes made, as no record to edit)
-                click.echo(message="Exiting: editing mode")
-    else:
-        click.echo(message="Text searches is not yet implemented\n"
-                           "Use searches with no input\n"
-                           "Try again, using -i/--index and a number value"
-                           "and axes: index")
-
-
-@edit.command("deletenote🗑️", help="🗑️Clears the note(s) from a record's "
-                                   "line/row🗑️")
-@click.pass_context
-@click.option('-s', '--searches', 'searche', type=str,
-              help='SEARCH TERM:✋ Leave blank if known location/row, '
-                   'i.e. index\n'
-                   '✋ SKIP: Hit Enter. Default:  , a blank string',
-              prompt="SEARCH TERM: SKIP: ⬇️ Hit enter, to continue: ",
-              default='')
-@click.option('-i', '--index',
-              type=click.IntRange(
-                      min=1,
-                      max=len(DataControl.dataframe),
-                      clamp=True),
-              help='BY ROW: ☑️ MUST: Know the line/row\'s index\'s id \n'
-                   f'Select between 1 and {len(DataControl.dataframe)}: ',
-              prompt='BY ROW: ☑️ Select between 1 and '
-                     f'{len(DataControl.dataframe)}: ',
-              required=True)
-@click.option('-n', '--note', 'note', type=str,
-              help='NOTE: ⭕ Clears the note. Hit Enter. Default:'
-                   '  , a blank string',
-              prompt="NOTE: ⭕ ⬇️ Hit enter, to continue: ",
-              confirmation_prompt="This will delete the note, "
-                                  "⬇️ hit enter, no input:",
-              default='',
-              show_default=True)
-@click.option('-a', '--axis',
-              type=click.Choice(['index'],
-                                case_sensitive=False),
-              help='🔎 How to search in/by. Default: by row\'s index',
-              default='index',
-              prompt="⬇️ Hit enter, to continue: index",
-              required=True,
-              show_default=True)
-def deleteanote(ctx: click.Context, index: int, searche: str, note: str,
-                axis: str = Literal['index']) -> None:  # noqa: ANN101
-    """DELETE a note from a record
-    
-    A: Find by a location/coordinate:
-    1) Index only searches by index
-    2) Searches term - Not implemented, User hits enter to skip
-    3) Index and Search Term - Not implemented, skips the search term on input.
-    - Uses Results.getrowframe
-    B: Check if it is a single result, i.e. a pd.Series,
-    C: Create a new record for local display and editing
-    D: Editor modifies the record by DELETEING a new note by index
-    E: Display the modified record, either alone, or side by side.
-    with the original record.
-    F: Update the local app data.
-    
-    Parameters:
-    -----------
-    :param ctx: click.Context
-    :param index: int: The index of the row to add a note to
-    :param searche: str: The search term to find the row to add a note to
-    :param note: str: The note to add to the row
-    :param axis: str: The axis to search by, default: index
-    :return: None: Display as stdout, or with --help
-    """
-    # Debugging Flags
-    debugON = True  # noqa
-    # Rehydrtate dataframe from remote
-    dataframe: pd.DataFrame = App.get_data()
-    # Search by index (-i, --index option, default/only choice)
-    if axis.lower() == 'index' and not searche:
-        click.echo(f"🗑️ Deleting a Note, in {index}...🗑️")
-        # - Get the record
-        resultframe = Results.getrowframe(data=dataframe,
-                                          ix=index,
-                                          st=Guard.santitise(searche))
-        # - Check if it is a single record
-        if Record.checksingle(resultframe) and note is not None:
-            # - Display the found result and - send to the editor
-            editing = \
-                window.showrecord(data=resultframe,
-                                  sendtoeditor=True)  # noqa
             # - Send the result to the editor
             if editing is not None:
                 editor = Editor(currentrecord=editing,
-                                sourceframe=resultframe)  # noqa
-                # - Add the note to the record
+                                sourceframe=resultframe)
+                # - Edit note field of the record
                 if index is not None:
-                    editor.deletingnotes(notes=note, location=index)
-                # Else, exit (No changes made, as no location to update)
+                    click.secho(message="=====================================",
+                                bg='white',
+                                bold=True)
+                    click.secho(message="Enter: edited mode: ToDo & Progress",
+                                blink=True)
+                    # Edit Mode for Todos & Progress:
+                    # Action/Tasks: Toggle/Progress Status:
+                    # Todo, WIP, Done, Missed
+                    editor.editprogress(edits=Valid.checktoggle(edits=mode),
+                                        index=index,
+                                        choicepad=Valid.checkstatus(status),
+                                        debug=debugOFF)
                 else:
-                    click.echo(message="No changes made")
-                    click.echo(message="Exiting: editing mode. "
-                                       "No Note Deleted")
+                    click.secho(message="No changes made")
+                    click.secho(message="Exiting: editing mode."
+                                        " No Progress Updated")
                 # - Display the modified record
-                click.echo(message="=====================================")
-                click.echo(message="Loading: edited record")
-                debugOFF = False  # noqa
+                click.secho(message="=====================================",
+                            bg='white', bold=True)
+                click.secho(message="Loading: edited record",
+                            blink=True)
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
-                                    commandtype='clear',
+                                    commandtype='insert',
                                     dataview='compare',
                                     debug=debugOFF)
                 # - Update the local app data
                 App.update_appdata(context=ctx,
                                    dataframe=editor.newresultframe)
-            else:
-                click.echo(message="Exiting: editing mode: no deletes made")
+        else:
+            click.secho(message="Exiting: editing mode: Adding a Note",
+                        fg='bright_yellow',
+                        bg='white',
+                        bold=True)
+        click.secho(message="=====================================",
+                    bg='white', bold=True)
     else:
-        click.echo(message="Text searches is not yet implemented\n"
-                           "Use searches with no input\n"
-                           "Try again, using -i/--index and a number value"
-                           "and axes: index")
+        click.secho(message="Try again, and use: \n"
+                            "-m/--mode and select edit action: "
+                            "add, update, delete\n"
+                            "-i/--index and a number value\n"
+                            "and axes: index",
+                    fg='bright_yellow', bold=True)
 
 
 # Click Command repl is run from this function
@@ -1445,7 +1480,8 @@ register_repl(run)
 
 if __name__ == "__main__":
     utils.warn()
-    Logs.log(message="Starting PyCriteria")
+    # Logs.log(message="Starting PyCriteria")
+    # Logs.sniffsniff(capture=1)
     # Opening Introduction
     click.echo(
             message="PyCriteria: A simple CLI for managing"

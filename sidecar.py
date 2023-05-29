@@ -50,6 +50,7 @@ import warnings
 
 # 3rd Paty Imports
 import click
+import pandas as pd
 import rich
 from rich import inspect, print as rprint  # type: ignore
 from rich.prompt import Prompt  # type: ignore
@@ -75,10 +76,12 @@ class AppValues:
     OFF: bool = False
     ON: bool = True
     sep: str = ":: "
+    shown: bool = True
+    case: bool = False
     
     @dataclasses.dataclass
     class Run:
-        """Start."""
+        """Base Anchor: String Settings."""
         cmd: str = "run"
         name: str = "PyCriteria"
         welcome: str = f"Welcome to!{name}"
@@ -86,100 +89,267 @@ class AppValues:
     
     @dataclasses.dataclass
     class Load:
-        """Load Settings.
-        
-        :property: intro:str: typer panel/intro.
-        :property: help:str: typer help.
-        :property: quik:str: typer short_help.
-        """
+        """Load Intent: String Settings."""
         cmd: str = "load"
-        refresh: str = "refresh"
-        projects: str = "projects"
-        criterias: str = "criteria"
-        references: str = "reference"
-        intro: str = "Load Settings."
-        help: str = "Load Settings."
-        quik: str = "Load Settings."
+        help: str = ("Available Actions: Todo, Views\n"
+                     "Parent Menu: Load -> Sub commands: todo, views")
+    
+    class Todo:
+        """Todo Action: String Setting."""
+        cmd: str = "todo"
+        intro: str = "Todo Settings."
+        help: str = "Load todo list: Select views to Display."
+        quik: str = "Todo Settings."
+        
+        class Selects:
+            """Todo Options: Selects: String Settings.
+            
+            Click's options parameters: must match the function parameters label
+            """
+            opt: str = "-s"
+            param: str = "selects"
+            default: str = "All"
+            show: bool = True
+            help: str = "Choose a option: All, Simple, Notes, Done, Grade, Review"
+            prompt: str = "Selects ToDo Views: :"
     
     @dataclasses.dataclass
     class Views:
-        """Choose a View."""
+        """Views: Action: String Settings."""
         cmd: str = "views"
-        allname: str = "showall"
-        list: str = "list"
-        table: str = "table"
-        columns: str = "columns"
-        intro: str = "Select which view: List, Table, Columns."
-        help: str = "Load Settings."
-        quik: str = "Load Settings."
+        help: str = "Load views. Select bulk data to view to Display."
+        
+        class Selects:
+            """Views Options: Selects: String Settings."
+            
+            Click's options parameters: must match the function parameters label
+            """
+            opt: str = "-s"
+            option: str = "selects"
+            default: str = "Overview"
+            show: bool = True
+            help: str = "Choose a option: Overview, Project, Criteria, " \
+                        "Todos, Reference"
+            prompt: str = "Choose a assignment view: "
     
     @dataclasses.dataclass
     class Find:
         """Find Settings."""
         cmd: str = "find"
-        items: str = "items"
-        rows: str = "rows"
-        columns: str = "columns"
-        intro: str = "Find an items. By single item, rows, columns."
-        help: str = "Find Settings."
-        quik: str = "Find Settings."
+        help: str = "Available Actions: Locate by row index"
+        
+        # Common Options for Locate, and Edit commands
+        @dataclasses.dataclass
+        class Index:
+            """Find Options: Index: String Settings.
+            
+            Click's options parameters: must match the function parameters label
+            """
+            opt: str = "-i"
+            param: str = "index"
+            min: int = 1
+            clamp: bool = True
+            help: str = 'BY ROW: ☑️ Select: 1 to ',
+        
+        class Axis:
+            """Find Options: Axis: String Settings.
+            
+            Axis for Search Focuses/Dimensions:
+            Click's options parameters: must match the function parameters label
+            """
+            opt: str = "-a"
+            param: str = "axis"
+            Choices: str = ["index"]
+            default: str = "index"
+            case: bool = False
+            help: str = '🔎 Search focus. Currently: by row\'s index',
+            prompt: str = "🔎 Select search focus on: index",
+            required: bool = True
+        
+        @dataclasses.dataclass
+        class Locate:
+            """Find Commands: Locate | String Settings."""
+            cmd: str = "locate"
+            help: str = "🔎 Search focus. Currently: by row\'s index"
     
     @dataclasses.dataclass
-    class Select:
+    class Edit:
         """Add Settings."""
-        cmd: str = "select"
-        items: str = "items"
-        rows: str = "rows"
-        columns: str = "columns"
-        intro: str = "Select to filter items. By single item, rows, columns"
-        help: str = "Select Settings."
-        quik: str = "Select Settings."
+        cmd: str = "edit"
+        help: str = "Edit Mode: Available Actions: Note, Todo"
+        opthelp: str = 'Select the edit mood: add, update, delete'
+        
+        @dataclasses.dataclass
+        class Note:
+            """Note command and option strings settings"""
+            cmd: str = "note"
+            help: str = 'Add | Update | Delete a note to record'
+            prompt: str = "The Note: Leave blank to delete."
+            required: bool = True
+            
+            class Mode:
+                """Edit mode options strings settings."""
+                opt: str = "-m"
+                param: str = "mode"
+                case: bool = False
+                help: str = "Select the edit mood: add, update, delete"
+                prompt: str = "Choose: add, update, delete: "
+                required: bool = True
+        
+        class ToDo:
+            """Select (filterr) Settings."""
+            cmd: str = "progress"
+            indexhelp: str = "BY ROW: ☑️ Select: 1 to "
+            Statuses: list = ["ToDo", "WIP", "Done", "Missed"]
+            
+            @dataclasses.dataclass
+            class Status:
+                """Status Settings."""
+                opt: str = "-s"
+                param: str = "status"
+                default: str = "ToDo"
+                case: bool = False
+                help: str = "Select the status: complete, incomplete"
+                prompt: str = "Update project status: Todo, WIP, Done, Missed: "
+                required: bool = True
+        
+        @dataclasses.dataclass
+        class Close:
+            """Close Settings."""
+            cmd: str = "close"
+            intro: str = "Close the remote connection."
+            help: str = "Close Settings."
+            quik: str = "Close Settings."
+
+
+@dataclasses.dataclass
+class Exit:
+    """Exit Settings."""
+    cmd: str = "exit"
+    intro: str = "Exit the terminal (and close the connection)."
+    help: str = "Exit Settings."
+    quik: str = "Exit Settings."
+
+
+class Checks:
+    """Checks.
+
+    :meth: isnot_context
+    :meth: has_dataframe
+    :meth: isnot_querytype
+    :meth: is_querycomplete
+    :meth: compare_frames
+    :meth: santitise
+    """
     
-    @dataclasses.dataclass
-    class Add:
-        """Add Settings."""
-        cmd: str = "add"
-        items: str = "items"
-        rows: str = "rows"
-        intro: str = "Add a new record: by cell or a single row."
-        help: str = "Add Settings."
-        quik: str = "Add Settings."
+    def __init__(self):
+        """Initialize."""
+        pass
     
-    @dataclasses.dataclass
-    class Update:
-        """Select (filterr) Settings."""
-        cmd: str = "update"
-        items: str = "items"
-        rows: str = "rows"
-        intro: str = "Update an existing record: by cell or a single row."
-        help: str = "Update Settings."
-        quik: str = "Update Settings."
+    @staticmethod
+    def isnot_context(ctx: click.Context) -> bool:
+        """Tests dataframe context.
+
+        :param ctx: click.Context - Click context
+        :return: bool - True if not context
+        """
+        return not (ctx and isinstance(ctx, click.Context))
     
-    @dataclasses.dataclass
-    class Delete:
-        """Select (filterr) Settings."""
-        cmd: str = "delete"
-        items: str = "items"
-        rows: str = "rows"
-        intro: str = "Delete an existing record: by cell/item or a single row."
-        help: str = "Delete Settings."
-        quik: str = "Delete Settings."
+    @staticmethod
+    def has_dataframe(ctx: click.Context) -> bool:
+        """Tests dataframe context.
+
+        Hinted by Sourcery
+        - Lift code into else after jump in control flow,
+        - Replace if statement with if expression,
+        - Swap if/else branches of if expression to remove negation
+
+        Refactored from: Perplexity
+        www.perplexity.ai/searches/a2f9c214-11e8-4f7d-bf67-72bfe08126de?s=c
+
+        :param ctx: click.Context - Click context
+        :return: bool - True if it has a dataframe
+        """
+        return isinstance(ctx, pd.DataFrame) if True else False
     
-    @dataclasses.dataclass
-    class Close:
-        """Close Settings."""
-        cmd: str = "close"
-        intro: str = "Close the remote connection."
-        help: str = "Close Settings."
-        quik: str = "Close Settings."
+    @staticmethod
+    def isnot_querytype(header: str,
+                        query: str) -> bool:
+        """Tests Search Query.
+
+        :header: str - Header
+        :query: str - Query
+        :return: bool - True if not query
+        """
+        return not isinstance(header, str) or not isinstance(query, str)
     
-    @dataclasses.dataclass
-    class Exit:
-        """Exit Settings."""
-        cmd: str = "exit"
-        intro: str = "Exit the terminal (and close the connection)."
-        help: str = "Exit Settings."
-        quik: str = "Exit Settings."
+    @staticmethod
+    def is_querycomplete(header: str,
+                         query: str) -> bool:
+        """Tests for Empty Serach.
+
+        :header: str - Header
+        :query: str - Query
+        :return: bool - True if header or query is not empty
+        """
+        return header is not None or query is not None
+    
+    @staticmethod
+    def compare_frames(olddata: pd.DataFrame,
+                       newdata: pd.DataFrame) -> bool:
+        """Compare dataframes.
+
+        :param olddata: pd.DataFrame - Old dataframe
+        :param newdata: pd.DataFrame - New dataframe
+        :return: bool - True if no changes
+        """
+        diff = olddata.compare(newdata,
+                               keep_shape=True,
+                               keep_equal=True)
+        if not diff.empty:
+            click.echo(message="Updated refreshed/rehydrated data")
+            rprint(diff, flush=True)
+            return False
+        
+        click.echo(message="No changes in refreshed/rehydrated data")
+        return True
+    
+    @staticmethod
+    def santitise(s: str) -> str | None:
+        """Sanitise strings.
+
+        :param s: str - String to sanitised
+        :return: str | None - Sanitised string or None
+        """
+        empty: str = ''
+        if s != empty and isinstance(s, str):
+            return s.strip() if s else None
+        click.echo(message="Searching by index only. No keywords.")
+        return None
+
+
+class CliStyles:
+    """App Styles."""
+    infofg: str = "white"
+    infobg: str = "green"
+    infobold: bool = True
+    invalidfg: bool = "yellow"
+    invalidbg: str = "white"
+    invalidbold: bool = True
+    warnfg: str = "white"
+    warnbg: str = "yellow"
+    warnbold: bool = True
+    warnblk: bool = True
+    warnunder: bool = True
+    warnrev: bool = True
+    errfg: str = "whit"
+    errbg: str = "red"
+    errbold: bool = True
+    errblk: bool = True
+    errrev: bool = True
+    reset: bool = True
+    resetno: bool = False
+    toerror: bool = True
 
 
 class ProgramUtils:
