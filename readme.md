@@ -120,7 +120,7 @@
 
 - The data model comes from the very own project criteria for the Code Institute assignments.
 - A version of the data, which is available at CI's own github pages site: https://code-institute-org.github.io/5P-Assessments-Handbook/portfolio3-prelims.html
-- Having had prior experience with breaking down the data model, the author did a manual extraction and transformed the source into a 15 columns (fields) by 70 row spreadsheet format.
+- Having had prior experience with breaking down the data model, the author did a manual extraction and transformed the source into a 14 columns (fields) by 70 row spreadsheet format.
 - This spreadsheet is available [here](https://docs.google.com/spreadsheets/d/1qOPVOTm5oS9G0feggujXwzfo5TsD8yMxkdBfPTdpBm0/edit?usp=sharing), under the `Data` tab:
     - The following fields are **source data native**:
         - `Performance`, alias for a Grade, `Pass`, `Merit` (and `Distinction`, not included).
@@ -136,10 +136,9 @@
           - Potentially useful for extracting data transformations operations on top of data without complicated analysis.
         - `LinkedRef`(*-erences): Associated with references that are all similar nature or have overlapping contexts or topics. Its a way fo linked similar.
     - The following fields are **author sourced**
-        - `DoD`, alias for *Definition of Done*: Thinking, this could be a planning or parent field to the `ToDo`. Alias for `ToDo` and `ToDoFlag`, where Done is not equal to DoD. Such as an LO is not done (DoD) until all criteria are done (Todo's Done).
+        - `DoD`, alias for *Definition of Done*: Thinking, this could be a planning or parent field to the `ToDo`. Alias for `ToDo`, where Done is not equal to DoD. Such as an LO is not done (DoD) until all criteria are done (Todo's Done).
         - `CriteriaTopic`: Author's own taxonomy for the categories of the criteria. 
         - `Progression`, alias for `ToDo`
-        - `ToDoFlag`, alias for `ToDo` but in a programmatic sense of a *boolean* nature: `0`, (`ToDo`) or `1`, `(Done`)
         - `RowID`: To be deprecated. A datasets plot that googles sheet's row number, which is a +1 based index, as the header row are the field/column labels.
         - `Position`: A non-zero'd index identifiers for the row, given that most data structures are N-1 indexed,
           starting from zero position. This is more human readable and user intuitive, i.e *"the row I want has the ID I know."*
@@ -597,6 +596,24 @@ H --> I[ View Record by \n Comparing Old/New];
 - These are manually tranfered to Heroku's ConfigVars name/value pair interface, which sits behind Multi factor authenticaion and private login access.
 - Then a script recreates these into the secure and private Heroku repository, and are using in the build and deployment of the app on Heroku.
 - These are never exposed on the open/public user's GitHub or the submission's fork.
+
+#### 5.3.1 [Vulnerable Libraries](#CVE-vulnerabilities)
+
+> Vulnerable dependencies/libraries
+
+- This solution has predefined requirements, as per node libraries, and two sources of inspections where performed:
+- These were not fixed nor fixable for purposes of this assignemt. 
+
+Source | Dependency | Warning | Vulnerability | CVE | Dependabot / CodeQL (GitHub)
+-----: | ----: | :----- | :----- | :------ | :------
+PyCharm Inspector<br>& GitHubDependabot| npm:node-static:0.7.11 | Vulnerable | Cxe839b3ed-21e1 7.5 Uncaught Exception vulnerability pending CVSS allocation | CVE-2023-26111 7.5 Improper Limitation of a Pathname to a Restricted Directory ('Path Traversal') vulnerability with medium severity foundResults powered by Checkmarx(c) | https://github.com/iPoetDev/PyCriteria/security/dependabot/4 <br> https://github.com/iPoetDev/PyCriteria/security/dependabot/2 <br> https://github.com/iPoetDev/PyCriteria/security/dependabot/3 <br> https://github.com/iPoetDev/PyCriteria/security/dependabot/1
+GitHub CodeQL | JQuery by Cloudflare | Untrusted source | Inclusion of functionality from an untrusted source | None | https://github.com/iPoetDev/PyCriteria/security/code-scanning/4
+GitHub CodeQL | Xterm by Cloudflare | Untrusted source | Inclusion of functionality from an untrusted source | None | https://github.com/iPoetDev/PyCriteria/security/code-scanning/3
+GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of functionality from an untrusted source | None | https://github.com/iPoetDev/PyCriteria/security/code-scanning/2
+ 
+
+
+
 
 ### 5.4 [Transport Security](#transport-security)
 
@@ -1068,15 +1085,13 @@ app.py | 1470 | Click_repl | www.perplexity.ai/search/085c28b9-d6e8-4ea2-8234-78
 
 #### 9.2.1 [Guides, Books, Articles](#guides)
 
-- **<small>BLOG</small>** | [Maruised Brg's article on Advanced CLI with Python and ClI](https://mauricebrg.
+- **<small>BLOG</small>** | [Maruised Brg's article on Advanced CLI with Python and ClI](https://mauricebrg.com/article/2020/08/advanced_cli_structures_with_python_and_click.html)  
 - **<small>BOOKS</small>** | Jason C. McDonald: Dead Simple Python: https://nostarch.com/dead-simple-python (Kindle)
-- **<small>PODCAST</small>** | [Talk Python podcast, episode #366, titled: ""Terminal magic"" with Rich and Textual"]
-  (https://talkpython.fm/episodes/show/336/terminal-magic-with-rich-and-textual)
+- **<small>PODCAST</small>** | [Talk Python podcast, episode #366, titled: ""Terminal magic"" with Rich and Textual"](https://talkpython.fm/episodes/show/336/terminal-magic-with-rich-and-textual)
 - **<small>PODCAST</small>** | PythonBytes: https://pythonbytes.fm/
 - **<small>PODCAST</small>** | Talk Python To Me : https://talkpython.fm/
 - **<small>TUTORIAL</small>** | Leodanis Pozo Ramos: Build a Command-Line To-Do App With Python and Typer : https://realpython.com/python-typer-cli/
-- **<small>WALKTHROUGH</small>** | CodeInstitutes: LoveSandwiches: https://learn.codeinstitute.
-  net/courses/course-v1:CodeInstitute+LS101+2021_T1/courseware/293ee9d8ff3542d3b877137ed81b9a5b/58d3e90f9a2043908c62f31e51c15deb/
+- **<small>WALKTHROUGH</small>** | CodeInstitutes: LoveSandwiches: https://learn.codeinstitute.net/courses/course-v1:CodeInstitute+LS101+2021_T1/courseware/293ee9d8ff3542d3b877137ed81b9a5b/58d3e90f9a2043908c62f31e51c15deb/
 
 #### 9.2.2 [Videos](#videos)
 
@@ -1089,28 +1104,31 @@ app.py | 1470 | Click_repl | www.perplexity.ai/search/085c28b9-d6e8-4ea2-8234-78
 
 #### 9.2.3 [Library Documentation](#documentation)
 
-- Click: https://click.palletsprojects.com/en/8.0.x/
-- GSpread with Panda: https://docs.gspread.org/en/latest/user-guide.html#using-gspread-with-pandas
-- GSpread: https://docs.gspread.org/en/latest/
-- Pandas: https://pandas.pydata.org/docs/getting_started/index.html
-- Prompt: http://python-prompt-toolkit.readthedocs.io/en/stable/pages/reference.html?prompt_toolkit.shortcuts.Prompt#prompt_toolkit.shortcuts.Prompt
-- Rich: https://rich.readthedocs.io/en/stable/index.html
+> **CODE**
 
-** TOOLS**
+- **Click**: https://click.palletsprojects.com/en/8.0.x/
+- **GSpread with Panda**: https://docs.gspread.org/en/latest/user-guide.html#using-gspread-with-pandas
+- **GSpread**: https://docs.gspread.org/en/latest/
+- **Pandas**: https://pandas.pydata.org/docs/getting_started/index.html
+- **Prompt**: http://python-prompt-toolkit.readthedocs.io/en/stable/pages/reference.html?prompt_toolkit.shortcuts.Prompt#prompt_toolkit.shortcuts.Prompt
+- **Rich**: https://rich.readthedocs.io/en/stable/index.html
 
-- Ruff https://beta.ruff.rs/docs/
-- PyLint: https://pylint.readthedocs.io/en/latest/index.html
-- MyPY: https://mypy.readthedocs.io/en/stable/index.html
+> **TOOLS**
+
+- **Ruff**: https://beta.ruff.rs/docs/
+- **PyLint**: https://pylint.readthedocs.io/en/latest/index.html
+- **MyPy**: https://mypy.readthedocs.io/en/stable/index.html
 
 #### 9.2.4 [GitHub](#repos-github)
 
 > The author spends time and lot of time in the source code of 3rd party libraries.
 
-** CODE**
+> **CODE**
 
-- Click: REPL: https://github.com/click-contrib/click-repl
-- Rich: https://github.com/Textualize/rich
-
+- **Click's REPL**: https://github.com/click-contrib/click-repl
+- **Rich**: https://github.com/Textualize/rich
+- **MauriceBrg/mauricebrg.com-projects**: https://github.com/MauriceBrg/mauricebrg.com-projects/blob/master/click-getting-started/multi_level_cli.py
+- 
 ----
 > |
 ----

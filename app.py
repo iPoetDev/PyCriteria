@@ -804,7 +804,7 @@ window: Window = Window()
 # 0. Run: Base Command: Anchors all Intent and Actions
 # Does not to anything but command achitecture/infrastructure and --help
 @click.group(name=App.values.Run.cmd,
-             context_settings=App.CONTEXT_SETTINGS)
+             context_settings=App.CONTEXT_SETTINGS, short_help='Type: --help')
 @click.pass_context
 def run(ctx: click.Context) -> None:  # noqa
     """Level: Run. Type: about to learn to use this CLI.
@@ -817,7 +817,7 @@ def run(ctx: click.Context) -> None:  # noqa
 
 # 0.1 Run: Base Command: Clear
 # Clears the REPL using click.clear()
-@run.command("clear", help="Clear the screen")
+@run.command("clear", help="Clear the screen", short_help="Clear the screen")
 @click.pass_context
 def clear(ctx: click.Context) -> None:  # noqa
     """Clear the screen."""
@@ -829,7 +829,7 @@ def clear(ctx: click.Context) -> None:  # noqa
 # READ of CRUD Ops (Create, _READ_, Update, Delete)
 # Load intents/actions does the bulk data loading
 # Uses App.values.x.x(.x) String values for configuration.
-@run.group(name=App.values.Load.cmd)
+@run.group(name=App.values.Load.cmd, short_help='Load Mode: Todos & Views')
 @click.pass_context
 def load(ctx: click.Context) -> None:  # noqa
     """INTENT: Load: => ACTIONS/Commands: todo, views:
@@ -908,7 +908,7 @@ def load(ctx: click.Context) -> None:  # noqa
 # 2.1 Load Data: ToDo (Sub) Views
 # Uses App.values.x.x(.x) String values for configuration.
 @load.command(App.values.Todo.cmd,
-              help=App.values.Todo.help)
+              help=App.values.Todo.help, short_help='Load Mode: Todos Views')
 @click.pass_context
 @click.option(f'-selects', 'selects',
               type=click.Choice(choices=App.views.Todo,
@@ -954,7 +954,7 @@ def todo(ctx, selects: str) -> None:
 # 2.2 Load Data: Views (Sub) Views - These are assignments levels views
 # Uses App.values.x.x(.x) String values for configuration.
 @load.command(App.values.Views.cmd,
-              help=App.values.Views.help)
+              help=App.values.Views.help, short_help='Load Mode: Selects views')
 @click.option('-selects', 'selects',
               type=click.Choice(choices=App.views.Load,
                                 case_sensitive=App.values.case),
@@ -1033,7 +1033,7 @@ def views(ctx, selects) -> None:
 
 # 3.0 Find: Locate: individual records from the bulk data
 # Uses App.values.x.x(.x) String values for configuration.
-@run.group(App.values.Find.cmd)
+@run.group(App.values.Find.cmd, short_help='Find Mode: Locate')
 @click.pass_context
 def find(ctx: click.Context) -> None:  # noqa
     """INTENT: Find: => ACTIONS/Commands: locate:
@@ -1094,7 +1094,7 @@ def find(ctx: click.Context) -> None:  # noqa
 
 
 # 3.1 Find: Locate: Index locations of an individual record
-@find.group(name=App.values.Find.Locate.cmd)
+@find.group(name=App.values.Find.Locate.cmd, short_help='Find: Locate a record')
 @click.option('--index', 'index',
               type=click.IntRange(
                       min=1,
@@ -1159,7 +1159,7 @@ def locate(ctx: click.Context, index: int,
 
 # 4. Edit: CUD Ops: Create, Read, Update, Delete.
 # New (Add) | Create, Add commands -> None: by item, by row
-@run.group(App.values.Edit.cmd)
+@run.group(App.values.Edit.cmd, short_help='Edit Mode: Notes, & Progress')
 @click.pass_context
 def edit(ctx: click.Context) -> None:  # noqa: ANN101
     """Editing mode: enter editing for notes, todos, etc.
@@ -1222,7 +1222,7 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
 
 # 4.1 Edit: CRUD Ops: Read, Create Update, Delete:
 # A Individual Record's Notes
-@edit.command(App.values.Edit.Note.cmd)
+@edit.command(App.values.Edit.Note.cmd, short_help='Edit: Modify a note')
 @click.pass_context
 # Edit Mode: add, update, delete
 @click.option('--mode', 'mode',
@@ -1367,7 +1367,7 @@ def notepad(ctx,
 
 # 4.1 Edit: CRUD Ops: Read, Create Update, Delete:
 # A Individual Record's ToDo Status
-@edit.command(App.values.Edit.ToDo.cmd)
+@edit.command(App.values.Edit.ToDo.cmd, short_help='Edit: Toggle progress\' statuses')
 @click.pass_context
 @click.option('--index', 'index',
               type=click.IntRange(
