@@ -1535,9 +1535,7 @@ class Editor:
                Potentially flagged by user from a CLI command option.
         :return: str
         """
-        if value != '':
-            click.echo("Do not supply a value. Try again.")
-        else:
+        if not value:
             _cleared = ''
             if (nodestroy
                     and series[column] is _cleared
@@ -1552,6 +1550,9 @@ class Editor:
                 click.echo(message="Cleared")
                 cleared = series[column] = ''
                 return cleared
+
+        else:
+            click.echo("Do not supply a value. Try again.")
     
     # =======================TODO===============================
     # Methods
@@ -1837,7 +1838,7 @@ class Editor:
         # Not used for developing the pattern below.
         def _update(framedata: pd.DataFrame, vlue: str, ix: int, col: str, ):
             """Update the data at the index and column"""
-            
+
             def _atindexcolumn(data, debg: bool, isz: bool):
                 """Update the data at the index and column"""
                 data.at[ix, col] = vlue
@@ -1854,7 +1855,7 @@ class Editor:
                                     f"by {record.series.name} only",
                             err=True)
                     rich.inspect(data.at[ix, col])
-            
+
             # Use the internal DF pointer if the index is not given
             if ix is None and col is not None:
                 framedata.at[record.series.name, col] = vlue
@@ -1871,18 +1872,16 @@ class Editor:
                     _atindexcolumn(data=framedata, debg=debug, isz=False)
             else:
                 click.echo("Nothing inserted")
-        
+
         # For first column update and assignment of the updated DataFrame
-        if updatedata is None and isupdate is False:
+        if updatedata is None and not isupdate:
             updatedframe = record.sourceframe.copy()
             _update(framedata=updatedframe, vlue=value, ix=index, col=column)
             return updatedframe
-        # For subsequent column updates and reuse of the same updated DataFrame
-        elif updatedata is not None and isupdate is True:
+        elif updatedata is not None and isupdate:
             updatedframe = updatedata.copy()
             _update(framedata=updatedframe, vlue=value, ix=index, col=column)
             return updatedframe
-        # For If neither, return the original DataFrame, with no changes
         else:
             click.secho("Nothing changed",
                         fg="bright_yellow",
