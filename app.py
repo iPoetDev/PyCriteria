@@ -108,7 +108,6 @@ from rich.panel import Panel  # type: ignore
 from rich.table import Table  # type: ignore
 
 # 3. Local: Note the controller * intentionally imports all from the module
-from clilogging import AppLogger  # type: ignore
 from controller import (Controller as Actions, DataController,
                         Display, Results, WebConsole,
                         configuration, gspread, Record, Inner, Editor, )
@@ -117,16 +116,13 @@ from sidecar import (AppValues as Val, ProgramUtils as utils,
                      CliStyles as styles, Checks as Guard, )
 
 # Global Modules/Objects
-# 1.1 logging.py
-Logs: AppLogger = AppLogger(httprequest=AppLogger.httpget,
-                            socket=AppLogger.socket)
-# 1.2 controller.py
+# 1.1 controller.py
 DataControl: DataController = DataController(Actions.load_wsheet())
 
 Webconsole: WebConsole = WebConsole(configuration.Console.WIDTH,
                                     configuration.Console.HEIGHT)
 Webconsole.terminal = Inner()
-# 1.3 sidecar.py
+# 1.2 sidecar.py
 pretty.install()
 
 
@@ -1480,8 +1476,6 @@ register_repl(run)
 
 if __name__ == "__main__":
     utils.warn()
-    # Logs.log(message="Starting PyCriteria")
-    # Logs.sniffsniff(capture=1)
     # Opening Introduction
     click.echo(
             message="PyCriteria: A simple CLI for managing"

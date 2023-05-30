@@ -60,3 +60,5 @@ ruff.log
 /appv1.py
 /Remote issue
 /.vscode/settings.json
+# Old Code for Reference
+clilogging.py
