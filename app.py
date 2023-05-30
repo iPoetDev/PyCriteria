@@ -173,8 +173,7 @@ class Valid:
         return value.strip() if value else empty
     
     @staticmethod
-    def mode(ctx, param, value) \
-            -> str | None:  # noqa Contexts, Parameters uses in callbacks
+    def mode(ctx, param, value) -> str | None:    # noqa Contexts, Parameters uses in callbacks
         """Check the mode."""
         if isinstance(value, str) and value.lower() is not None:
             # Enter Add Edit Mode: To insert, create, new inputs to a record.
@@ -182,17 +181,20 @@ class Valid:
                 click.secho(message="Adding to the record: .......",
                             fg=styles.infofg, bold=styles.infobold)
                 return value
-            # Enter Update Edit Mode: To append, update, new inputs to existing.
             elif value.lower() == 'update':
-                click.secho(message=f"Updating the record: .......",
-                            fg=styles.infofg, bold=styles.infobold)
+                click.secho(
+                    message="Updating the record: .......",
+                    fg=styles.infofg,
+                    bold=styles.infobold,
+                )
                 return value
-            # Enter Delete Edit Mode: To clear, remove existing record's value.
             elif value.lower() == 'delete':
-                click.secho(message=f"Deleting from the record: .......",
-                            fg=styles.infofg, bold=styles.infobold)
+                click.secho(
+                    message="Deleting from the record: .......",
+                    fg=styles.infofg,
+                    bold=styles.infobold,
+                )
                 return value
-            # Exit Edit Mode: Automatically exit Editing Mode.
             else:
                 click.secho(message="Exiting Editing Mode. "
                                     "Try again.",
@@ -906,13 +908,8 @@ def load(ctx: click.Context) -> None:  # noqa
 @load.command(App.values.Todo.cmd,
               help=App.values.Todo.help, short_help='Load Mode: Todos Views')
 @click.pass_context
-@click.option(f'-selects', 'selects',
-              type=click.Choice(choices=App.views.Todo,
-                                case_sensitive=App.values.case),
-              default=App.values.Todo.Selects.default,
-              show_default=App.values.shown,
-              prompt=App.values.Todo.Selects.prompt,
-              help=App.values.Todo.Selects.help)
+@click.option('-selects', 'selects', type=click.Choice(choices=App.views.Todo,
+                                case_sensitive=App.values.case), default=App.values.Todo.Selects.default, show_default=App.values.shown, prompt=App.values.Todo.Selects.prompt, help=App.values.Todo.Selects.help)
 def todo(ctx, selects: str) -> None:
     """Load todos, and display different filters/views.
     
@@ -923,7 +920,7 @@ def todo(ctx, selects: str) -> None:
     """
     # Get Data
     dataframe: pd.DataFrame = App.get_data()
-    
+
     # Guard Clause Checks Choice
     def checkchoice(choice: str) -> str:
         """Guard Clause."""
@@ -936,7 +933,7 @@ def todo(ctx, selects: str) -> None:
                                 "Choices: All, Simple, Done, Grade, Review",
                         fg=styles.invalidfg,
                         bold=styles.invalidbold)  # noqa
-    
+
     # Display
     try:
         App.command_todo(dataframe=dataframe,
@@ -1220,7 +1217,6 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
 # A Individual Record's Notes
 @edit.command(App.values.Edit.Note.cmd, short_help='Edit: Modify a note')
 @click.pass_context
-# Edit Mode: add, update, delete
 @click.option('--mode', 'mode',
               type=click.Choice(App.editmode,
                                 case_sensitive=
@@ -1229,7 +1225,6 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
               callback=Valid.mode,
               prompt=App.values.Edit.Note.Mode.prompt,
               required=App.values.Edit.Note.Mode.required)
-# Edit Mode: Row recorď to edit
 @click.option('--index', 'index',
               type=click.IntRange(
                       min=App.values.Find.Index.min,
@@ -1238,13 +1233,11 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
               callback=Valid.index,
               help=f'{App.values.Find.Index.help}{App.get_range}: ',
               prompt=f'{App.values.Find.Index.help}{App.get_range}: ')
-# Edit Mode: Note to link/append/clear to Row recorď on edit
 @click.option('--note', 'note', type=str,
               help=App.values.Edit.Note.help,
               callback=Valid.santitise,
               prompt=App.values.Edit.Note.prompt,
               required=App.values.Edit.Note.required)
-# Edit Mode: Axis, or searchg focus, to locate record on.
 @click.option('-a', '--axis', 'axis',
               type=click.Choice(choices=['index'],
                                 case_sensitive=False),
@@ -1277,31 +1270,32 @@ def notepad(ctx,
     debugON = True  # noqa
     # Rehydrtate dataframe from remote
     dataframe: pd.DataFrame = App.get_data()
-    
+
     # Mode Switch
     def checkmode(edits):
         """Check the mode."""
-        if isinstance(edits, str):
-            # Add
-            if edits.lower() == 'add':
-                click.echo(message="🆕 Adding note"
-                                   f", in {index} 🆕")
-                return edits
-            # Update
-            elif edits.lower() == 'update':
-                click.echo(message="🔂 Updating a Note"
-                                   f", in {index}...🔂")
-                return edits
-            # Delete
-            elif edits.lower() == 'delete':
-                click.echo(message="🗑️ Deleting a Note"
-                                   f", in {index}...🗑️")
-                return edits
-            # None, Other
-            else:
-                click.echo(message="Exiting Editing Mode. Try again.")
-                return None
-    
+        if not isinstance(edits, str):
+            return
+        # Add
+        if edits.lower() == 'add':
+            click.echo(message="🆕 Adding note"
+                               f", in {index} 🆕")
+            return edits
+        # Update
+        elif edits.lower() == 'update':
+            click.echo(message="🔂 Updating a Note"
+                               f", in {index}...🔂")
+            return edits
+        # Delete
+        elif edits.lower() == 'delete':
+            click.echo(message="🗑️ Deleting a Note"
+                               f", in {index}...🗑️")
+            return edits
+        # None, Other
+        else:
+            click.echo(message="Exiting Editing Mode. Try again.")
+            return None
+
     if axis.lower() == 'index' and note:
         # - Get the record
         resultframe = Results.getrowdata(data=dataframe, ix=index)
@@ -1404,13 +1398,13 @@ def progress(ctx: click.Context,
     # Debugging Flags
     debugON = True  # noqa
     dataframe: pd.DataFrame = App.get_data()
-    # Deprecated the --mode click.option from note, and parked the value here.
-    mode = Tuple['toggle']
     # Mode Switch
-    
+
     if axis.lower() == 'index' and status:
         # - Get the record
         resultframe = Results.getrowdata(data=dataframe, ix=index)
+        # Deprecated the --mode click.option from note, and parked the value here.
+        mode = Tuple['toggle']
         if Record.checksingle(resultframe) \
                 and Valid.checkstatus(status) is not None:
             debugOFF = False  # noqa
