@@ -25,19 +25,15 @@
 5. To have a/any user, of any experience, preview the changes by comparing the record side by side.
 6. To have a/any user, of any experience, save. commit and then refresh the new data with the remote. 
 
-## 1.1 App
+## 1.1 [Live App](#live-app)
 
 [Live App Here](https://py-criteria.herokuapp.com/)
 
-## 1.2. App Visuals
+## 1.2. [App Visuals](#app-visuals)
 
 <!-- todo #2: add image link-->
 ![AddScreenshot]()
 
-
-> - <small><small> Presents a clear rationale for development of project: LO8.4.1(Merit)
-> - Has a clear and well defined purpose: LO8.4.2 (Merit)
-> - Purpose for addressing critical goals: LO8.4.3 (Merit)</small></small>
 ----
 > |
 ----
@@ -59,6 +55,7 @@
 - Any user, regardless of experience, should be able to use the application without having to read the documentation or help files.
 - However, the user should be able to access the help files and documentation, if they need to, in the cli in the context of the command prompt. 
   - Say by the, for example, entering *'--help'*, or *'-h'* as an option to the command prompt.
+
 
 **CLI Commands:**
 >  *BASE > INTENT > ACTION*
@@ -214,7 +211,7 @@ The application was designed for future development and testing in mind; however
 3. *Intent Contraint:*
    - Given the data intensity of data display and accuracy requirements of data input this CLI is never envisioned to be targetted at Mobile users or low end user uses cases.
 
-#### 3.2.2 [App Design]
+#### 3.2.2 [App Design](#app-design)
 
 > NOTE: The author modified the defacto terminal window dimensions (80 cols by 24 rows) to suit his Business and Design Use Case
 
@@ -246,7 +243,7 @@ For further insights into the code and logic of the app. [See here for Code & Lo
 
 ### 3.3 [Application Context](#app-context)
 
-> LO: State Diagram, Activity Diagram
+> State Diagram, Activity Diagram
 
 #### 3.3.1 [State Diagram](#state-diagram)
 
@@ -299,7 +296,7 @@ sequenceDiagram
 
 ### 3.4 [User Journey](#user-journey)
 
-> LO: Flowcharts, Activity Diagram
+> Flowcharts, Activity Diagram
 
 ```mermaid
 graph LR;
@@ -326,7 +323,7 @@ H --> I[ View Record by \n Comparing Old/New];
 
 ### 4.1 [Environment](#enviornment)
 
-#### 4.1.1 Interpreter
+#### 4.1.1 [Interpreter](#python-interpreter)
 
 - Python 3.11.03
     - Local: Installed
@@ -348,11 +345,11 @@ H --> I[ View Record by \n Comparing Old/New];
 - PyCrunch
 - Sourcery
 
-### 4.3 [3rd Party Libraries](#3party)
+### 4.3 [3rd Party Libraries](#3party) <small><sup>✅</sup></small>
 
 > <sub>Frameworks Used: Programs, packages, libraries used in workflows, and in the app code.</sub>
 
-#### 4.3.1 [Standard Libraries](#standard-libs)
+#### 4.3.1 [Standard Libraries](#standard-libs) <small><sup>✅</sup></small>
 
 > <sub>*Internal Library | Class or Function or Object*</sub>
 
@@ -373,11 +370,11 @@ H --> I[ View Record by \n Comparing Old/New];
 - Ruff: `ruff>0.0.263` | Beta | Command Line `ruff check .`
 - MyPy : `mypy>=1.2.0` | PyCharm Plugin | Command line `dmypy run --  --check-untyped-defs --follow-imports=error  .`
 
-#### 4.3.2 [External Libraries](#external-libs)
+#### 4.3.2 [External Libraries](#external-libs) <small><sup>✅</sup></small>
 
 > As installed by `requirements.txt`, locally into the Interpreters `venv` environment on per repo level and by the Heroku's buildpacks upon deployment.
 
-##### A: TUI/CLI
+#### A: TUI/CLI
 
 > Commands, Console Options, and REPL.
 
@@ -385,13 +382,13 @@ H --> I[ View Record by \n Comparing Old/New];
 - `click-repl>=0.2.0` | [PyPi](https://pypi.org/project/click-repl/ "click-repl 0.2.0") | [GitHub](https://github.com/untitaker/click-repl) | [Homepage]()  
 - `rich>=13.3.5` | [PyPi](https://pypi.org/project/rich/ "rich 13.3.5") | [GitHub](https://github.com/Textualize/rich) | [Homepage](https://rich.readthedocs.io/en/latest/)  
 
-##### B: Data
+#### B: Data
 
 > Local clients side data management.
 
 - `pandas>=2.0.1` | [PyPi](https://pypi.org/project/pandas/ "pandas 2.0.1") | [GitHub](https://github.com/pandas-dev/pandas) | [Homepage](https://pandas.pydata.org/) | [Docs](https://pandas.pydata.org/docs/index.html)  
 
-##### C: Google API/DATA Libraries
+#### C: Google API/DATA Libraries
 
 > Google API/DATA Libraries and Interfaces.
 
@@ -402,24 +399,24 @@ H --> I[ View Record by \n Comparing Old/New];
 - `gspread>=5.8.0` | [PyPi]() | [GitHub]() | [Homepage]()  
 - `gspread_dataframe>=3.0.8` | [PyPi]() | [GitHub]() | [Homepage]()  
 
-##### D: Environment
+#### D: Environment
 
 > Environment variable management.
 
 - `python-dotenv>=1.0.0` | [PyPi]() | [GitHub]() | [Homepage]()  
 
-### 4.4 [3rd Party Tools](#3party-tools)
+### 4.4 [3rd Party Tools](#3party-tools) <small><sup>✅</sup></small>
 
-#### 4.4.1 [UI/UX](#ui-ux-tools)
+#### 4.4.1 [UI/UX](#ui-ux-tools) <small><sup>✅</sup></small>
 
 - Mermaid |  UML Diagramming 
 - Excalidraw.io | Drawing, Flowcharts, Ideaboards, Diagramming
 
-#### 4.4.2 [GitHub Apps](#github-apps)
+#### 4.4.2 [GitHub Apps](#github-apps) <small><sup>✅</sup></small>
 
 > - As cyber security informed professional, secure code as code quality matter, hence the use of CodeQl and Synk.
 
-##### 4.4.2.1 *[Pull Requests](pr-checks)*
+#### 4.4.2.1 *[Pull Requests](pr-checks)* <small><sup>✅</sup></small>
 
 - GitHub CodeQL:  GitHub's Security Scanner : CodeQL / Analyze:
     - `(javascript) (dynamic)` | [JavaScript CodeQL](https://codeql.github.com/docs/codeql-overview/supported-languages-and-frameworks/#javascript-and-typescript-built-in-support) | [Homepage](https://codeql.github.com/)
@@ -433,14 +430,14 @@ H --> I[ View Record by \n Comparing Old/New];
 - Sourcery:
   - `sourcery-ai`: Code Refactoring | [Docs]() | [Homepage](https://sourcery.ai/)
 
-#### 4.4.3 [AI Codex Agents](#ai-codex-agents)
+#### 4.4.3 [AI Codex Agents](#ai-codex-agents) <small><sup>✅</sup></small>
 
 > <sub>AI Codex Agents: Programs, services, websites use in workflows, and in the app code.</sub>
 
 > AUTHOR STATEMENT:  "[AI Codex Ethics and Use in Education] I reached out to the Code Institute for advice on the proper used and integration with coding assignments  on Friday 12th May 2023, titled: *"Accreditation of AI Agents".* "<br>
 > "Without a statement from the education provider, the I declare myself as user of AIAgent Codex agents, as co-pilots and tutor alternates in the development of this code base, with the project in full disclosure and transparency so that there are no, or at least minimised, conflicts interests or suspicions/risks of plagiarism, in a best effort, fashion."
 
-##### 4.4.2.1 [Codings Agents](#coding-agents)
+##### 4.4.2.1 [Codings Agents](#coding-agents) <small><sup>✅</sup></small>
 
 - **PerplexityAI**: URL: https://www.perplexity.ai
   - *Does provides attribution for sources.*
@@ -454,7 +451,7 @@ H --> I[ View Record by \n Comparing Old/New];
   - Primary use case: code completion.
   - *Does not provides attribution for sources.*
 
-#### 4.4.3 **[Code Generation](#ai-code-gen): <ins>Perplexity</ins>**
+#### 4.4.3 **[Code Generation](#ai-code-gen): <ins>Perplexity</ins>** <small><sup>✅</sup></small>
 
 - Role: Code Pilot and Code (Sample/Example) Generation
 - The author opted for PerplexityAI on the grounds of:
@@ -474,7 +471,7 @@ H --> I[ View Record by \n Comparing Old/New];
 > <sub><strong>Media</strong>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[YouTube: Machine Learning Street Talk: Perplexity AI](https://www.youtube.com/watch?v=_vMOWw3uYvk " Machine Learning Street Talk: 'PERPLEXITY AI - The future of search.'.  8 May 2023, First accessed: 10 May 2023")</sub> 
 > <sub><strong>References</strong> &nbsp;[Standford University: Evaluating Verifiability in Generative Search Engines](https://arxiv.org/abs/2304.09848 "Nelson F. Liu, Tianyi Zhang, Percy Liang, 'Evaluating Verifiability in Generative Search Engines', 19 Apr 2023, Last accessed: 23 May 2023]") ||  [Download: PDF](https://arxiv.org/pdf/2304.09848.pdf)</sub>
 
-#### **4.4.3.1 [Benefits](#ai-benefits)**
+#### **4.4.3.1 [Benefits](#ai-benefits)** <small><sup>✅</sup></small>
 
 - Alternative solution to search engines and partials answers over 20 different tabs, impacting attention, focus and ability to executive process the information.
     - *Benefit*: Have a question about a coding, or 20, and your candidate drill down using generic examples
@@ -493,7 +490,7 @@ H --> I[ View Record by \n Comparing Old/New];
   - *Benefit*: Improvements in accuracy, speed, and quality of the code generated by the AI Agent, as a co-pilot/partner, is a game changer.
 - Improved to self care as a developer, and wellbeing, by lowering of cognitive load, stress and anxiety; by reducing information over-saturation.
 
-#### 4.4.3.2 [Risks](#ai-risks)
+#### 4.4.3.2 [Risks](#ai-risks) <small><sup>✅</sup></small>
 
 - Being accused of plagiarism unintentionally.
 - Not showing one's work and sources of the external code as attributions.
@@ -501,7 +498,7 @@ H --> I[ View Record by \n Comparing Old/New];
 - Improper handling and use of the generated code without attribution, referencing and accreditation.
 - Lack of discernment and critical thinking insight when usings AI Codex agents.
 
-#### 4.4.3.3 [Mitigation](#ai-mitigations)
+#### 4.4.3.3 [Mitigation](#ai-mitigations) <small><sup>✅</sup></small>
 
 - As a developer, the author keep all his responses from each prompt and the generated code in a separate file/location.
 - As the author, it is important to have a process of reviewing the generated code and comparing it to the author's code, by requesting generic examples.
@@ -546,9 +543,9 @@ H --> I[ View Record by \n Comparing Old/New];
 > |
 ----
 
-## 5.0 [Code](#code)
+## 5.0 [Code](#code) <small><sup>✅</sup></small>
 
-### 5.1 [Code Convention](#codeconventions)
+### 5.1 [Code Convention](#codeconventions) <small><sup>✅</sup></small>
 
 - [PEP8](https://www.python.org/dev/peps/pep-0008/) - Python Style Guide
 
@@ -556,7 +553,7 @@ H --> I[ View Record by \n Comparing Old/New];
 
 - [PEP484](https://www.python.org/dev/peps/pep-0484/) - Python Type Hints
 
-### 5.1.1 [Naming](#naming)
+### 5.1.1 [Naming](#naming) <small><sup>✅</sup></small>
 
 > A note on conventions: These are accepted norms; and they can also be pedantic and dogmatic at the same time.
 > The author has used some or part of these conventions, where by tooling, linters and automation enforced or tailored such conventions. 
@@ -569,7 +566,7 @@ H --> I[ View Record by \n Comparing Old/New];
 >NOTE: Be advised the author would adhere to follow conventions & naming styles by mutual agreement, when working in a team environment, for consistency, alignment, and team maintainability. 
 > The author is working for himself in ths project and has the autonomy to choose.
 
-### 5.1.2 [Docstrings](#docstrings)
+#### 5.1.2 [Docstrings](#docstrings) <small><sup>✅</sup></small>
 
 > Source: https://betterprogramming.pub/3-different-docstring-formats-for-python-d27be81e0d68
 
@@ -577,13 +574,13 @@ H --> I[ View Record by \n Comparing Old/New];
 
 - It is the one most likely to be autocompleted by TabNine/Github's' Co-Pilot. These tools, along with the Pycharm inspector, helped with the autocompletion of the documentation.
 
-### 5.1.3 [TypeHints and Typing](#typehints)
+#### 5.1.3 [TypeHints and Typing](#typehints)
 
 - The author is an explicitly typed coder and uses, as a coding style, explicit type hints and typing in his code. 
 - PyCharm is configurable and is used to supply the type hints in the IDE.
 - This is not true when with dual type casting in a same assignment or function return, in a few instances, which where causing side effects are (e.g. `panda.Series` v `panda.DataFrame` causing array of internal value to be `False` boolean values, not the actual values).
 
-### 5.1.4 [Issues](#issues)
+#### 5.1.4 [Issues](#issues) <small><sup>✅</sup></small>
 
 > Goto https://github.com/iPoetDev/PyCriteria/issues?q=is%3A+issue+author%3A%40me+
 
@@ -594,39 +591,162 @@ H --> I[ View Record by \n Comparing Old/New];
     - `Synk-bot`: Inspects for vulnerabilities and auto bumps versions of libraries found in package.json for Javascript and Python.
     - `sourcery-ai`: Analyses and refactors every pull request developers only merges highly quality, well-written code. [Link](https://github.com/marketplace/sourcery-ai). 
       - Only the author approves the PR request, or use this reporting to manually improve the code.
-- The author fixed most other annoyances without documenting each and every traceback that happened, with one significant breaking exception:
+- The author fixed most other annoyances without documenting each and every traceback that happened, with one significant breaking exception.
 
-- **Issue**: **[#32](https://github.com/iPoetDev/PyCriteria/issues/32)
-  **SUBMISSION BLOCK:** `*'Connection aborted.', RemoteDisconnected('Remote end closed connection without  response')`
-    - This is was force majeure on the issue eve of submission, and the author has not had time to fix it, my scheduled submission of deadline.
+#### 5.1.5 [IDE Code Style & Code Formatter](#ide-editor-codestyle) <small><sup>✅</sup></small>
 
-### 5.2 Library Choices
-> Document the rationale as to why a particular library/libraries are necessary LO8.1.0 (Merit)
+> AUTHOR'S NOTE: For P3, the Author opted for local development, over cloud development environments, and deviated from VSCod* electron IDE to JetBrains PyCharms.
+
+- PyCharm has a inbuilt code style editor, where codestyle, and thus code conventions are globally configured.
+- PyCharm is pythonic focuses IDE specialising in Python.
+- This code style editor allows for consistent and immediate code style and convention alignment. 
+
+:------| :-------
+![Tabs & Indents](.docs/assets/PyCharmCodeStyle-TabsIndents.png) | ![BlankLines](.docs/assets/PyCharmCodeStyle-BlankLines.png)
+
+<br>
+
+```Pycharm > Editor > Code Style: 1: Tabs & Indents | 2: Blank Lines```
+
+:------| :-------
+![Import](.docs/assets/PyCharmCodeStyle-Import.png) | ![Other](.docs/assets/PyCharmCodeStyle-OtherAlignment.png)
+
+<br>
+
+```Pycharm > Editor > Code Style: 3: Import | 4: Other Alignment```
+
+:------| :-------
+![Spaces](.docs/assets/PyCharmCodeStyle-Spaces.png) | ![Wrapping](.docs/assets/PyCharmCodeStyle-WrappingBraces.png)
+
+<br>
+
+```Pycharm > Editor > Code Style: 5: Spaces | 6: WrappingBraces```
+
+### 5.2 [3rd Party Library Choices](#3party-libraries-choices) <small><sup>✅</sup></small>
+> Document the rationale as to why a particular library/libraries are necessary LO8.1.0 (Merit)<br>
 > <small>**ADR**: (aliases: Architectural Decision Record, Any Decision Records): A format to document these decisions.</small>
 
-#### 5.2.1 `gspread` and `google`
+#### 5.2.1 **`gspread` v `google`, and `google`: Remote Data & Authentication for Access** <small><sup>✅</sup></small>
 
-- **ADR**: To employ Google Sheets, via API access, as a *remote data* repository/data store.
-- *Libraries*: `GSpread`, `Google / OAuth` 
-- *Use Case*: For Service Account access, API management and Remote Data Source.
-- *Source*: LoveSandwiches, Code Institute.
-- *Alternatives*: None considered.
-- *Benefits*:
+- <ins>**ADR**</ins>: **To employ Google Sheets, via API access, as a *remote data* repository/data store.**
+- <ins>*Libraries*</ins>: `GSpread`, `Google / OAuth` 
+- <ins>*Use Case*</ins>: For Service Account access, API management and Remote Data Source.
+- <ins>*Choice*</ins>: **`GSPREAD`**, using Google underneath.
+- <ins>**Rationale**</ins>: <ins>Simplies the Google / OAuth API by being a wrapper around the authentication, authorisation, a resource access.</ins> 
+- <ins>*Source*</ins>: LoveSandwiches, Code Institute.
+- <ins>*Alternatives*</ins>: None considered.
+- <ins>*Benefits*</ins>:
+  - Gspread can handle read-write connections to Google spreadsheets.
+  - Gspread produces one HTTP API call most of the time when you call a gspread method to fetch or update a sheet, which is more efficient than fetching data one by one in a loop or iterating over rows or columns
   - Code was developed for walkthrough and improved upon for this code base
   - Technical requirements were already defined/pre-known.
-- *Disbenefits*:
+- <ins>*Disbenefits*</ins>:
   - Risk of rate limiting (HTTP 429 Errors) during testing. (see above).
   - Risk of other critical issues (credential leakage) and being blocked or banned by API owner.
   - Dependency on external provider to host and tolerate frequency of requests/responses.
   - Risk of not having a fall back API/Data Repository provider; or considering a simpler data structure for a data base.
-- *Mitigations*:
+- <ins>*Mitigations*</ins>:
   - Implemented: None.
   - Not Implemented: Logging (Python: Loguru, standard Logging), Own rate limit metrics, and reporting for app design flaws. 
 
-#### 5.2.2 gspread v pandas
+#### 5.2.2 **`gspread` v `pandas`: Local Data** <small><sup>✅</sup></small>
+
+- <ins>**ADR**</ins>: To use a 3rd party library to Extract Transform & Load (ETL) the local datase
+- <ins>*Libraries*</ins>: `Gspread` v `Pandas`
+- <ins>*Use Case*</ins>: For streamlined local dataset, i.e. two dimension array, management, without creating additional custom procedures to ETL the data or parts thereof
+- <ins>*Choice*</ins>: **`PANDAS`: `PANDAS.DATAFRAMES` & `PANDAS.SERIES`**
+- <ins>**Rationale**</ins>: <ins>Pandas is a third-party library that provides data structures for efficiently storing and manipulating large datasets.</ins> Pandas provides two main data structures: `Pandas.DataFrame` and `Pandas.Series` 
+- <ins>*Source*</ins>: [Using GSpread with Pandas, from Gspread.org](https://docs.gspread.org/en/v5.7.1/user-guide.html#using-gspread-with-pandas)
+- <ins>*Alternatives*: Gspread native and custom ETL procedures.
+- <ins>*Benefits*</ins>:
+  - Keeps all local, in memory data, in an efficient data structures.
+  - Has inherent ETL functions, avoiding the need for custom development of access, transform, and other procedures.
+  - Pandas allows integration of the worksheets returned from Gspread with a Pandas DataFrame using the gspread_dataframe package.
+- <ins>*Disbenefits*</ins>:
+  - Pandas is not as efficient as Gspread when it comes to handling read-write connections to Google spreadsheets. Pandas where not used for this, so this is not a concern.
+- <ins>*Mitgations*</ins>:
+  - Using Pandas for data analysis avoided the custom development of a slew of access, trandform and other procedures that `gspread` would have, and did start, to lead to . 
 
 
-### 5.3 [Code Security](#code-security)
+#### 5.2.3 **`click` v `typer` etc: [CLI Command, Option and Arugments Interfaces](#cli-interfaces)** <small><sup>✅</sup></small>
+
+- <ins>**ADR**</ins>: **Select the optiomal library for creating CLI and prompt driven applications.**
+- <ins>*Libraries*</ins>: `click` and `typer.
+- <ins>*Use Case*</ins>: Command-line interface (CLI) creation in Python.
+- <ins>*Choice*</ins>: **`CLICK` v8.1.4**
+- <ins>*Rationale*</ins>:
+  - Both `click` and `typer` are popular, and are related. libraries for creating CLIs in Python. However, based on the provided Piptrends data, `click` is far more mature and widely used library than `typer`, or the other alternatives. 
+  - In terms of the features requested, both `click` and `typer` support prompting of custom values and are fully nestable and composable.
+  - However, `click` implements its own parsing of arguments (as does `typer`, being built on `click`), which can be an advantage over libraries that use `argparse or docopt` 
+  - While `typer` is built on top of click and provides a simpler interface with autocompletion, it may not be as powerful as `click` in terms of customization and flexibility.
+    - Additionally, `typer` is less popular than `click` and may have a smaller community for support
+  - <ins>Therefore, based on the above. **`click`** is the recommended choice for this use case.</ins>
+- <ins>*Source</ins>: 
+  - 1: [LibHunt.com: Typer v Click](https://python.libhunt.com/compare-typer-vs-click),
+  - 2: [PalletsProjects.com: Why Click](https://click.palletsprojects.com/en/8.1.x/why/),
+  - 3: [Tiangolo.com: Typer using Click](https://typer.tiangolo.com/tutorial/using-click/) i.e. is built upon.
+  - 4: [PipTrends: argparse vs typer vs docopt vs click vs fire](https://piptrends.com/compare/argparse-vs-typer-vs-docopt-vs-click-vs-fire): Click far outpasses other CLI libraries.
+- <ins>*Alternatives*</ins>: `typer`, `argparse`, `docopt`, `fire`.
+- <ins>*Benefits*</ins>:
+  - `click` implements its own parsing of arguments.
+  - Widely used and mature library. See [Piptrends](https://piptrends.com/compare/argparse-vs-typer-vs-docopt-vs-click-vs-fire)
+  - Customizable, composable and flexible.
+- <ins>*Disbenefits*</ins>: 
+  - May have a steeper learning curve than `typer`for having more features; 
+    - Though on balance `typer` is more challenging to learn by being less mature.
+  - May require more code to achieve the same functionality as `typer`.
+- <ins>*Mitigations*</ins>:
+  - Utilize the extensive documentation and community support for `click` to overcome any learning curve or code complexity.
+  - Has a discord community, where the author asked a question that promptly solved.
+- 
+#### 5.2.4 **`rich` v `click.secho`: CLI Output and Style** <small><sup>✅</sup></small>
+
+- <ins>**ADR**</ins>: **Help style and Layout the Terminal/CLI Standard Output stream.**
+- <ins>*Libraries*</ins>: `rich` and `click.secho`
+- <ins>*Use Case*</ins>: Styling output in CLI REPL and Prompt CLI environments
+- <ins>*Choice*</ins>: Use `rich` for complex and advanced terminal layouts and `click.secho` for simple text output style.
+- <ins>*Rationale*</ins>: 
+  - `rich` is a powerful library that provides advanced styling options for terminal output. It supports a wide range of features such as syntax highlighting, tables, progress bars, and more. It is well-suited for complex and advanced terminal layouts.
+  - `click.secho` is a simple utility function provided by the `click` library that allows for basic text styling. It is easy to use and provides a quick way to add color and style to text output.
+  - <ins>By using both libraries, we can take advantage of the strengths of each library. 
+    - We can use `rich for advanced styling & layout options.
+    - We can use `click.secho` for fast simple text output style, where `rich` requires more  effort for simple text styling.</ins>
+- <ins>*Source*</ins>: [rich.readthedocs.io](rich.readthedocs.io), [click.palletsprojects.com](click.palletsprojects.com)
+- <ins>*Alternatives</ins>:
+  - Use only `rich` for complex/advanced styling and layout needs.
+  - Use only `click.secho` for simple text styling needs.
+- <ins>*Benefits*</ins>: By using both libraries, we can take advantage of the strengths of each library and create more visually appealing and informative output. 
+  - `rich` provides advanced styling options that are not available in `click.secho`.
+  - `click.secho` is a simple utility function that is easy to use and provides a quick way to add color and style to text output, which `rich` can emulate.
+- <ins>*Disbenefits*</ins>:
+  - Using two libraries may increase the maintainbility of the code.
+- <ins>*Mitigations*</ins>: 
+  - Proper documentation and code organization can help mitigate the complexity of using two libraries. 
+  - Use `rich` only for complex and advanced terminal layouts and `click.secho` only for simple text output style to minimize the use of two libraries in the same code block.
+
+#### 5.2.5 **`click_repl` v `prompt_toolkit` v custom REPL loops: [Application/CLI Environment](#app-cli-env)** <small><sup>✅</sup></small>
+
+- <ins>**ADR**</ins>: **Self contained command line & prompt driven application environments.**
+- <ins>Libraries</ins>: `Click_repl`, `prompt_toolkit`
+- <ins>Use Case</ins>: Building a CLI REPL and Prompt CLI environment
+- <ins>Choice</ins>: **`Click_repl`**
+- <ins>Rationale</ins>: 
+  - <ins> `click_repl`  is a library built on top of Click that provides a REPL (*Read-Eval-Print Loop*) and a prompt CLI environment.</ins> 
+  - It is a good choice for building a CLI REPL and Prompt CLI environment because it is easy to use and provides a lot of functionality out of the box. 
+  - It also integrates well with Click.command, which is already being used as a critical library in the project.
+- <ins>Source</ins>: https://github.com/click-contrib/click-repl
+- <ins>Alternatives</ins>: `prompt_toolkit`, *build own*
+ - `Prompt_toolkit` is another popular library for building *CLI REPL and Prompt CLI environments*. 
+ - While it is more powerful and customizable than `click_repl`, it is also more complex and requires more setup. 
+ - Given that the project is already using `Click.command`, which is a simpler and more lightweight library, it made sense to use `click_repl` as well to maintain consistency and simplicity.
+- <ins>Benefits</ins>: 
+  - Easy to use and provides a lot of functionality out of the box. Requiring only one line and one function invocation to configure: e.g. `register_repl(run)` after importing the function from the library.
+  - Integrates well with `Click.command`, which is already being used as a critical library in the project
+  - Maintains consistency and simplicity with the rest of the project
+- <ins>Disbenefits</ins>: Less powerful and customizable than prompt_toolkit.
+- <ins>Mitigations</ins>: None needed, as the benefits of using `click_repl` outweighs the disbenefits in this particular use case.
+
+### 5.3 [Code Security](#code-security) <small><sup>✅</sup></small>
 
 > Secrets Management <br>
 >  Securing data at rest
@@ -644,7 +764,7 @@ H --> I[ View Record by \n Comparing Old/New];
 - Then a script recreates these into the secure and private Heroku repository, and are using in the build and deployment of the app on Heroku.
 - These are never exposed on the open/public user's GitHub or the submission's fork.
 
-#### 5.3.1 [Vulnerable Libraries](#CVE-vulnerabilities)
+#### 5.3.1 [Vulnerable Libraries](#CVE-vulnerabilities) <small><sup>✅</sup></small>
 
 > Vulnerable dependencies/libraries
 
@@ -660,9 +780,7 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
  
 
 
-
-
-### 5.4 [Transport Security](#transport-security)
+### 5.4 [Transport Security](#transport-security) <small><sup>✅</sup></small>
 
 > Securing data in transit
 
@@ -689,6 +807,7 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 > - As a user, I want to be able to edit a record by updating the note in the location.
 > - As a user, I want to be able to edit a record by deleting the note in the location.
 > - As a user, I want to be able to edit a record by toggling the TODO in the individual records.
+> - As a user, I want to be able to save/commit the modified data to a Google sheet.
 
 #### 6.1.1 [User Stories Testing](#user_stories_testing)
 
@@ -744,7 +863,7 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 
 ---
 
-#### 6.2.1 Initialisation - Page Load - Landing Page
+#### 6.2.1 [Initialisation - Page Load - Landing Page](#feature-intialise) <small><sup>✅</sup></small>
 
 - These screenshots are the first vieẇ for the user
 - Note that the supporting text is kept to 80 cols for readability of blocks of text. 
@@ -792,9 +911,10 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
   - `enter`after the `Action` enters into a prompt sequence for value entry
   - Typing the relevant `--option` on the same line as `Intent Action`, e.g. edit note, does the same execpt that values follow the `--option` and `space` between option and value.
 
----
 
-#### 6.2.2 [Autocomplete & Navigation](#feature-autocomplete)
+---
+0
+#### 6.2.2 [Autocomplete & Navigation](#feature-autocomplete) <small><sup>✅</sup></small>
 
 > - Inherent in the design of the REPL, from [Click's Contibs](https://click.palletsprojects.com/en/8.1.x/contrib/) experiemental [R&G GitHub](https://github.com/click-contrib/), generated by the library [click_repl](https://github.com/click-contrib/click-repl), is the ability to use autocomplete.<br>
 > > - *It was an automagic suprise, undocumented, feature that the author leveraged in his design.*
@@ -802,7 +922,7 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 
 - Are no screenshots per se, however each Feature Screenshots will demonstrate this inherent feature in action as it is common to all parts of moving and navigation the nested command structure.
 
-#### 6.2.3 [Clear the Screen](#feature-clear-screen)
+#### 6.2.3 [Clear the Screen](#feature-clear-screen) <small><sup>✅</sup></small>
 
 > Common: Clear commands are common to many cli, useful for when the user wants to start over from the previous context or just reset the `stdout` or `stderr` stream display.
 
@@ -816,7 +936,7 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 
 ---
 
-### 6.2.5 [Loading Mode | Load Mode](#feature-loading-mode)
+### 6.2.4 [Loading Mode | Load Mode](#feature-loading-mode)  <small><sup>✅</sup></small>
 
 > - <ins>**Load Mode**</ins>: Displays the bulk of the CLI data in one view.<br> 
 >     - <ins>Sub Views</ins> for each ACTION slice up the number of columns, so they fit in the CLI's web terminal width.<br>
@@ -866,18 +986,19 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 
 > These two **Input and Output Patterns (i.e. `7.3`, & `7.4`)** repeats for all subsequent ACTIONS, just with more prompts and selection choices to make. So only highlights of difference will be pointed to.
 
-### 6.2.6 [Finding | Find Mode](#feature-finding-mode)
+### 6.2.5 [Finding | Find Mode](#feature-finding-mode)
 
 - 
 
-### 6.2.7 [Editing | Edit Mode](#feature-editing-mode)
+### 6.2.6 [Editing | Edit Mode](#feature-editing-mode)
 
 - 
 
 ### 6.3 [User Acceptance](#user_acceptance_testing)
 
-#### 6.3.1 [Participants and Controls](#feature-actor-controls)
-#### 6.3.1.1 [Actors](#feature-actors)
+#### 6.3.1 [Participants and Controls](#feature-actor-controls) <small><sup>✅</sup></small>
+
+#### 6.3.1.1 [Actors](#feature-actors) <small><sup>✅</sup></small>
 
  Actor | Description 
  ---: | :--------------------------
@@ -886,7 +1007,7 @@ Google:  | The remote host/API providers/Data respoitory
 REPL | External Library (Cick REPL) functions, not authored
 User | User for the CLI who interfaces/uses the commands/subcommands
 
-#### 6.3.1.2 [Controls](#feature-controls)
+#### 6.3.1.2 [Controls](#feature-controls) <small><sup>✅</sup></small>
 
 - The user is presented with a application level custom prompt (i.e. the *main prompt*) in an *application level REPL* environment. 
 - The **main prompt** is configured to autocomplete the users input and ...
@@ -913,7 +1034,7 @@ User | User for the CLI who interfaces/uses the commands/subcommands
   4. Output to the stdout according to the command INTENT/ACTION i.e. its TASK. 
 
 
-#### 6.3.2 [Feature Acceptance Testing](#feature-testing)
+#### 6.3.2 [Feature Acceptance Testing](#feature-testing) 
 
 |    Epic | User Story |                            Feature |                                                                                         Actions | Actor(s)        | Effects or Absence of Side Effects                                                 | Outcome                                                            | Acceptance, Date |
 | ------: | :--------- | ---------------------------------: | ----------------------------------------------------------------------------------------------: | :-------------- | :--------------------------------------------------------------------------------- | :----------------------------------------------------------------- | :--------------- |
@@ -942,13 +1063,13 @@ User | User for the CLI who interfaces/uses the commands/subcommands
 > |
 ----
 
-## 7.0 [Reliability](#qa)
+## 7.0 [Reliability](#qa) <small><sup>✅</sup></small>
 
-### 7.1 [Testing & Validation](#testing)
+### 7.1 [Testing & Validation](#testing) <small><sup>✅</sup></small>
 
-### 7.3 [Static Analysis](#static)
+### 7.2 [Static Analysis](#static) <small><sup>✅</sup></small>
 
-### 7.3.1 Basic Linting
+### 7.2.1 [Basic Linting: AutoPep8](#pep8-ci) 
 
 > Code Institute very own autopep8 validator: https://pep8ci.herokuapp.com/
 
@@ -963,9 +1084,9 @@ exceptions.py | 23-05-05 | Non Critical, typically lines between functions</br> 
 settings.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  |       Passing <br/>with ignored        |_
 sidecar.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  |     Passing <br/>with ignored        | -
 
-### 7.3.2 [Code Quality](#quality)
+### 7.2.2 [Code Quality](#quality) <small><sup>✅</sup></small>
 
-#### 7.3.1.1 [Ruff](lint-ruff)
+#### 7.2.1.1 [Ruff](#lint-ruff) 
 
 > See `.pyproject.toml` for configuration and evaluation of configuration.
 
@@ -1031,7 +1152,7 @@ sidecar.py | 23-05-05 | Non Critical, typically lines between functions</br> Fix
 
  ````
 
-#### 7.3.1.2 [Pylint](#lint-pylint)
+#### 7.2.1.2 [Pylint](#lint-pylint) 
 
 > Integrated into PyCharm, so this is the defacto problem matcher for the IDE.
 > Disabled: `pylint: disable=` in the code base hint at non-critical or intentional code hot spots
@@ -1045,14 +1166,7 @@ settings.py | 23-05-05 |     19,49      |    too-few-public-methods     | R0903 
 settings.py | 23-05-05 |     19,49      |    too-many-instance-attributes     | R0902 | disabled | Setting Classes
 connection.py | 23-05-05 |     26-36      |    invalid-name     | C0103  | disabled | as per settings.py, CONSTANTS
 
-#### 7.3.1.3 SonarLint
-
-> Integrated into PyCharm, by 3rd Party Plugin
-
-*File* |   Date    |    LN    |          Issue          |     Code     |   State    | Note
------:|:---------:|:--------:|:-----------------------:|:------------:|:----------:|:-----
-
-#### 7.3.1.4 [MyPy](#lint-mypy)
+#### 7.2.1.3 [MyPy](#lint-mypy)
 
 ***Status***
 
@@ -1067,14 +1181,11 @@ File |   Date    | LN | Issue | Fix   |  State  | Note
 -----------------:|:---------:|:--:|:-----:|:-----:|:-------:|:---
 `settings.pg` | 23-05-05  | 1 | assignment | changed type assign | Passing | --
 
-### 7.4 [Code Integration](#)
+### 7.3 [Code Integration](#code-integration) <small><sup>✅</sup></small>
 
 > Version control use and configuration for commits and pull requests
 
-
-### 7.4.1 [Commit Strategy | Style](#vcs-commits)
-
-> Commit early and often. LO8.2 (Merit) 
+### 7.3.1 [Commit Strategy | Style](#vcs-commits) <small><sup>✅</sup></small>
 
 - The author found that he deviated from this common practice and he adopted one that suited his own efforts and working practices.
 
@@ -1084,9 +1195,9 @@ File |   Date    | LN | Issue | Fix   |  State  | Note
 
 - Though this practice did not hold when either there was a mentor meeting and a code base was for review and then all was commited.
 
-### 7.4.2 [Pull Request Checks](#)
+### 7.3.2 [Pull Request Checks](#pr-checks) <small><sup>✅</sup></small>
 
-#### 7.4.2.1 [Check Providers](#)
+#### 7.3.2.1 [Check Providers](#CO-providers) <small><sup>✅</sup></small>
 
 - Synx: security/snyk (iPoetDev) — https://snyk.io/
 - Code Review Doctor: https://github.com/apps/code-review-doctor
@@ -1106,13 +1217,9 @@ File |   Date    | LN | Issue | Fix   |  State  | Note
 
 ## 8.0 [Deploy](#deploy)
 
-### 8.1 [Features](#features)
+### 8.1 [Deployment](#deployment) <small><sup>✅</sup></small>
 
-### 8.2 [Deployment](#deployment)
-
-> Follow these deployment procedures, as per LO9.0, 9.1, 9.2 (Pass) and LO9.3 (Merit)
-
-#### 8.2.1 [Heroku Create App](#heroku)
+#### 8.1.1 [Heroku Create App](#heroku) <small><sup>✅</sup></small>
 
 - 1: Login to Heroku, and verify and MFA authenticate
 - 2: Create a new app.
@@ -1140,18 +1247,15 @@ File |   Date    | LN | Issue | Fix   |  State  | Note
 - 7: Config Vars
 - 8: On Github, deploy to Heroku by PullRequest
   ![](.docs/deployment/deploy-auto-heroku.png)
-- 9: Switch to Heroku.com, and a launch the app from
-
-**ADD SCREENSHOT**
 
 
-#### 8.2.1.1 [App Information](#heroku-app)
+#### 8.1.1.1 [App Information](#heroku-app) <small><sup>✅</sup></small>
 
 Name | Region | Stack | Framework | Slug Size | ConfigVars | Buildpacks | SSL Certs | Repo | Local Git
 ------------:|:-------|:----------|:----------|:-----------|:-----------|:--------------|:----------|:--------------------|:--------
 py-criteria | Europe | heroku-22 | Python | 30/500 MiB | In Use | heroku/python | None | iPoetDev/PyCriteria |https://git.heroku.com/py-criteria.git
 
-#### 8.3.2 [Heroku Branch Deployment](#heroku-git) ✅
+#### 8.2.2 [Heroku Branch Deployment](#heroku-git) <small><sup>✅</sup></small>
 
 1. Pull Request from ``main`` to ``heroku`` branch for deployment
 2. Protect ``heroku`` branch from changes or having anything pushed
@@ -1192,13 +1296,13 @@ gitGraph:
 	commit id: "#2 Heroku Automated"
 ```
 
-#### 8.3.2.1 [Heroku Deployments](#heroku-deploy) ✅
+#### 8.2.2.1 [Heroku Deployments](#heroku-deploy) <small><sup>✅</sup></small>
 
 - Must have buildpacks installed in the correct order
     1. `heroku/nodejs`
     2. `heroku/python`
 
-#### 8.3.2.2 [Heroku CLI Logs](#eroku-logs) ✅
+#### 8.2.2.2 [Heroku CLI Logs](#eroku-logs) <small><sup>✅</sup></small>
 
 > CLI Documentation: [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
 
@@ -1212,7 +1316,7 @@ Other useful runners
 heroku option --app=py-criteria arguement
 ```
 
-#### 8.3.3 [Repository Service](#repo-vcs)
+#### 8.2.3 [Repository Service](#repo-vcs) <small><sup>✅</sup></small>
 
 - [GitHub.com](https://www.github.com) is the chosen remote code repository service being used.
 
@@ -1220,7 +1324,7 @@ User | Profile | Repo | Link                                   | Visibility | Is
 ----------:| :--- | :--- |:---------------------------------------|:--- |:---
 @iPoetDev | @iPoetDev | PyCriteria | https://github.com/iPoetDev/PyCriteria | Public | Issues
 
-#### 8.3.4 [Local Git Service / IDE](local-git) ✅
+#### 8.2.4 [Local Git Service / IDE](#local-git) <small><sup>✅</sup></small>
 
 - PyCharm configured with GitHub account for Local development environment.
 - Utilized a modified/reduced Changelog format to document the changes, a-la, Keep a Changelog.
@@ -1230,7 +1334,7 @@ User | Profile | Repo | Link                                   | Visibility | Is
 - Mostly adhered to Semantic Versioning approach.
     - Minor adjustment was to put a double-digit index for each separate commit if several occurred on one day.
 
-#### 8.3.5 [Deployment Environment](deploy-env) ✅
+#### 8.2.5 [Deployment Environment](#deploy-env) <small><sup>✅</sup></small>
 
 - Heroku is the cloud environment for deployment:
 - Deploy a static web page off every commit.
@@ -1246,11 +1350,11 @@ User | Profile | Repo | Link                                   | Visibility | Is
 > |
 ----
 
-## 9.0 [Assessment](#assessment)
+## 9.0 [Assessment](#assessment) <small><small><sup>✅</sup></small></small>
 
-### 9.1 [References & Acknowledgements](#references-acknowledgements)
+### 9.1 [References & Acknowledgements](#references-acknowledgements) <small><small><sup>✅</sup></small></small>
 
-#### 9.1.1 [AI &amp; Author](#ai-author)
+#### 9.1.1 [AI &amp; Author](#ai-author) <small><sup>✅</sup></small>
 
 > As per above, all references to PerplexityAI is listed here.
 
@@ -1260,16 +1364,16 @@ app.py | 805 |has_dataframe | www.perplexity.ai/searches/a2f9c214-11e8-4f7d-bf67
 app.py | 1184 | addsinglenotes | https://www.perplexity.ai/search/a8d503cb-8aec-489a-8cf5-7f3e5b573cb7?s=c
 app.py | 1470 | Click_repl | www.perplexity.ai/search/085c28b9-d6e8-4ea2-8234-783d7f1a054c?s=c
 
-#### 9.1.2 [References](#references)
+#### 9.1.2 [References](#references) <small><sup>✅</sup></small>
 
 - **<small>DATA SOURCE</small>** | CodeInstitute |: Project Three: Diploma in Full Stack Software Development, Assessments Guide
   https://code-institute-org.github.io/5P-Assessments-Handbook/portfolio3-prelims.html => DataSourceFile of DataModel
 
-### 9.2 [Credits](#credits)
+### 9.2 [Credits](#credits) <small><small><sup>✅</sup></small></small>
 
 > Documentation | Articles | Tutorials | Resources | Books | Podcasts
 
-#### 9.2.1 [Guides, Books, Articles](#guides)
+#### 9.2.1 [Guides, Books, Articles](#guides) <small><sup>✅</sup></small>
 
 - **<small>BLOG</small>** | [Maruised Brg's article on Advanced CLI with Python and ClI](https://mauricebrg.com/article/2020/08/advanced_cli_structures_with_python_and_click.html)  
 - **<small>BOOKS</small>** | Jason C. McDonald: Dead Simple Python: https://nostarch.com/dead-simple-python (Kindle)
@@ -1279,7 +1383,7 @@ app.py | 1470 | Click_repl | www.perplexity.ai/search/085c28b9-d6e8-4ea2-8234-78
 - **<small>TUTORIAL</small>** | Leodanis Pozo Ramos: Build a Command-Line To-Do App With Python and Typer : https://realpython.com/python-typer-cli/
 - **<small>WALKTHROUGH</small>** | CodeInstitutes: LoveSandwiches: https://learn.codeinstitute.net/courses/course-v1:CodeInstitute+LS101+2021_T1/courseware/293ee9d8ff3542d3b877137ed81b9a5b/58d3e90f9a2043908c62f31e51c15deb/
 
-#### 9.2.2 [Videos](#videos)
+#### 9.2.2 [Videos](#videos) <small><sup>✅</sup></small>
 
 > YouTube | Online
 
@@ -1288,7 +1392,7 @@ app.py | 1470 | Click_repl | www.perplexity.ai/search/085c28b9-d6e8-4ea2-8234-78
 - **<small>CLICK</small>**  | NeuralNine | Professional CLI Applications with Click: https://www.youtube.com/watch?v=vm9tOamPkeQ&pp=ygUFY2xpY2s%3D
 - **<small>RUFF</small>**: PyCharm by JetBrains | Ruff: Faster Python Linting With Rust: https://www.youtube.com/watch?v=jeoL4qsSLbE&t=4229s
 
-#### 9.2.3 [Library Documentation](#documentation)
+#### 9.2.3 [Library Documentation](#documentation) <small><sup>✅</sup></small>
 
 > **CODE**
 
@@ -1305,7 +1409,7 @@ app.py | 1470 | Click_repl | www.perplexity.ai/search/085c28b9-d6e8-4ea2-8234-78
 - **PyLint**: https://pylint.readthedocs.io/en/latest/index.html
 - **MyPy**: https://mypy.readthedocs.io/en/stable/index.html
 
-#### 9.2.4 [GitHub](#repos-github)
+#### 9.2.4 [GitHub](#repos-github) <small><sup>✅</sup></small>
 
 > The author spends time and lot of time in the source code of 3rd party libraries.
 
