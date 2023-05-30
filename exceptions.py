@@ -1,7 +1,49 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
 # ruff: noqa: I001
-"""Module Exception Status and Graceful recovery."""
+# noqa: W293 blank line contains whitespace
+# - Without global file level rule, using # noqa: is not possible
+"""Module Exception Status and Graceful recovery.
+
+Usage:
+-------------------------
+- ExceptionValues: Global Settings for the Exceptions logic.
+                Anti cyclic references
+- ManagingExceptions: Gracefully handle exceptions for datasources,
+                Exceptions for API shutdowns, errros, and HTTP 429,
+                See: https://github.com/iPoetDev/PyCriteria/issues/32
+
+Linting:
+-------------------------
+- pylint: disable=
+            trailing-whitespace
+            too-few-public-methods,
+- ruff: noqa:
+        I001:     unsorted-imports
+                Import block is unsorted or unformatted
+- noqa: W293
+
+Critieria:
+LO2.2: Clearly separate and identify code written for the application and
+       the code from external sources (e.g. libraries or tutorials)
+LO2.2.3: Clearly separate code from external sources
+LO2.2.4: Clearly identify code from external sources
+LO6: Use library software for building a graphical user interface,
+or command-line interface, or web application, or mathematical software
+LO6.1 Implement the use of external Python libraries
+LO6.1.1 Implement the use of external Python libraries
+      where appropriate to provide the functionality that the project requires.
+-------------------------
+Standard Libraries
+:imports: sys, typing
+
+3rd Paty Imports
+:imports: rich
+
+:class: Settings
+:class: TableSettings - Used to load environmental variables from .env file.
+:class: EnvirnomentalVars - Used to load environmental variables from .env file.
+"""
 
 # 0.1: Standard Library Imports
 import sys
@@ -37,7 +79,6 @@ class ManagingExceptions:
         :param module: str: The module name
         :param setting: str: The ENV filename name
         
-
         Returns:
         ----------
         :return: NoReturn
@@ -64,6 +105,10 @@ class ManagingExceptions:
         ----------
             :param error: Exception
             :param message: str
+            
+        Returns:
+        ----------
+            :return: NoReturn
         """
         _error_context: str = f'{str(error).title}'
         _output: str = f'{_error_context}: {error}: {message}'
@@ -105,7 +150,9 @@ class ManagingExceptions:
         return _value_str
     
     @staticmethod
-    def creds_correction(credentials: str, file_type: str, message: str) -> str:
+    def creds_correction(credentials: str,
+                         file_type: str,
+                         message: str) -> str:
         """Make an exiting exception.
         
         Seek a new credentials' filename from the user by prompting them.
@@ -116,7 +163,6 @@ class ManagingExceptions:
         :param file_type: str: Credentials file's extension is json
         :param message: str: File or Tab
         
-
         Returns:
         ----------
         :returns: value_str: str:  Returns a string for a file|tab name
@@ -130,7 +176,8 @@ class ManagingExceptions:
         # 2. Status, Success and Prompt messages
         _status: str = f'{_output}'
         _success: str = 'New Cred\'s filename + .json:'
-        _prompt: str = f"Enter the new {credentials} name with .json as extension:"
+        _prompt: str = f"Enter the new {credentials} #" \
+                       "name with .json as extension:"
         # 3. Prompt User from Console/Std.In
         while True:
             rprint(_status)

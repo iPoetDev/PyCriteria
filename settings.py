@@ -1,13 +1,57 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
 # ruff: noqa: I001
-"""Module App Settings and Environmental Vars."""
+# noqa: W293 blank line contains whitespace
+# - Without global file level rule, using # noqa: is not possible
+"""Module Backend Settings and Environmental Vars.
+
+Usage:
+-------------------------
+- Settings: Global Settings for the Controller, Connectiors
+- EnvirnomentalVars: Load .env file to develop with env vars early.
+  :deprecated: JS is used to load and recreate CREDS fromheroku CONFIG_VARS
+
+Linting:
+-------------------------
+- pylint: disable=
+            trailing-whitespace
+            too-few-public-methods,
+            too-many-instance-attributes
+- ruff: noqa:
+        I001:     unsorted-imports
+                Import block is unsorted or unformatted
+- noqa: W293
+
+Critieria:
+LO2.2: Clearly separate and identify code written for the application and
+       the code from external sources (e.g. libraries or tutorials)
+LO2.2.3: Clearly separate code from external sources
+LO2.2.4: Clearly identify code from external sources
+LO6: Use library software for building a graphical user interface,
+or command-line interface, or web application, or mathematical software
+LO6.1 Implement the use of external Python libraries
+LO6.1.1 Implement the use of external Python libraries
+      where appropriate to provide the functionality that the project requires.
+-------------------------
+Standard Libraries
+:imports: dataclasses, importlib, pathlib, typing
+
+3rd Paty Imports
+:imports: dotenv, rich
+
+Custom Authored Libraries
+:imports: exceptions
+
+:class: Settings
+:class: TableSettings - Used to load environmental variables from .env file.
+:class: EnvirnomentalVars - Used to load environ variables from .env file.
+"""
 # 0.1 Standard Imports
 import dataclasses
 # 0.1.2 Targeted Imports
 from importlib import util as findlib
 from pathlib import Path
-from typing import Dict, NoReturn, Union
+from typing import NoReturn, Union
 
 # 0.2 Third Party Modules
 import dotenv as dotenv_loader  # type: ignore
@@ -38,7 +82,8 @@ class Settings:
     TAB_NAME: str = 'Data'  # pylint: disable=C0103
     TITLE: str = 'PyCriteria'  # pylint: disable=C0103
     PURPOSE: str = 'CLI to managing Project Criteria'  # pylint: disable=C0103
-    WELCOME: str = f'Welcome to {TITLE} {PURPOSE} App.'  # pylint: disable=C0103
+    WELCOME: str = \
+        f'Welcome to {TITLE} {PURPOSE} App.'  # pylint: disable=C0103
     ON: bool = True  # pylint: disable=C0103
     OFF: bool = False  # pylint: disable=C0103
     # Data String/Int Resources
@@ -54,34 +99,6 @@ class Settings:
         """Config."""
         WIDTH: int = 150  # pylint: disable=C0103
         HEIGHT: int = 48  # pylint: disable=C0103
-
-
-# pylint: disable=too-few-public-methods, too-many-instance-attributes
-class TableSettings:
-    """TableSettings."""
-    CRITERIA_FILTER: Dict[str, str] = \
-        {"H1": "CriteriaGroup",
-         "I1": "CriteriaTopic",
-         "J1": "CriteriaRef",
-         "K1": "Criteria",
-         "L1": "Progress",
-         "M1": "ToDoFlag",
-         "N1": "Notes"}
-    METADATA_FILTER: Dict[str, str] = \
-        {"A1": "RowID",
-         "B1": "Position",
-         "C1": "Tier",
-         "D1": "TierPrefix",
-         "E1": "TierDepth",
-         "F1": "DoD",
-         "G1": "Performance",
-         }
-    HEADERS_RANGE: str = 'A1:O1'
-    COLUMN_RANGE: str = 'A:O'
-    ROW_START_POS: str = '1'
-    ROW_END_POS: str = '71'
-    DATA_RANGE: str = 'A2:071'
-    TOTAL_RANGE: str = 'A1:071'
 
 
 class EnvirnomentalVars:
@@ -132,7 +149,8 @@ class EnvirnomentalVars:
         ----------
             :return: bool - If the .ENV loads: True or False
         """
-        # With statement / Context management to load .env file and handle closure of path/files
+        # With statement / Context management to
+        # load .env file and handle closure of path/files
         success_message: str = f'Successfully loaded {filename} file.'
         # Get the path of the .env file
         dotenv_path: Path = Path(filename)

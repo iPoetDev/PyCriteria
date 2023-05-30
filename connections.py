@@ -1,29 +1,77 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
 # ruff: noqa: F841, ANN101, D415, ANN001
-"""Module Connection Management."""
+"""Module Connection Management for gspread and google API.
+
+
+Usage:
+-------------------------
+- GoogleConnector: Connects to a Google Sheet.
+- ConnectExceptions: Static Class for Exception Objects.
+
+Linting:
+-------------------------
+- pylint: disable=trailing-whitespace
+- ruff: noqa:
+      F841:     unused-variable
+                Local variable {name} is assigned to but never used
+      D415:     ends-in-punctuation
+                First line should end with a period, question mark,
+                or exclamation point
+      ANN101:   missing-type-self
+                Missing type annotation for {name} in method
+      ANN001: 	missing-type-function-argument
+                Missing type annotation for function argument {name}
+
+Critieria:
+LO2.2: Clearly separate and identify code written for the application and
+       the code from external sources (e.g. libraries or tutorials)
+LO2.2.3: Clearly separate code from external sources
+LO2.2.4: Clearly identify code from external sources
+LO6: Use library software for building a graphical user interface,
+or command-line interface, or web application, or mathematical software
+LO6.1 Implement the use of external Python libraries
+LO6.1.1 Implement the use of external Python libraries
+      where appropriate to provide the functionality that the project requires.
+
+Standard Libraries
+:imports: dataclasses, typing
+
+3rd Party Imports
+:imports: gspread, google.oauth2.service_account.Credentials
+
+Custom Authored Libraries
+:imports: exceptions.ManagingExceptions, settings.Settings
+
+:class: ConnectionExceptions: Static Class for Exception Objects.
+:class: GoogleConnector: Connects to a Google Sheet.
+"""
 
 # 0.1 Core Imports
 import dataclasses
-import socket
-import ssl
-
 from typing import Tuple
-
-from google.oauth2.service_account import Credentials  # type: ignore
 
 # 0.2 Core Modules
 import gspread  # type: ignore
+from google.oauth2.service_account import Credentials  # type: ignore
 
+from clilogging import ConnectionLogger  # type: ignore
 # 0.3 Project Logging
 from exceptions import ManagingExceptions as Graceful
 from settings import Settings
 
 
 # pylint: disable=C0103
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class ConnectExceptions:
-    """Connection Exceptions.: Static Class for Exception Objects."""
+    """Connection Exceptions.: Static Class for Exception Objects.
+    
+    :property: GSPREADERROR: gspread.exceptions.GSpreadException
+    :property: APIERROR: gspread.exceptions.APIError
+    :property: WORKSHEETERROR: gspread.exceptions.WorksheetNotFound
+    :property: SPEADSHEETERROR: gspread.exceptions.SpreadsheetNotFound
+    
+    """
     # 0.5 Exceptions: base GSpread Error
     GSPREADERROR: gspread.exceptions.GSpreadException = \
         gspread.exceptions.GSpreadException  # pylint: disable=C0103
@@ -194,8 +242,7 @@ class GoogleConnector:
             _output: str = GoogleConnector.notfound_prompt(
                     notfound=_error,
                     name=sheet.title)
-            nofetch: None = Graceful.exiting_status(_error, _output)
-            return nofetch
+            return Graceful.exiting_status(_error, _output)
     
     @staticmethod
     # pylint: disable=line-too-long
@@ -243,41 +290,3 @@ class GoogleConnector:
             raise ConnectExceptions.GSPREADERROR(notfound)
         
         return output
-
-
-class SSLManager:
-    """SSL Manager.
-    
-    :method open_ssl_connection: Opens secure connects to outside network
-    :method close_ssl_connection: Closes secure connects to outside network.
-    """
-    sslsock: ssl.SSLSocket
-    
-    def __init__(self):
-        """Initialise SSL Manager."""
-        self.sslsock: ssl.SSLSocket = SSLManager.open_ssl_connection()
-    
-    @staticmethod
-    def open_ssl_connection() -> ssl.SSLSocket:
-        """Opens secure connects to outside network
-        
-        :return: _ssl
-        :rtype: SSLSocket.
-        """
-        _connection: ssl.SSLContext = ssl.create_default_context()
-        _socket: socket = \
-            socket.socket(
-                    family=socket.AF_INET, type=socket.SOCK_STREAM)
-        _ssl: ssl.SSLSocket = \
-            _connection.wrap_socket(_socket,
-                                    server_hostname=Settings.DOMAINHOST)
-        _ssl.connect((Settings.DOMAINHOST, Settings.HTTPS))
-        return _ssl
-    
-    @staticmethod
-    def close_ssl_connection(sslsock: ssl.SSLSocket) -> None:
-        """Closes secure connects to outside network
-        
-        Clears the sslsock variable from memory.
-        """
-        sslsock.close()
