@@ -55,8 +55,7 @@ from typing import Tuple
 import gspread  # type: ignore
 from google.oauth2.service_account import Credentials  # type: ignore
 
-from clilogging import ConnectionLogger  # type: ignore
-# 0.3 Project Logging
+# 0.3 Project
 from exceptions import ManagingExceptions as Graceful
 from settings import Settings
 
