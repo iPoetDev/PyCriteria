@@ -601,26 +601,32 @@ H --> I[ View Record by \n Comparing Old/New];
 - PyCharm is pythonic focuses IDE specialising in Python.
 - This code style editor allows for consistent and immediate code style and convention alignment. 
 
-:------| :-------
-![Tabs & Indents](.docs/assets/PyCharmCodeStyle-TabsIndents.png) | ![BlankLines](.docs/assets/PyCharmCodeStyle-BlankLines.png)
+![Tabs & Indents](.docs/assets/PyCharmCodeStyle-TabsIndents.png)
+<br>
+```Pycharm > Editor > Code Style: 1: Tabs & Indents ```
+
+![BlankLines](.docs/assets/PyCharmCodeStyle-BlankLines.png)
+<br>
+
+```Pycharm > Editor > Code Style: 2: Blank Lines```
+
+
+![Import](.docs/assets/PyCharmCodeStyle-Import.png)
+<br>
+```Pycharm > Editor > Code Style: 3: Import```
+
+![Other](.docs/assets/PyCharmCodeStyle-OtherAlignment.png)
+<br>
+```Pycharm > Editor > Code Style: 4: Other Alignment```
+
+![Spaces](.docs/assets/PyCharmCodeStyle-Spaces.png) 
+<br>
+```Pycharm > Editor > Code Style: 5: Spaces```
+![Wrapping](.docs/assets/PyCharmCodeStyle-WrappingBraces.png)
 
 <br>
 
-```Pycharm > Editor > Code Style: 1: Tabs & Indents | 2: Blank Lines```
-
-:------| :-------
-![Import](.docs/assets/PyCharmCodeStyle-Import.png) | ![Other](.docs/assets/PyCharmCodeStyle-OtherAlignment.png)
-
-<br>
-
-```Pycharm > Editor > Code Style: 3: Import | 4: Other Alignment```
-
-:------| :-------
-![Spaces](.docs/assets/PyCharmCodeStyle-Spaces.png) | ![Wrapping](.docs/assets/PyCharmCodeStyle-WrappingBraces.png)
-
-<br>
-
-```Pycharm > Editor > Code Style: 5: Spaces | 6: WrappingBraces```
+```Pycharm > Editor > Code Style: 6: WrappingBraces```
 
 ### 5.2 [3rd Party Library Choices](#3party-libraries-choices) <small><sup>✅</sup></small>
 > Document the rationale as to why a particular library/libraries are necessary LO8.1.0 (Merit)<br>
