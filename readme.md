@@ -195,11 +195,60 @@ The application was designed for future development and testing in mind; however
   - Automcomplete aids the users's navigation, using **`tab`**, **`space`**
   - Additional `aborted`, `interupt` actions by the user are **`ctl + d`**, **`ctl + c`**, althought the last two may force the application and user to start over; **by design**.
 
-### 3.2 [Application Context](#app-context)
+### 3.2 [App Design & Constriants](#app-design-constraints)
+
+> - NOTE: This is a data intensive application, by design, with dense information in a structural layout, as such
+
+#### 3.2.1 [Constraints](#design-constraints)
+
+1. *No to Mobile screens & Usage:*
+- This App needs a wider viewport (terminal window) than 80 cols ot 720px. 
+  - Consequently this means that this excludes standard size and pro size mobiles upto this width (even in mobile landscape)
+  - **Constraint** Does not serve Mobile Users
+2. *Dimensions:* 
+   - Without Zoom or Pinch and Zoom, this measures 1230px x 1128px
+   - Consequently this only include Pro size Tablets, 13inch laptops (with thin bezels) and all desktop monitors at standard resolutions of 1080p or higher/denser
+   - Fortunately this fits with modern laptop and tablet
+   - Unfortunately this exludes the 70P User and low end mobile, laptops (780p) and low end desktops
+   - It also exluced Proffessioal Users on their high end mobiles
+3. *Intent Contraint:*
+   - Given the data intensity of data display and accuracy requirements of data input this CLI is never envisioned to be targetted at Mobile users or low end user uses cases.
+
+#### 3.2.2 [App Design]
+
+> NOTE: The author modified the defacto terminal window dimensions (80 cols by 24 rows) to suit his Business and Design Use Case
+
+1. **Business Case**
+   - This is a application of a CLI design for data driven use cases
+   - This is modeled after a CLI accessing a spreadsheet of undeterminate lenght of rows
+   - This is intended to display all the data on the screen for *reading* and *browsing* for the user to reference the data row identities.
+   - A business user would use this in lieu of web based access for rapid data modification or even script based modifications of datasets at scale, hypothetically.
+   - A college user & a coder, in this configuration, would use this to rapidly adjust his progress on his project without context switching from the terminal to a web page; thus breaking his flow.
+
+2. **Design Case**
+
+- Data Dense and Intense Display: Columnar data of predefined views, i.e. sub-views, based on the Intent/Action (i.e. Task and Outcome) of the user
+  - 1. `load todo` Use Case in **Loading Mode**: The User wants to quickly access and see his actionable items in different configurations; in bulk so to read and browse the whole data.
+  - 2. `load view` Use Case in **Loading Mode**: The User wants to step back and see the assignment views like overview and reference meta data; in bulk so to read and browse the whole data.
+- Fast Locate and Display of Individual Record in a Card Format
+  - 3. `find locate` Use Case in **Finding Mode**: The User wants to locate and view an individal record in a different layout to inspect and reflect on the data record in a more readable fashion than a tabular layout and horrizontal row data.
+- Code Reuse of the Finding/Searching
+    - The application reuse of `find locate` Use Case: Code reuse is part of code efficiency, so this logic/algorithm forms the basis of the **Editing Mode**
+- Editing a value of Notes and Progress.
+  - 4. `edit note` Use Case in **Editing Mode**: The User wants to locate an individual record to edit/modify via the three tasks of adding, updating and deleting, in this instance, a Note field of an individual record.
+  - 5. `edit progress` Use Case in **Editing Mode**: The User wants to locate an individual record to edit/modify via the three tasks of adding, updating and deleting, in this instance, a Progress field of an individual record, and based on progression, the Defintion of Done field.
+    - A sub use case, potentially, is to report on the progression of the Definition of Done and filter out the various computed field values. 
+    - This is not implemented. This filtering pattern could be used to reduce the number of rows on display by certain common values.
+
+3. **Code & Logic Design**
+
+For further insights into the code and logic of the app. [See here for Code & Logic Flows](.docs/classes.md)
+
+### 3.3 [Application Context](#app-context)
 
 > LO: State Diagram, Activity Diagram
 
-#### 3.2.1 [State Diagram](#state-diagram)
+#### 3.3.1 [State Diagram](#state-diagram)
 
 ```mermaid
 stateDiagram
@@ -229,7 +278,7 @@ stateDiagram
 	DisplayData --> [*]
 ```
 
-#### 3.2.2 [Activity Diagram](#activity-diagram)
+#### 3.3.2 [Activity Diagram](#activity-diagram)
 
 ```mermaid
 sequenceDiagram
@@ -245,6 +294,8 @@ sequenceDiagram
 	app ->> google sheets: Update Data (gspread API)
 	app -->> user: Output Result
 ```
+
+
 
 ### 3.4 [User Journey](#user-journey)
 
@@ -266,10 +317,6 @@ F --> I;
 G --> I;
 H --> I[ View Record by \n Comparing Old/New];
 ```
-
-### 3.5 [User Interface](#user-interface)
-
-> Screenshots
 
 ----
 > |
@@ -688,6 +735,145 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 
 ### 6.2 [Screenshots](#Screenshots)
 
+- Terminal Dimensions are 1226 pxiels wide
+- Suitable for Tablets Landscape, Laptops and Desktops
+- Not suitable for Mobile by default. 
+
+![](.docs/assets/WebApp-OnInit.png)<br>
+`Screenshot 0: Overall Impression: Tablet and Laptop View`
+
+---
+
+#### 6.2.1 Initialisation - Page Load - Landing Page
+
+- These screenshots are the first vieẇ for the user
+- Note that the supporting text is kept to 80 cols for readability of blocks of text. 
+
+---
+
+![](.docs/assets/WebApp-TopofWindow-OnInit.png)<br>
+`Screenshot 1: Top of Window: Entering the REPL`
+
+- Informs of high level context and gives awareness.
+
+---
+
+![](.docs/assets/WebApp-Part2-OnInit.png)<br>
+`Screenshot 2: Getting Started`
+
+- Informs user of optimal keyboard controls and command to enter.
+- Useful for navigation of the CLI app in this REPL environment.
+
+---
+
+![](.docs/assets/WebApp-Part3-OnInit.png)<br>
+`Screenshot 3: CLI Structure & CLI Data`
+
+- Informs of the architecture and design behind the CLI
+
+---
+
+![](.docs/assets/WebApp-Part4-OnInit.png)<br>
+`Screenshot 4: CLI Environment, Commands & Options`
+
+- Informs how the environment is fault tollerant and handles user mistakes.
+- Informs user of how to use the command & options in their various dual uses.
+
+---
+
+![](.docs/assets/WebApp-Part5-OnInit.png)<br>
+`Screenshot 5: Quick Start & Autocomplete of Commands and Options`
+
+- After all that introduction text, a quick refresher start guide to get the user going.
+- This also shows the *autocomplete features* of the REPL for `options` under the `--option` and their short inline help text.
+  - `space` starts the drop down menu for autocomplete for each of the `Intents`, `Actions`, and inline `Options`
+  - Start typing the display item's name/label/prefix first letter.
+  - `tab` completes the started displayed item, starting with the first letter/symbol of the command or option.
+  - `enter`after the `Action` enters into a prompt sequence for value entry
+  - Typing the relevant `--option` on the same line as `Intent Action`, e.g. edit note, does the same execpt that values follow the `--option` and `space` between option and value.
+
+---
+
+#### 6.2.2 [Autocomplete & Navigation](#feature-autocomplete)
+
+> - Inherent in the design of the REPL, from [Click's Contibs](https://click.palletsprojects.com/en/8.1.x/contrib/) experiemental [R&G GitHub](https://github.com/click-contrib/), generated by the library [click_repl](https://github.com/click-contrib/click-repl), is the ability to use autocomplete.<br>
+> > - *It was an automagic suprise, undocumented, feature that the author leveraged in his design.*
+> - Combined in a nested command structure: *Base* > *Intent* > *Action*, it builds an automagic menu structure with a visual artefact of a selectable (Up & down menu).
+
+- Are no screenshots per se, however each Feature Screenshots will demonstrate this inherent feature in action as it is common to all parts of moving and navigation the nested command structure.
+
+#### 6.2.3 [Clear the Screen](#feature-clear-screen)
+
+> Common: Clear commands are common to many cli, useful for when the user wants to start over from the previous context or just reset the `stdout` or `stderr` stream display.
+
+![](.docs/assets/WebApp-Clear1.png)<br>
+`Screendshot 6.1: Clear command in autocomplete drop down selection`
+
+![](.docs/assets/WebApp-Clear2.png)<br>
+`Screendshot 6.2: Clear command after clearing the screen`
+
+- Shows before and after of command selection, and hitting `space` to popup the `autocomplete menu`
+
+---
+
+### 6.2.5 [Loading Mode | Load Mode](#feature-loading-mode)
+
+> - <ins>**Load Mode**</ins>: Displays the bulk of the CLI data in one view.<br> 
+>     - <ins>Sub Views</ins> for each ACTION slice up the number of columns, so they fit in the CLI's web terminal width.<br>
+>   - The source data is 15 columns wide, and is data dense, so sub views and partitioning of actions aids in this implemention of this design constraint.
+> - Aliases for this are: `Reading Mode`, `Browse Mode` and `Bulk Display Mode`
+
+<br>
+
+
+![](.docs/assets/WebApp-Load1.png)<br>
+`Screendshot 7.1: Load + presses enter immediately for Help`
+
+- This displays the man page/help for the Load Intent. 
+- The function and format is an inbuilt part of Click's command and help features.
+- The text is used from the docstrings of the command, and is author generated.
+
+![](.docs/assets/WebApp-LoadTodo1.png)<br>
+`Screenshot 7.2: Load Todo for Todo View prompt and Sub View selection`
+
+- Loading Mode user guide displays on each ACTION + `enter`
+- See annotations for more details
+
+![](.docs/assets/WebApp-LoadTodo2.png)<br>
+`Screenshot 7.3: Load Todo's prompt value entry: All i.e. the default view`
+
+![](.docs/assets/WebApp-LoadTodo3.png)<br>
+`Screenshot 7.4: Load Todo's single line flag value entry, with auto complete`
+
+- Loading Mode `All` subview dataset for reference.
+- <ins>Input & Output for 7.3: *Prompted Value Entry*</ins>:
+  1. `load` `todo` + user hits `enter`.
+  2. Prompt: with default value + user hits `enter`
+  3. Prompt: User can input, typing to select: `All`, `Simple`, `Notes`, `Done`, `Grade`, `Review` 
+  4. User is not allowed to enter a non listed value
+  5. If so, a Click.command level's soft error, not program traceback, shows that an invalid value was used.
+  6. User trys again at the command ready prompt.
+- <ins>Input alternate for 7.4: *Single Line Flag Value Entry*</ins>:
+  1. Instead of user hitting enter, user can type `space` + `--` and the option name
+     - e.g `load todo --selects`
+  2. Then user enters in one of these values immediate after `--selects` + hits `space`:
+     - e.g. `All`, `Simple`, `Notes`, `Done`, `Grade`, `Review` 
+  3. Then user hits `enter` to complete the command.
+  4. Same output.
+  5. Same user mistake handling.
+- Shows all 70 rows
+- See annotations for more details
+
+> These two **Input and Output Patterns (i.e. `7.3`, & `7.4`)** repeats for all subsequent ACTIONS, just with more prompts and selection choices to make. So only highlights of difference will be pointed to.
+
+### 6.2.6 [Finding | Find Mode](#feature-finding-mode)
+
+- 
+
+### 6.2.7 [Editing | Edit Mode](#feature-editing-mode)
+
+- 
+
 ### 6.3 [User Acceptance](#user_acceptance_testing)
 
 #### 6.3.1 [Participants and Controls](#feature-actor-controls)
@@ -881,7 +1067,7 @@ File |   Date    | LN | Issue | Fix   |  State  | Note
 -----------------:|:---------:|:--:|:-----:|:-----:|:-------:|:---
 `settings.pg` | 23-05-05  | 1 | assignment | changed type assign | Passing | --
 
-## 7.4 [Code Integration](#)
+### 7.4 [Code Integration](#)
 
 > Version control use and configuration for commits and pull requests
 
