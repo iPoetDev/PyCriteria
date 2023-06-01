@@ -75,9 +75,25 @@ class AppValues:
     deprecated: bool = False
     OFF: bool = False
     ON: bool = True
+    FORWARDING: bool = True
+    DISPLAYING: bool = True
+    HIDING: bool = False
+    SQUEEZE: bool = True
+    SINGLE: bool = True
+    TRACING: bool = True
+    NOTRACING: bool = False,
+    SEARCHFOCUS: str = "index"
     sep: str = ":: "
     shown: bool = True
     case: bool = False
+    
+    @dataclasses.dataclass
+    class Display:
+        """Display Values."""
+        STANDALONE: str = 'show'
+        SIDEBYSIDE: str = 'compare'
+        TOLAYOUT: bool = True
+        TOTERMINAL: bool = False
     
     @dataclasses.dataclass
     class Run:
@@ -178,6 +194,12 @@ class AppValues:
         cmd: str = "edit"
         help: str = "Edit Mode: Available Actions: Note, Todo"
         opthelp: str = 'Select the edit mood: add, update, delete'
+        ADD: str = "add"
+        UPDATE: str = "update"
+        DELETE: str = "delete"
+        INSERT: str = "insert"
+        APPEND: str = "append"
+        CLEAR: str = "clear"
         
         @dataclasses.dataclass
         class Note:
@@ -201,6 +223,7 @@ class AppValues:
             cmd: str = "progress"
             indexhelp: str = "BY ROW: ☑️ Select: 1 to "
             Statuses: list = ["ToDo", "WIP", "Done", "Missed"]
+            TOGGLE: str = 'toggle'
             
             @dataclasses.dataclass
             class Status:
