@@ -598,15 +598,6 @@ class Window:
             if debug is True:
                 click.echo(message="=====================================")
             # Switch confirmation on a command's type
-            if commandtype == 'insert':
-                click.echo(message=("🆕 A new note is now added "
-                                    "🆕 at:" + editor.lastmodified))
-            elif commandtype == 'append':
-                click.echo(message="A note is updated at:"
-                                   + editor.lastmodified)
-            elif commandtype == 'clear':
-                click.echo(message="A record's is now deleted at:"
-                                   + editor.lastmodified)
             click.echo(message="Exiting: Command completed")
         else:
             click.echo(message="No changes made. Bulk edits not supported.")
@@ -625,6 +616,17 @@ class Window:
         :param debugdisplay: bool - Switch to debug display mode or not.
         :return: None
         """
+        
+        def _setrecordprops(record: Record, editor: Editor) -> None:
+            """Set Record Properties.
+            
+            :param record: Record - Record to use
+            :return: None
+            """
+            record.editmode = editor.editmode
+            record.modified = editor.lastmodified
+            record.command = editor.command
+        
         if debug is True:
             rprint(editeddata)
             inspector(editeddata)
@@ -633,6 +635,7 @@ class Window:
             # 0. Create the Old and New Records, locallt
             oldrecord: Record = editor.record
             newrecord: Record = Record(series=editor.newresultseries)
+            _setrecordprops(record=newrecord, editor=editor)
             # 1. Display the Edited recor
             left = oldrecord.editable(
                     consoleedit=Webconsole.console,
@@ -1356,6 +1359,7 @@ def notepad(ctx,
                         currentrecord=editing,
                         sourceframe=resultframe,
                         debug=App.values.NOTRACING)
+                editor.command = f'Edit: > Note in {mode} mode'
                 # - Edit note field of the record
                 if index is not None:
                     click.secho(message="=====================================",
@@ -1470,6 +1474,7 @@ def progress(ctx: click.Context,
                         currentrecord=editing,
                         sourceframe=resultframe,
                         debug=App.values.NOTRACING)
+                
                 # - Edit note field of the record
                 if index is not None:
                     click.secho(message="=================1====================",
