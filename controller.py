@@ -85,14 +85,14 @@ import rich
 from click import echo  # type: ignore
 from gspread_dataframe import get_as_dataframe as get_gsdf  # type: ignore
 from rich import pretty as rpretty, print as rprint, box  # type: ignore
-from rich.columns import Columns  # type: ignore
+from rich.columns import Columns as Column  # type: ignore
 from rich.console import (Console, ConsoleDimensions,
                           ConsoleOptions, )  # type: ignore
 from rich.layout import Layout  # type: ignore
 from rich.panel import Panel  # type: ignore
 from rich.prompt import Prompt  # type: ignore
 from rich.style import Style  # type: ignore
-from rich.table import Table  # type: ignore
+from rich.table import Table, Column  # type: ignore
 from rich.text import Text  # type: ignore
 from rich.theme import Theme  # type: ignore
 
@@ -696,6 +696,9 @@ class Record:
     reference: str
     group: str
     notes: str | None = ''
+    lastcommand: str = ''
+    editedmode: str = ''
+    lastmodified: str | None = ''
     
     def __init__(self,
                  labels: list[str] | None = None,
@@ -732,6 +735,48 @@ class Record:
             self.loadrecord(single=series)
         elif isinstance(source, pd.DataFrame):
             self.loadsingle(single=source)
+    
+    @property
+    def editmode(self) -> str:
+        """The editedmode of the record."""
+        return self.editedmode
+    
+    @editmode.setter
+    def editmode(self, value: str) -> None:
+        """The editedmode of the record."""
+        self.editedmode = value
+    
+    @property
+    def modified(self) -> str | None:
+        """The lastmodified of the record."""
+        return self.lastmodified
+    
+    @modified.setter
+    def modified(self, value: str) -> None:
+        """The lastmodified of the record."""
+        self.lastmodified = value
+    
+    @property
+    def command(self) -> str:
+        """The lastcommand of the record."""
+        return self.lastcommand
+    
+    @command.setter
+    def command(self, value: str) -> None:
+        """The lastcommand of the record."""
+        self.lastcommand = value
+    
+    @staticmethod
+    def cmdnote(value: str) -> str:
+        """The lastcommand of the record."""
+        if value == 'insert':
+            return 'This note is now added'
+        elif value == 'append':
+            return 'This note is now updated'
+        elif value == 'clear':
+            return 'This note is now deleted'
+        elif value == 'toggle':
+            return 'The progress status is now reported'
     
     def loadsingle(self, single: pd.DataFrame | pd.Series) -> None:
         """Loads the source of the record, if any."""
@@ -1110,7 +1155,39 @@ class Record:
                              switch=sendtolayout)
     
     @staticmethod
-    def comparegrid(container: Table,
+    def setcolumn(table: Table,
+                  heading: str = '',
+                  hstyle=None,
+                  footing: str = '',
+                  fstyle=None,
+                  styler=None,
+                  minw: int = 35,
+                  maxw: int = 50,
+                  width: int = 50,
+                  full: bool = True,
+                  wraps: bool = False,
+                  proportion: int = 1) -> Table:
+        """Configured the Rich Column for the webconsole, side x side"""
+        table.add_column(header=heading,
+                         footer=footing,
+                         header_style=hstyle,
+                         footer_style=fstyle,
+                         min_width=minw,
+                         max_width=maxw,
+                         width=width,
+                         overflow='fold',
+                         ratio=proportion,
+                         justify='default',
+                         vertical='top',  # noqa
+                         no_wrap=wraps)
+        return table
+    
+    def footnote(self) -> str:
+        """Renders the footnote for the record"""
+        return f'{self.cmdnote(self.editmode)} at: {self.modified}'
+    
+    def comparegrid(self,
+                    container: Table,
                     left: Table,
                     right: Table,
                     fit: bool = False,
@@ -1119,12 +1196,23 @@ class Record:
         """ Display the header grid table"""
         main: Table = container
         main.grid(expand=fit)
+        main.width = 100
+        main.title = f'{self.command}: {self.type}.{self.prefix}.{self.reference}'
+        main.show_footer = True
+        main = Record.setcolumn(table=main,
+                                heading="Existing",
+                                footing=f'-----------------')
+        main = Record.setcolumn(table=main,
+                                heading="Modified",
+                                footing=f'{self.footnote()}')
         main.add_row(left, right)
         
         if debug is True:
             rich.inspect(main)
         
-        return Record.switch(main, printer=container, switch=sendtolayout)
+        return Record.switch(main,
+                             printer=container,
+                             switch=sendtolayout)
     
     @staticmethod
     def switch(renderable,
@@ -1170,6 +1258,7 @@ class Editor:
     APPENDEDIT: str = 'append'
     REPLACEEDIT: str = 'replace'
     CLEAREDIT: str = 'clear'
+    lastcommand: str | None = None
     
     def __init__(self,
                  currentrecord: Record = None,
@@ -1196,6 +1285,16 @@ class Editor:
         self.lastmodified = None
         self.modified = None
         self.lasteditmode: str = ''
+    
+    @property
+    def command(self) -> str:
+        """Return the last command"""
+        return self.lastcommand
+    
+    @command.setter
+    def command(self, value: str) -> None:
+        """Set the last command"""
+        self.lastcommand = value
     
     def edit(self) -> None:
         """The Editor is a console utility for editing records."""
