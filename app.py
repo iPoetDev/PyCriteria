@@ -96,7 +96,7 @@ Global Variables:,
 
 """
 # 1. Std Lib
-from typing import Literal, Tuple
+from typing import Literal
 
 import click  # type: ignore
 # 2. 3rd Party
@@ -371,6 +371,45 @@ class Valid:
             else:
                 click.echo(message="Exiting Editing Mode. Try again.")
                 return None
+    
+    @staticmethod
+    def checkmode(edits: str, index: int) -> str | None:
+        """Check the mode."""
+        if isinstance(edits, str):
+            # Add
+            if edits.lower() == App.values.Edit.ADD:
+                click.echo(message="🆕 Adding note"
+                                   f", in row {index} 🆕")
+                return edits
+            # Update
+            elif edits.lower() == App.values.Edit.UPDATE:
+                click.echo(message="🔂 Updating a Note"
+                                   f", in row {index}...🔂")
+                return edits
+            # Delete
+            elif edits.lower() == App.values.Edit.DELETE:
+                click.echo(message="🗑️ Deleting a Note"
+                                   f", in row {index}...🗑️")
+                return edits
+            # None, Other
+            else:
+                click.echo(message="Exiting Editing Mode. Try again.")
+    
+    @staticmethod
+    def checkcommand(mode: str) \
+            -> str | None:
+        """Check the mode, translate to edit comand tyoe."""
+        allowed = {App.values.Edit.ADD,
+                   App.values.Edit.UPDATE, App.values.Edit.DELETE}
+        if mode in allowed:
+            if mode == App.values.Edit.ADD:
+                return App.values.Edit.INSERT
+            elif mode == App.values.Edit.UPDATE:
+                return App.values.Edit.APPEND
+            elif mode == App.values.Edit.DELETE:
+                return App.values.Edit.CLEAR
+        else:
+            return None
 
 
 class Window:
@@ -403,11 +442,13 @@ class Window:
     @staticmethod
     def showrecord(data: pd.Series | pd.DataFrame,
                    sendtoeditor: bool = False,
+                   displayon: bool = True,
                    debug: bool = False) -> Record | None:
         """Display Record.
         
         :param data: pd.Series | pd.DataFrame - Individual Record to display
         :param sendtoeditor: bool - Switch to send to the Editor or not.
+        :param displayon: bool - Switch to display or not.
         :param debug: bool - Switch to debug mode or not.
         :return: Record | None - Individual Record to display or None
         """
@@ -419,15 +460,16 @@ class Window:
             # Not designed for results >1, unless part of a loop.
             individual = Record(series=data, source=data)
             
-            if debug:
+            if debug is True:
                 rprint("Debug Mode: Show Record")
                 inspector(individual)
             
-            if individual.card(consolecard=Webconsole.console) is not None:
-                window.printpanels(record=individual)
-            else:
-                click.echo("Displaying Simple Card")
-                individual.card(consolecard=Webconsole.console)
+            if displayon:
+                if individual.card(consolecard=Webconsole.console) is not None:
+                    window.printpanels(record=individual)
+                else:
+                    click.echo("Displaying Simple Card")
+                    individual.card(consolecard=Webconsole.console)
             
             return Window.sendto(individual, sendtoeditor)
     
@@ -507,7 +549,7 @@ class Window:
     @staticmethod
     def showmodified(editeddata: pd.Series,
                      editor: Editor,
-                     commandtype: Literal['insert', 'append', 'clear'],
+                     commandtype: str,
                      dataview: Literal['show', 'compare'] = 'show',
                      debug=False) -> None:
         """Display Modified Record.
@@ -522,26 +564,38 @@ class Window:
         """
         # Display single records
         if Record.checksingle(editeddata):
-            if editor.ismodified and editor.lasteditmode == commandtype:
-                if debug:
+            # Was checking if Record.ismodified was truthy, if state persists
+            # But a record's state between transactions are not kept in state
+            # A new record per find/locate is created for a stateless record
+            # So dropped this guard, as stateful transactions are not in scope.
+            # State could be if time permits, if a lastmodified field is saved.
+            # Is saved to the remote database, but not in the local record.
+            # Therefore not in scope for version: 1.0.0.alpha+
+            click.echo(f'Command Type: {commandtype}')
+            if editor.editmode == commandtype:
+                click.echo(editor.editmode)
+                if debug is True:
                     click.echo(message="==========Displaying: "
                                        "Changes=========\n")
                 # 1. Display the Edited record
-                if dataview == 'show':
-                    window.showedited(editeddata=editeddata, debug=debug)
-                elif dataview == 'compare':
+                if dataview == 'show':  # show
+                    window.showedited(editeddata=editeddata,
+                                      debug=App.values.NOTRACING)
+                elif dataview == 'compare':  # compare
+                    click.echo(f"DataView Outside: {dataview}")
                     window.comparedata(editeddata=editeddata,
                                        editor=editor,
-                                       debug=False)  # noqa
+                                       debug=App.values.NOTRACING,
+                                       debugdisplay=App.values.NOTRACING)  # noqa
                 #  [DEBUG]
-                if debug:
+                if debug is True:
                     click.echo(message="=== [DEBUG] Saving: "
                                        "changes made [DEBUG]==\n")
                     click.echo(f" Modified: {editor.lastmodified} ")
             else:
                 click.echo(message="No changes made. See above.")
             #
-            if debug:
+            if debug is True:
                 click.echo(message="=====================================")
             # Switch confirmation on a command's type
             if commandtype == 'insert':
@@ -562,29 +616,31 @@ class Window:
     @staticmethod
     def comparedata(editeddata: pd.Series,
                     editor: Editor,
-                    debug=False) -> None:
+                    debug=False, debugdisplay=False) -> None:
         """Compare Old and New side by side.
         
         :param editeddata: pd.Series - Individual Record to display
         :param editor: Editor - Editor to use
         :param debug: bool - Switch to debug mode or not.
+        :param debugdisplay: bool - Switch to debug display mode or not.
         :return: None
         """
-        shown: bool = True
-        if debug:
+        if debug is True:
             rprint(editeddata)
             inspector(editeddata)
-        elif editeddata.empty is False and editor.ismodified:
+        
+        if editeddata.empty is False and editor.ismodified:
+            # 0. Create the Old and New Records, locallt
             oldrecord: Record = editor.record
             newrecord: Record = Record(series=editor.newresultseries)
             # 1. Display the Edited recor
             left = oldrecord.editable(
                     consoleedit=Webconsole.console,
-                    sendtolayout=shown,
+                    sendtolayout=App.values.DISPLAYING,
                     title="Original Record")
             right = newrecord.editable(
                     consoleedit=Webconsole.console,
-                    sendtolayout=shown,
+                    sendtolayout=App.values.DISPLAYING,
                     title="Updated Record")
             # Compare Old with New, else just show the new
             if left is not None or right is not None:
@@ -592,30 +648,32 @@ class Window:
                                  printer=Webconsole.console)
                 header = newrecord.header(
                         consolehead=Webconsole.console,
-                        sendtolayout=shown,
-                        gridfit=True)
+                        sendtolayout=App.values.Display.TOLAYOUT,
+                        gridfit=True,
+                        debug=debugdisplay)
                 sidebyside = newrecord.comparegrid(
                         container=Webconsole.table,
                         left=left,
                         right=right,
-                        sendtolayout=shown,
-                        fit=True)
+                        sendtolayout=App.values.Display.TOLAYOUT,
+                        fit=True,
+                        debug=App.values.TRACING)
                 footer = newrecord.footer(
                         consolefoot=Webconsole.console,
-                        expand=False)
+                        sendtolayout=App.values.Display.TOLAYOUT,
+                        expand=False,
+                        debug=debugdisplay)
                 
                 newrecord.panel(consolepane=Webconsole.console,
                                 renderable=header,
                                 fits=True,
-                                sendtolayout=False)  # noqa
+                                sendtolayout=
+                                App.values.Display.TOTERMINAL)  # noqa
                 newrecord.panel(consolepane=Webconsole.console,
                                 renderable=sidebyside,
                                 fits=True,
-                                sendtolayout=False)  # noqa
-                newrecord.panel(consolepane=Webconsole.console,
-                                renderable=footer,
-                                fits=True,
-                                sendtolayout=False)  # noqa
+                                sendtolayout=
+                                App.values.Display.TOTERMINAL)  # noqa
             else:
                 window.showedited(editeddata=editeddata, debug=debug)
 
@@ -813,7 +871,7 @@ def run(ctx: click.Context) -> None:  # noqa
 
 # 0.1 Run: Base Command: Clear
 # Clears the REPL using click.clear()
-@run.command("clear", help="Clear the screen", short_help="Clear the screen")
+@run.command("clear", help="Cmd: Clear the screen", short_help="Cmd: Clear the screen")
 @click.pass_context
 def clear(ctx: click.Context) -> None:  # noqa
     """Clear the screen."""
@@ -1236,14 +1294,13 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
                       max=App.get_range,
                       clamp=App.values.Find.Index.clamp),
               callback=Valid.index,
-              help=f'{App.values.Find.Index.help}{App.get_range}: ',
-              prompt=f'{App.values.Find.Index.help}{App.get_range}: ')
+              help=f'{App.values.Find.Index.help}{App.get_range}',
+              prompt=f'BY ROW: ☑️ Select: 1 to {App.get_range}')
 # Edit Mode: Note to link/append/clear to Row recorď on edit
 @click.option('--note', 'note', type=str,
               help=App.values.Edit.Note.help,
-              callback=Valid.santitise,
-              prompt=App.values.Edit.Note.prompt,
-              required=App.values.Edit.Note.required)
+              # callback=Valid.santitise,  # Callback: Input Validation: santitise
+              prompt=App.values.Edit.Note.prompt)
 # Edit Mode: Axis, or searchg focus, to locate record on.
 @click.option('-a', '--axis', 'axis',
               type=click.Choice(choices=['index'],
@@ -1278,44 +1335,27 @@ def notepad(ctx,
     # Rehydrtate dataframe from remote
     dataframe: pd.DataFrame = App.get_data()
     
-    # Mode Switch
-    def checkmode(edits):
-        """Check the mode."""
-        if isinstance(edits, str):
-            # Add
-            if edits.lower() == 'add':
-                click.echo(message="🆕 Adding note"
-                                   f", in {index} 🆕")
-                return edits
-            # Update
-            elif edits.lower() == 'update':
-                click.echo(message="🔂 Updating a Note"
-                                   f", in {index}...🔂")
-                return edits
-            # Delete
-            elif edits.lower() == 'delete':
-                click.echo(message="🗑️ Deleting a Note"
-                                   f", in {index}...🗑️")
-                return edits
-            # None, Other
-            else:
-                click.echo(message="Exiting Editing Mode. Try again.")
-                return None
-    
-    if axis.lower() == 'index' and note:
+    # - Check the index search focus (i.e. dimenson). Default: index
+    # Only one dimension, i.e axis, is implemented: index,
+    # Others are column, row: Future implementation.
+    if axis.lower() == App.values.SEARCHFOCUS and note:
         # - Get the record
-        resultframe = Results.getrowdata(data=dataframe, ix=index)
+        resultframe = Results.getrowdata(data=dataframe,
+                                         ix=index,
+                                         debug=App.values.NOTRACING)
         if Record.checksingle(resultframe) and note is not None:
-            debugOFF = False  # noqa
             # - Display the found result and - send to the editor
             editing = \
                 window.showrecord(data=resultframe,
-                                  sendtoeditor=True,
-                                  debug=debugOFF)  # noqa
+                                  sendtoeditor=App.values.FORWARDING,
+                                  displayon=App.values.HIDING,
+                                  debug=App.values.NOTRACING)  # noqa
             # - Send the result to the editor
             if editing is not None:
-                editor = Editor(currentrecord=editing,
-                                sourceframe=resultframe)
+                editor = Editor(
+                        currentrecord=editing,
+                        sourceframe=resultframe,
+                        debug=App.values.NOTRACING)
                 # - Edit note field of the record
                 if index is not None:
                     click.secho(message="=====================================",
@@ -1325,10 +1365,11 @@ def notepad(ctx,
                                 blink=True)
                     # Edit Mode for Notes:
                     # Action/Tasks: Add/Insert, Update/Append, Delete/Clear
-                    editor.editnote(edits=checkmode(edits=mode),
+                    editor.editnote(edits=Valid.checkmode(edits=mode,
+                                                          index=index),
                                     index=index,
                                     notepad=note,
-                                    debug=debugOFF)
+                                    debug=App.values.NOTRACING)
                 else:
                     click.secho(message="No changes made")
                     click.secho(message="Exiting: editing mode. No Note Added")
@@ -1339,9 +1380,9 @@ def notepad(ctx,
                             blink=True)
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
-                                    commandtype='insert',
+                                    commandtype=Valid.checkcommand(mode),
                                     dataview='compare',
-                                    debug=debugOFF)
+                                    debug=App.values.NOTRACING)
                 # - Update the local app data
                 App.update_appdata(context=ctx,
                                    dataframe=editor.newresultframe)
@@ -1391,10 +1432,12 @@ def progress(ctx: click.Context,
              status: str = Literal['Todo', 'WIP', 'Done', 'Missed'],
              axis: str = Literal['index', 'column', 'row']):
     """
-    Edit a ToDo Status by index.
+    Edit a ToDo Status, on Progress column., by index.
     
     
     \f
+    Progress and ToDo as reference names are related, with ToDo as an alias.
+    
     :param ctx: click.Context: The click context
     :param index: int: The index of the record to edit
     :param status: str: The status of the ToDo: Todo, WIP, Done, Missed
@@ -1402,47 +1445,53 @@ def progress(ctx: click.Context,
     :return: None
     """
     # Debugging Flags
-    debugON = True  # noqa
     dataframe: pd.DataFrame = App.get_data()
-    # Deprecated the --mode click.option from note, and parked the value here.
-    mode = Tuple['toggle']
-    # Mode Switch
     
-    if axis.lower() == 'index' and status:
+    # Check the index search focus (i.e. dimenson). Default: index
+    # Only one dimension, i.e axis, is implemented: index,
+    # Others are column, row: Future implementation.
+    if axis.lower() == App.values.SEARCHFOCUS and status:
         # - Get the record
-        resultframe = Results.getrowdata(data=dataframe, ix=index)
+        resultframe = Results.getrowdata(data=dataframe,
+                                         ix=index,
+                                         single=App.values.SINGLE,
+                                         debug=App.values.NOTRACING)
         if Record.checksingle(resultframe) \
                 and Valid.checkstatus(status) is not None:
-            debugOFF = False  # noqa
             # - Display the found result and - send to the editor
             editing = \
                 window.showrecord(data=resultframe,
-                                  sendtoeditor=True,
-                                  debug=debugOFF)  # noqa
+                                  sendtoeditor=App.values.FORWARDING,
+                                  displayon=App.values.HIDING,
+                                  debug=App.values.NOTRACING)  # noqa
             # - Send the result to the editor
             if editing is not None:
-                editor = Editor(currentrecord=editing,
-                                sourceframe=resultframe)
+                editor = Editor(
+                        currentrecord=editing,
+                        sourceframe=resultframe,
+                        debug=App.values.NOTRACING)
                 # - Edit note field of the record
                 if index is not None:
-                    click.secho(message="=====================================",
+                    click.secho(message="=================1====================",
                                 bg='white',
                                 bold=True)
                     click.secho(message="Enter: edited mode: ToDo & Progress",
                                 blink=True)
                     # Edit Mode for Todos & Progress:
                     # Action/Tasks: Toggle/Progress Status:
-                    # Todo, WIP, Done, Missed
-                    editor.editprogress(edits=Valid.checktoggle(edits=mode),
+                    # Todo, WIP, Done, Missed Valid.checktoggle(edits=mode)
+                    # Moved the chckcing status lower to here, instead of Option
+                    # Due to issues with callbacks and the REPL features
+                    editor.editprogress(edits=App.values.Edit.ToDo.TOGGLE,
                                         index=index,
                                         choicepad=Valid.checkstatus(status),
-                                        debug=debugOFF)
+                                        debug=App.values.TRACING)
                 else:
                     click.secho(message="No changes made")
                     click.secho(message="Exiting: editing mode."
                                         " No Progress Updated")
                 # - Display the modified record
-                click.secho(message="=====================================",
+                click.secho(message="=================2====================",
                             bg='white', bold=True)
                 click.secho(message="Loading: edited record",
                             blink=True)
@@ -1450,7 +1499,7 @@ def progress(ctx: click.Context,
                                     editor=editor,
                                     commandtype='insert',
                                     dataview='compare',
-                                    debug=debugOFF)
+                                    debug=App.values.NOTRACING)
                 # - Update the local app data
                 App.update_appdata(context=ctx,
                                    dataframe=editor.newresultframe)

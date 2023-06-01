@@ -533,17 +533,16 @@ class Results:
         pass
     
     @staticmethod
-    def search_rows(frame: pd.DataFrame,
-                    searchterm: str,
-                    exact: bool = False) -> pd.DataFrame | None:
+    def search(frame: pd.DataFrame,
+               searchterm: str,
+               exact: bool = False) -> pd.DataFrame | None:
         """Search across all columns for the searches team
 
         :param frame: pd.DataFrame - Dataframe to search
         :param searchterm: str - Search term
         :param exact: bool - Exact match
-        :return: pd.DataFrame - Search result
-
-        """
+        :return: pd.DataFrame - Search result """
+        # Search by text
         if searchterm is None or isinstance(searchterm, str):
             return None
         # Search across all columns for the searches text/str value
@@ -554,11 +553,26 @@ class Results:
             else frame.loc[mask.any(axis=1)]
     
     @staticmethod
+    def index(frame: pd.DataFrame,
+              index: int,
+              zero: bool = True) \
+            -> pd.DataFrame | pd.Series | None:
+        """Get the row from the dataframe by index.
+        
+        :param frame: pd.DataFrame - Dataframe to search
+        :param index: int - Index to search
+        :param zero: bool - Zero based index
+        :return: pd.DataFrame | pd.Series | None - Expect a result or None
+        """
+        if isinstance(index, int) and index is not None:
+            return frame.iloc[index] if zero else frame.loc[index - 1]
+    
+    @staticmethod
     def rows(frame: pd.DataFrame,
              index: int = None,
-             searchterm: str = None,
-             strict: bool = False,
-             zero: bool = True, debug: bool = False) \
+             zero: bool = True,
+             squeeze: bool = False,
+             debug: bool = False) \
             -> pd.DataFrame | pd.Series | None:
         """Get the rows from the dataframe.
 
@@ -568,110 +582,96 @@ class Results:
             The dataframe to searches.
         index: int: optional
             The index to searches for, by default None
-        searchterm: str: optional
-            The searches term to searches for, by default None
-        strict: bool: optional
-            Whether to searches for
-            - a non-exact (any) match, by default False, so any can match
-            - exact (all), by True, so all muct match
         zero: bool: optional
             Whether to searches for a zero indexed dataset, by default True
+        squeeze: bool: optional
+            Whether to squeeze the dataframe result into a pd.Series,
+            By default False
         debug: bool: optional debug flag, by default False
 
         return pd.DataFrame | None: - Expect a result or None
         """
         result: pd.DataFrame | pd.Series | None
         if index:
-            result = App.index(frame=frame, index=index, zero=zero)  # noqa
-        elif searchterm:
-            # Search across all columns for the position value
-            result = Results.search_rows(frame=frame,
-                                         searchterm=searchterm,
-                                         exact=strict)
-            if result.empty is False:
-                click.echo(f"Could not find {searchterm}")
-            elif debug:
-                click.echo(f"Found: {result}")
+            result = Results.index(frame=frame, index=index, zero=zero)  # noqa
         else:
-            click.echo("Please provide either "
-                       "an index or searches term")
+            click.echo("Please provide an index identifier for a team")
             return None
+        
+        if squeeze and isinstance(result, pd.DataFrame) and len(result) == 1:
+            result = result.squeeze()
         
         return result
     
     @staticmethod
-    def getrowframe(data: pd.DataFrame,
-                    ix: int, st: str, debug: bool = False) \
+    def getrowdata(data: pd.DataFrame,
+                   ix: int,
+                   single: bool = False,
+                   debug: bool = True) \
             -> pd.Series | pd.DataFrame | None:
         """Get a row from a dataframe by index or searches term.
 
         :param data: pd.DataFrame - Dataframe
         :param ix: int - Index
-        :param st: str - Search term - Not yet implemented, critical to design
-        :param debug: bool - Debug
-        :return: pd.Series | pd.DataFrame | None - Row or rows
-        """
-        if ix and not st:
-            result = Results.rows(frame=data, index=ix)
-        elif ix:
-            result = Results.rows(frame=data, index=ix, searchterm=st)
-        elif st:
-            result = Results.rows(frame=data, searchterm=st)
-        else:
-            click.echo(f"No Data for row: {ix}")
-            return None
-        
-        if isinstance(result, pd.Series):
-            if debug:
-                click.echo(f"GetRowFrame(): Found a record\n")
-                rich.inspect(result)
-            return result
-        elif isinstance(result, pd.DataFrame):
-            if debug:
-                click.echo("GetRowFrame(): Found a set of records")
-                rich.inspect(result)
-            return result
-        else:
-            click.echo("GetRowFrame(): Found something: undefined")
-            if debug:
-                rich.inspect(result)
-            return None
-    
-    @staticmethod
-    def getrowdata(data: pd.DataFrame, ix: int, debug: bool = False) \
-            -> pd.Series | pd.DataFrame | None:
-        """Get a row from a dataframe by index or searches term.
-
-        :param data: pd.DataFrame - Dataframe
-        :param ix: int - Index
+        :param single: bool - Single row
         :param debug: bool - Debug
         :return: pd.Series | pd.DataFrame | None - Row or rows
         """
         if ix:
-            result = Results.rows(frame=data, index=ix)
+            result = Results.rows(frame=data, index=ix,
+                                  squeeze=True,
+                                  debug=debug)
         else:
             click.echo(f"No Data for row: {ix}")
             return None
         
         if isinstance(result, pd.Series):
-            if debug:
-                click.echo(f"GetRowData(): Found a record\n")
+            if debug is True:
+                click.secho(f"GetRowData(): Series:"
+                            f" Found a Series's record\n")
                 rich.inspect(result)
             return result
         elif isinstance(result, pd.DataFrame):
-            if debug:
-                click.echo("GetRowData(): Found a set of records")
+            if debug is True:
+                click.secho("GetRowData() Dataframe: "
+                            "Found a set of records")
                 rich.inspect(result)
             return result
         else:
-            click.echo("GetRowData(): Found something: undefined")
+            click.secho("GetRowData(): Found something: undefined")
             if debug:
                 rich.inspect(result)
             return None
 
 
 class Record:
-    """A Record is a row of data to be displayed in console, by views"""
+    """A Record is a row of data to be displayed in console, by views
+    
+    :property: view: The view of the record, default is table.
+    :property: index: The index of the record, default is 0.
+    :property: z: The z index of the record, default is 0.
+    :property: length: The length of the record, default is 1.
+    :property: headers: The headers of the record, default is None.
+    :property: values pd.DataFrame:
+                The values of the record, default is None - Default: []
+    :property: series: The series of the record, default is None.
+    :property: sourceframe: The sourceframe of the record, default is None.
+    :property: size: The size of the record
+    :property: recordid: The recordid of the record.
+    :property: positionid: The positionid of the record.
+    :property: recordid: The recordid of the record.
+    :property: todo: The todo of the record.
+    :property: grade: The grade of the record.
+    :property: status: The status of the record.
+    :property: topics: The topics of the record.
+    :property: criteria: The criteria of the record.
+    :property: type: The type of the record.
+    :property: prefix: The prefix of the record.
+    :property: linked: The linked of the record, default is None.
+    :property: reference: The reference of the record.
+    :property: group: The group of the record.
+    :property: notes: The notes of the record, default is None.
+    """
     
     view: str = "table"
     index: int = 0
@@ -684,10 +684,8 @@ class Record:
     size: int = 0
     recordid = 0
     positionid: int = int(recordid) + 1
-    rowid: str
     recordid: str
     todo: str
-    flag: str
     grade: str
     status: str
     topics: str
@@ -761,14 +759,12 @@ class Record:
     def loadrecord(self, single: pd.Series) -> None:
         """Sets individial record properties."""
         if Record.checksingle(single):
-            self.rowid: str = single.RowID
             self.recordid: int = single.Position
             self.type: str = single.Tier
             self.prefix: str = single.TierPrefix
             self.grade: str = single.Performance
             self.status: str = single.DoD
             self.todo: str = single.Progress
-            self.flag: str = single.ToDoFlag
             self.group: str = single.CriteriaGroup
             self.topics: str = single.CriteriaTopic
             self.reference: str = single.CriteriaRef
@@ -838,7 +834,8 @@ class Record:
               fits: bool = False,
               card: tuple[int, int] = (0, 0),
               align: typing.Literal["left", "center", "right"] = "left",
-              outline: rich.box = box.SIMPLE, sendtolayout: bool = False) \
+              outline: rich.box = box.SIMPLE, sendtolayout: bool = False,
+              debug: bool = False) \
             -> Panel | None:  # noqa
         """Frames the renderable as a panel."""
         
@@ -870,11 +867,14 @@ class Record:
                              highlight=True)
             return p
         
-        # Switches the flow: returns | print| to stdout
         panel: Panel = config(dimensions=card,
                               styler=styld.panel(grey=23),
                               safe=True)
         
+        if debug is True:
+            rich.inspect(panel)
+        
+        # Switches the flow: returns | print| to stdout
         return Record.switch(panel,
                              printer=consolepane,
                              switch=sendtolayout)
@@ -922,7 +922,8 @@ class Record:
     def header(self, consolehead: Console,
                sendtolayout: bool = False,
                gridfit: bool = False,
-               subgrid: bool = False) -> Table | None:
+               subgrid: bool = False,
+               debug: bool = False) -> Table | None:
         """Displays the header of the record"""
         
         def config(fit: bool = False,
@@ -955,7 +956,7 @@ class Record:
                                        sides=5,
                                        outline=boxd)
             rowid_label: str = 'Record Name:  '
-            rowid_value: str = f'{self.rowid} - {self.series.name}'
+            rowid_value: str = f'{self.series.name}'
             identtable.add_row(rowid_label,
                                rowid_value)
             pos_label: str = 'Position ID:  '
@@ -1000,6 +1001,9 @@ class Record:
                                    boxd=3,
                                    fit=gridfit)  # noqa
         
+        if debug is True:
+            rich.inspect(mainpane)
+        
         return Record.switch(mainpane,
                              printer=consolehead,
                              switch=sendtolayout)
@@ -1007,7 +1011,8 @@ class Record:
     def editable(self, consoleedit: Console | None = None,
                  expand: bool = False,
                  sendtolayout: bool = False,
-                 title: str = 'Current Data') -> Table | None:
+                 title: str = 'Current Data',
+                 debug: bool = False) -> Table | None:  # noqa
         """Displays the record: Use it for Current | Modified Records"""
         webconsole: Console = consoleedit  # noqa
         
@@ -1043,6 +1048,10 @@ class Record:
         
         currentdatapane: Table = \
             currentdata(table=config(fit=expand), t=title)  # noqa
+        
+        if debug is True:
+            rich.inspect(currentdatapane)
+        
         return Record.switch(currentdatapane,
                              printer=consoleedit,
                              switch=sendtolayout)
@@ -1050,7 +1059,8 @@ class Record:
     def footer(self, consolefoot: Console,
                sendtolayout: bool = False,
                expand: bool = True,
-               valign: str = 'top') -> Table | None:
+               valign: str = 'top',
+               debug: bool = False) -> Table | None:
         """Displays footer as a card/record"""
         
         # Config Table/Grid for Footer
@@ -1091,6 +1101,10 @@ class Record:
             return meta
         
         footer: Table = metapane(table=config(fit=expand, vertical=valign))  # noqa
+        
+        if debug is True:
+            rich.inspect(footer)
+        
         return Record.switch(footer,
                              printer=consolefoot,
                              switch=sendtolayout)
@@ -1100,11 +1114,15 @@ class Record:
                     left: Table,
                     right: Table,
                     fit: bool = False,
-                    sendtolayout: bool = False) -> Table | None:
+                    sendtolayout: bool = False,
+                    debug: bool = False) -> Table | None:
         """ Display the header grid table"""
         main: Table = container
         main.grid(expand=fit)
         main.add_row(left, right)
+        
+        if debug is True:
+            rich.inspect(main)
         
         return Record.switch(main, printer=container, switch=sendtolayout)
     
@@ -1113,13 +1131,21 @@ class Record:
                printer: Console | Table,
                switch: bool = False) -> Table | None:
         """Switches between console print or redirecting to a layout"""
-        if switch:
+        # App.values.Display.TOLAYOUT = True, (author notes, not unused code).
+        # Then send renderable to next Rich Renderable handler.
+        # Does not print to console.
+        if switch is True:
             return renderable
+        
+        # If App.values.Display.TOTERMINAL = False,
+        # (author notes, not unused code).
+        # Then print to terminal console
         if isinstance(printer, Console):
             printer.print(renderable)
         elif isinstance(printer, Table):
             c = Console()
             c.print(renderable)
+        # Output to StdOut
         return None
 
 
@@ -1135,21 +1161,37 @@ class Editor:
     ismodified: bool = False
     lastmodified: str | None = None
     modified: Record | None = None
-    lasteditmode: str = ''
+    lasteditmode: str
+    ADDMODE: str = 'add'
+    UPDATEMODE: str = 'update'
+    DELETEMODE: str = 'delete'
+    TOGGLEMODE: str = 'toggle'
+    INSERTEDIT: str = 'insert'
+    APPENDEDIT: str = 'append'
+    REPLACEEDIT: str = 'replace'
+    CLEAREDIT: str = 'clear'
     
-    def __init__(self, currentrecord: Record = None,
-                 sourceframe: pd.DataFrame | None = None) -> None:
+    def __init__(self,
+                 currentrecord: Record = None,
+                 sourceframe: pd.DataFrame | None = None,
+                 debug=False) -> None:
         """The Editor is a console utility for editing records."""
         if currentrecord is not None:
             self.record = currentrecord
+            if debug is True:
+                rich.inspect(currentrecord)
         else:
             click.echo(message="No editing possible", err=True)
         
+        if debug is True:
+            rich.inspect(sourceframe)
+        self.sourceframe = sourceframe
+        
+        # Assign Properties
         self.oldresultseries = self.record.series
         self.oldresultframe = self.record.sourceframe
         self.newresultseries = None
         self.newresultframe = None
-        self.sourceframe = sourceframe
         self.ismodified = False
         self.lastmodified = None
         self.modified = None
@@ -1159,33 +1201,52 @@ class Editor:
         """The Editor is a console utility for editing records."""
         pass
     
-    def editnote(self, edits, index: int, notepad, debug: bool = False) -> None:
+    def editnote(self,
+                 edits,
+                 index: int,
+                 notepad,
+                 debug: bool = False) -> None:
         """Hub switch between editing modes, and actions for Notes """
         #
-        if edits == 'add':
+        if edits == self.ADDMODE:
             self.addingnotes(notes=notepad,
                              location=index,
                              debug=debug)
-        elif edits == 'update':
+        elif edits == self.UPDATEMODE:
             self.updatingnotes(notes=notepad,
                                location=index,
                                debug=debug)
-        elif edits == 'delete':
+        elif edits == self.DELETEMODE:
             self.deletingnotes(notes=notepad,
-                               location=index)
+                               location=index,
+                               debug=debug)
         else:
-            click.echo(message="Exiting Editing Mode. Try again.")
+            click.echo(message="Exiting Editing Mode. Bad Edit Mode.")
     
-    def editprogress(self, edits, index: int, choicepad, debug: bool = False) -> None:
+    @property
+    def editmode(self) -> str:
+        """Return the last edit mode"""
+        return self.lasteditmode
+    
+    @editmode.setter
+    def editmode(self, value: str) -> None:
+        """Set the last edit mode"""
+        self.lasteditmode = value
+    
+    def editprogress(self, edits,
+                     index: int,
+                     choicepad,
+                     debug: bool = False) -> None:
         """Hub switch between editing modes, and actions for ToDos
          
          And similar status/values choice fields/columns"""
-        if edits == 'toggle':
+        
+        if edits == self.TOGGLEMODE:
             self.togglestatus(status=choicepad,
                               location=index,
                               debug=debug)
         else:
-            click.echo(message="Exiting Editing Mode. Try again.")
+            click.echo(message="Exiting Editing Mode. Bad Edit Mode.")
     
     # =======================NOTES===============================
     # Methods
@@ -1253,13 +1314,14 @@ class Editor:
             # Update the record's series with the new notes
             # Copy current records into local series
             editingseries = self.record.series.copy()
-            self.lasteditmode = ''  # Clears out the last edit mode, before use
+            self.editmode = ''  # Clears out the last edit mode, before use
             # Check if the target location data (series) is empty for Notes
             if self._isempty(editingseries, ColumnSchema.Notes):
                 # Perplexity AI was used to build out this function, based on below.
                 # https://www.perplexity.ai/search/a8d503cb-8aec-489a-8cf5-7f3e5b573cb7?s=c
                 # Set the edit mode explicitly to insert
-                EDITMODE = 'insert'  # noqa
+                EDITMODE = self.INSERTEDIT  # noqa
+                self.editmode = EDITMODE
                 # User confirmation to add the note, step by step
                 if click.confirm("Please confirm to "
                                  f"add/{EDITMODE} your note"):
@@ -1267,7 +1329,7 @@ class Editor:
                     self.modifynotes(editingseries,
                                      record=self.record,
                                      notes=notes,
-                                     editmode=EDITMODE,
+                                     editmode=self.INSERTEDIT,
                                      location=location)
                 # Allow user to modify their note, if change of mind
                 elif click.confirm(
@@ -1279,7 +1341,7 @@ class Editor:
                         self.modifynotes(editingseries,
                                          record=self.record,
                                          notes=str(newnotes),
-                                         editmode=EDITMODE,
+                                         editmode=self.INSERTEDIT,
                                          location=location,
                                          debug=debug)
                     # Graceful user exit for wrong type of input.
@@ -1299,7 +1361,7 @@ class Editor:
                 self.modifynotes(editingseries,
                                  record=self.record,
                                  notes=notes,
-                                 editmode='append',
+                                 editmode=self.APPENDEDIT,
                                  location=location,
                                  debug=debug)
                 click.echo("Note appended, not created")
@@ -1335,15 +1397,15 @@ class Editor:
             # Check if the target location data (series) ha content for Notes
             if self._hascontent(editingseries, ColumnSchema.Notes):
                 # Set the edit mode explicitly to append.
-                EDITMODE = 'append'  # noqa
+                self.editmode = self.APPENDEDIT  # noqa
                 # User confirmation to append the note, step by step
                 if click.confirm("Please confirm to"
-                                 f" {EDITMODE} your note"):
+                                 f" {self.editmode} your note"):
                     # Send to hub modifier function for all Notes editing
                     self.modifynotes(editingseries,
                                      record=self.record,
-                                     notes=notes,
-                                     editmode=EDITMODE,
+                                     notes=notes.strip(),
+                                     editmode=self.APPENDEDIT,
                                      location=location,
                                      debug=debug)
                 # Allow user to modify their note, if change of mind
@@ -1355,19 +1417,19 @@ class Editor:
                     if isinstance(newnotes, str):
                         self.modifynotes(editingseries,
                                          record=self.record,
-                                         notes=str(newnotes),
-                                         editmode=EDITMODE,
+                                         notes=str(newnotes.strip()),
+                                         editmode=self.APPENDEDIT,
                                          location=location,
                                          debug=debug)
                     # Graceful user exit for wrong type of input.
                     else:
                         click.echo(message="No Edit Made for  "
-                                           f"Update {EDITMODE}",
+                                           f"Update {self.editmode}",
                                    err=True)
                 # If user does not want to add/amend the note, then exit
                 else:
                     click.echo("Exiting editing mode:"
-                               f" Update {EDITMODE}")
+                               f" Update {self.editmode}")
                     return None
     
     def deletingnotes(self,
@@ -1395,11 +1457,11 @@ class Editor:
             # Backup User's input into current record
             # Create a transitory single data series from record
             editingseries = self.record.series.copy()
-            self.lasteditmode = ''  # Clears out the last edit mode, before use
+            self.editmode = ''  # Clears out the last edit mode, before use
             # Check if the series has notes
             if self._hascontent(editingseries, ColumnSchema.Notes):
                 # Set the edit mode explicitly to clear.
-                EDITMODE = 'clear'  # noqa
+                self.editmode = self.CLEAREDIT  # noqa
                 # Confirm if the user wants to proceed.
                 # It is a CLI and not a GUI, and thus keywboard driven.
                 # The user clear all the notes and then decide to delete or not.
@@ -1408,12 +1470,13 @@ class Editor:
                     self.modifynotes(editingseries,
                                      record=self.record,
                                      notes=notes,
-                                     editmode=EDITMODE,
+                                     editmode=self.CLEAREDIT,
                                      location=location,
                                      debug=debug)
                 # If user does not want to clear all the notes, then exit
                 else:
-                    click.echo(f"Exiting editing mode: Delete: {EDITMODE}")
+                    click.echo(f"Exiting editing mode: "
+                               f"Delete: {self.editmode}")
                     return None
     
     def modifynotes(self, editingseries, record: Record,
@@ -1444,29 +1507,36 @@ class Editor:
                 The location of the notes to be added to the record.
         :return: None"""
         # EditMode is Insert: then add / overwrite / create at the location
-        if editmode == "insert":
+        if editmode == self.INSERTEDIT:
+            self.lasteditmode = self.INSERTEDIT
             # Insert the notes - add / overwrite / create
             editingseries[ColumnSchema.Notes] = notes
+            click.echo(f"Note inserted")
         # EditMode is Append: then append the notes the Notes column
-        elif editmode == "append":
+        elif editmode == self.APPENDEDIT:
+            self.lasteditmode = self.APPENDEDIT
             # Append the notes - by target location (Notes)
             editingseries[ColumnSchema.Notes] = \
                 self.appendnotes(series=editingseries,
                                  column=ColumnSchema.Notes,
                                  value=notes)
+            click.echo(f"Note inserted")
         # EditMode is Clear: then clear the notes the Notes column
-        elif editmode == "clear":
+        elif editmode == self.CLEAREDIT:
+            self.lasteditmode = self.CLEAREDIT
             editingseries[ColumnSchema.Notes] = \
                 self.deletenotes(series=editingseries,
-                                 column=ColumnSchema.Notes,
-                                 value=notes)
+                                 column=ColumnSchema.Notes)
+            click.echo(f"Note cleared")
+        
         # Current and Modified datasets diverge here
         # Create a new updated series & dataframe with the new data
         updatedframe = self.insert(
                 record=record,
                 value=editingseries[ColumnSchema.Notes],
                 column=ColumnSchema.Notes,
-                index=location, debug=debug)
+                index=location,
+                debug=debug)
         self.newresultseries = editingseries
         self.newresultframe = updatedframe
         # Debug flows
@@ -1482,7 +1552,7 @@ class Editor:
         if self.newresultframe.empty is False:
             self.ismodified = True
             self.lastmodified = self.timestamp()
-            click.echo("Modified Frame at " + self.lastmodified)
+            click.echo("Modified at " + self.lastmodified)
             self.modified = Record(
                     series=editingseries,
                     source=self.newresultframe)
@@ -1521,37 +1591,54 @@ class Editor:
     @staticmethod
     def deletenotes(series: pd.Series,
                     column: str,
-                    value: str,
                     nodestroy: bool = False) -> str:
         """Deletes complete/all notes from the existing record/row if flag: nodestroy/destroy
         
         Parameters
         ----------
         :param series: pandas.Series: The series to be edited.
-        :param value: str: The notes to be added to the record.
         :param column: str: The name of the column to be edited.
         :param nodestroy: bool: The flag to delete or not to delete.
                A mechanism to handle destructive actions and safely delete.
                Potentially flagged by user from a CLI command option.
         :return: str
         """
-        if value != '':
-            click.echo("Do not supply a value. Try again.")
+        
+        def _removelabel(clear: str) -> str:
+            """Removes the label from the notes"""
+            
+            if series[column] == 'Add a note'.strip():
+                series[column] = cleared
+            return series[column]
+        
+        def _haslabel() -> bool:
+            """Checks if the notes have a label"""
+            return True if series[column].startswith('Add a note') else False
+        
+        def _emptydelete(clear: str = '') -> bool:
+            """Checks if the notes are empty"""
+            if nodestroy is False and _haslabel() is False:
+                return True if series[column] == clear else False
+            elif nodestroy is True and _haslabel() is True:
+                series[column] = _removelabel(clear)
+                return True if series[column] == clear else False
+            elif nodestroy is True and _haslabel() is False:
+                return True if series[column] == clear else False
+            elif nodestroy is True and _haslabel() is True:
+                series[column] = _removelabel(clear)
+                return True if series[column] == clear else False
+        
+        _cleared = ''
+        if _emptydelete(_cleared):
+            click.echo(message="No notes to delete")
+            return series[column]
+        elif nodestroy is False:
+            click.echo(message="Exitsing notes present. No change")
+            return series[column]
         else:
-            _cleared = ''
-            if (nodestroy
-                    and series[column] is _cleared
-                    or not nodestroy
-                    and series[column] is _cleared):
-                click.echo(message="No notes to delete")
-                return series[column]
-            elif nodestroy:
-                click.echo(message="Exitsing notes present. No change")
-                return series[column]
-            else:
-                click.echo(message="Cleared")
-                cleared = series[column] = ''
-                return cleared
+            click.echo(message="Cleared")
+            cleared = series[column] = _cleared
+            return cleared
     
     # =======================TODO===============================
     # Methods
@@ -1569,48 +1656,44 @@ class Editor:
         """Toggle the status of the record"""
         shown: bool = True
         notso: bool = False
-        validstatus: list[str] = ['todo', 'wip', 'done', 'missed']
+        validstatus: list[str] = ['ToDo', 'WIP', 'Done', 'Missed']
         
         def reprompt() -> str | None:
             """Re-prompt the user to enter a valid status"""
             tryagain = click.prompt(text="Enter a valid status:",
                                     default="todo",
                                     type=click.Choice(choices=validstatus),
-                                    prompt_suffix="Again: ",
+                                    prompt_suffix=" Again: ",
                                     show_choices=shown,
                                     show_default=shown,
-                                    err=notso,
-                                    confirmation_prompt=shown)
+                                    err=notso)
             
-            return tryagain if isinstance(tryagain, str) \
+            return tryagain.lower() if isinstance(tryagain, str) \
                 else click.secho(
                     message="Exiting Editing Mode. "
                             "Invalid input",
                     fg="bright_yellow", bold=True)
         
         # Inner function to check the status against the allowed values
-        def _checkstatus(state) -> str | None:
-            """Check the status for accepted value literals"""
-            try:
-                allowed = Literal['todo', 'wip', 'done', 'missed']
-                if status not in allowed:
-                    raise ValueError(f"Invalid status: {status}")
-                
-                return status
-            except ValueError as e:
-                click.secho(
-                        message=f'{e}. Try again with this prompt',
-                        fg="bright_yellow", bold=True)
-                return reprompt()
+        def _checkstatus(state: str, debg: bool = False) -> str | None:
+            valid = {'todo', 'wip', 'done', 'missed'}
+            if state.lower() in valid:
+                if debg is True:
+                    click.secho(message=f"Valid status: {state.lower()}",
+                                fg="bright_green", bold=True)
+                return state.lower()
+            else:
+                click.echo("Invalid status. Try again.")
+                return None
         
         # Check if the status is valid
-        if _checkstatus(status) is not None:
+        if _checkstatus(state=status, debg=debug) is not None:
             editingseries = self.record.series.copy()
             self.lasteditmode = ''  # Clears out the last edit mode, before use
             if self._hascontent(editingseries, ColumnSchema.Notes):
                 EDITMODE = 'toogle'  # noqa
-                if click.confirm("Please confirm to"
-                                 f" {EDITMODE} your ToDo progress status"):
+                if click.confirm(text="Please confirm to"
+                                      f" {EDITMODE} your ToDo progress status"):
                     self.modifyprogress(editingseries,
                                         record=self.record,
                                         status=_checkstatus(status),
@@ -1692,27 +1775,28 @@ class Editor:
                 click.echo("Progress updated")
                 # Keep the same, is the default
                 if editingseries[ColumnSchema.DoD] == 'Planned' and \
-                        progress == 'todo':
+                        progress.lower() == 'todo':
                     editingseries[ColumnSchema.DoD] = 'Planned'
                 # Update if item is overlooked
                 if editingseries[ColumnSchema.DoD] == 'Planned' and \
-                        progress == 'missed':
+                        progress.lower() == 'missed':
                     editingseries[ColumnSchema.DoD] = 'Unfinished'
                 # Update if item is started, up DoD is not updated
                 elif editingseries[ColumnSchema.DoD] == 'Planned' and \
-                        progress == 'wip':
+                        progress.lower() == 'wip':
                     editingseries[ColumnSchema.DoD] = 'In Progress'
                 # Update if item is done, up DoD is not updated
                 elif editingseries[ColumnSchema.DoD] == 'In Progress' and \
-                        progress == 'done':
+                        progress.lower() == 'done':
                     editingseries[ColumnSchema.DoD] = 'Completed'
                 # Update if item is not completed on time
                 elif editingseries[ColumnSchema.DoD] == 'In Progress' and \
-                        progress == 'missed':
+                        progress.lower() == 'missed':
                     editingseries[ColumnSchema.DoD] = 'Unfinished'
                 # Update if item is not done, status is missed, DoD is refreshed
                 elif editingseries[ColumnSchema.DoD] == 'Unfinished' and \
-                        progress != 'done' and progress == 'missed':
+                        progress.lower() != 'done' \
+                        and progress.lower() == 'missed':
                     editingseries[ColumnSchema.DoD] = 'Unfinished'
                 else:
                     click.secho(
@@ -1738,7 +1822,7 @@ class Editor:
                     index=location, debug=debug)
             return updated
         
-        if editmode == "toggle":
+        if editmode.lower() == "toggle":
             # Insert the notes - add / overwrite / create
             editingseries[ColumnSchema.Progress] = ''
             
@@ -1835,22 +1919,26 @@ class Editor:
         # https://www.perplexity.ai/search/1ae6c535-37ae-4721-bbc8-38aa37cae119?s=c # noqa
         # Use for debuging IndexError: iloc cannot enlarge its target object
         # Not used for developing the pattern below.
-        def _update(framedata: pd.DataFrame, vlue: str, ix: int, col: str, ):
+        def _update(framedata: pd.DataFrame,
+                    vlue: str,
+                    ix: int,
+                    col: str) -> pd.DataFrame | None:
             """Update the data at the index and column"""
             
             def _atindexcolumn(data, debg: bool, isz: bool):
                 """Update the data at the index and column"""
                 data.at[ix, col] = vlue
-                if isz and debug:
+                if isz and debug is True:
                     click.secho(
-                            message=f"Note Updated at row: {ix} "
+                            message=f"_IXxCol: Note Updated at row: {ix} "
                                     "by zero index for "
                                     f"{record.series.name}",
                             err=True)
                     rich.inspect(data.at[ix, col])
-                elif not isz and debug:
+                elif not isz and debug is True:
                     click.secho(
-                            message=f"Note Updated at row: {ix} "
+                            message="_IXxCol: Note Updated at nonzero'd"
+                                    f" row: {ix} "
                                     f"by {record.series.name} only",
                             err=True)
                     rich.inspect(data.at[ix, col])
@@ -1865,8 +1953,14 @@ class Editor:
                         _atindexcolumn(data=framedata, debg=debug, isz=True)
                     elif ix != record.series.name:
                         _atindexcolumn(data=framedata, debg=debug, isz=False)
+                    elif ix:
+                        _atindexcolumn(data=framedata, debg=debug, isz=False)
+                        if debug is True:
+                            click.secho(message=f"Row's Index {ix} identified")
                     else:
-                        click.secho(message="Row not identified", err=True)
+                        if debug is True:
+                            click.secho(message="Row not identified", err=True)
+                        click.echo("On Update: No changes made")
                 else:
                     _atindexcolumn(data=framedata, debg=debug, isz=False)
             else:
