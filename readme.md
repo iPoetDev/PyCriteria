@@ -2,13 +2,13 @@
 <!-- markdownlint-disable -->
 # Project Criteria
 
-## 1.0 [Introduction](#introduction)
+## 1.0 [Introduction](#introduction)   <small><sup>✅</sup></small>
 
 - Data-centric command line interfaces are increasingly popular, for a wide set of use cases and implementations to model the architecture and design against these use cases; particularly in high speed trading and larger data-modeling environments.
 - In these use cases, performances is everything and using an non-graphical interface is more optimal than a GUI driven one.
 - This is a simple example of a command line interface that models after the popular `aws cli` by being command and options, i.e. user controls, driven over an nested command structure to manipulate the data in a google sheets as a simple Project Management format managing Code Institute's own project assignments and criteria.
 
-### 1.0.1 [Goals](#project-goals)
+### 1.0.1 [Goals](#project-goals)   <small><sup>✅</sup></small>
 
 
 
@@ -25,11 +25,11 @@
 5. To have a/any user, of any experience, preview the changes by comparing the record side by side.
 6. To have a/any user, of any experience, save. commit and then refresh the new data with the remote. 
 
-## 1.1 [Live App](#live-app)
+## 1.1 [Live App](#live-app)   <small><sup>✅</sup></small>
 
 [Live App Here](https://py-criteria.herokuapp.com/)
 
-## 1.2. [App Visuals](#app-visuals)
+## 1.2. [App Visuals](#app-visuals)   <small><sup>✅</sup></small>
 
 <!-- todo #2: add image link-->
 ![AddScreenshot]()
@@ -38,9 +38,9 @@
 > |
 ----
 
-## 2.0 [Plan](#plan)
+## 2.0 [Plan](#plan)   <small><sup>✅</sup></small>
 
-### 2.1 [User Experience](#ux)
+### 2.1 [User Experience](#ux)   <small><sup>✅</sup></small>
 
 - Any user, regardless of experience, should be intuitively able to use the auto-completed command prompts found in this CLI.These command prompts are the only possible user controls. 
 - The **`tab`** and **`space`** keys are core keyboard input (user) controls that can be intuitive to use, quick to learn and become familiar with.
@@ -79,7 +79,7 @@
 - The CLI should allow the user to manage their projects from the CLI, while they are developing other CLI apps and, so can update their projects achievements by adding notes and checking off of TODOs per project learning objective and criteria.
 - This CLI application only reached MVP level and therefore has potential for more development effort to be planned for.
 
-### 2.2 [Audiences](#audiences)
+### 2.2 [Audiences](#audiences)   <small><sup>✅</sup></small>
 
 > Purpose for addressing critical goals: LO8.4.3. (Merit)
 
@@ -92,9 +92,9 @@
 - Code Institute assessors as potential clients and users / owners of the Project Criteria for Code Institute assignments; <small>and as fun meme of using the Criteria data in ths project.</small>
 - The author of the project; keeping him on track and on target for the project criteria and delivery of project.
 
-### 2.3 [Requirements](#requirements)
+### 2.3 [Requirements](#requirements)   <small><sup>✅</sup></small>
 
-#### 2.3.1 [Drivers](#driving-requirements)
+#### 2.3.1 [Drivers](#driving-requirements)   <small><sup>✅</sup></small>
 
 - The requirements of this application were defined by the project criteria of
     1. [LO7.0] `"... to manage, query and manipulate data ..."` in a real-world domain.
@@ -105,7 +105,7 @@
     3. The development of a `CREATE, READ, UPDATE, DELETE` (CRUD) application for a dataset was the driver.
     4. Additionally developing `ETL` and `Find/Locate/Search` operations where also the drivers for the application's features.
 
-#### 2.3.2 [Business Case](#business-requirements)
+#### 2.3.2 [Business Case](#business-requirements)   <small><sup>✅</sup></small>
 
 - The business case of this kind of application is to demonstrate the utility, and the RoI's value add, of CLI applications for accessing remote data varied datasets from the command line, although this is only a MVP solution so it is bare bones and not fully featured.
 - This was inspired by the listings to the creator of the *'**rich**' CLI python library* on [Talk Python podcast, episode #366, titled: ""Terminal magic"" with Rich and Textual"](https://talkpython.fm/episodes/show/366/terminal-magic-with-rich-and-textual)
@@ -113,7 +113,7 @@
   - The specific reference of Amazon's 'aws cli' application was particularly interesting and very useful. 
   - It also demonstrates the business case of multi-commands CLIs and who the user targets audience is.
 
-#### 2.3.3 [Data Requirements](#user-requirements)
+#### 2.3.3 [Data Requirements](#user-requirements)   <small><sup>✅</sup></small>
 
 - The data model comes from the very own project criteria for the Code Institute assignments.
 - A version of the data, which is available at CI's own github pages site: https://code-institute-org.github.io/5P-Assessments-Handbook/portfolio3-prelims.html
@@ -140,7 +140,7 @@
         - `Position`: A non-zero'd index identifiers for the row, given that most data structures are N-1 indexed,
           starting from zero position. This is more human readable and user intuitive, i.e *"the row I want has the ID I know."*
 
-#### 2.3.4 [User Stories](#user-stories)
+#### 2.3.4 [User Stories](#user-stories)   <small><sup>✅</sup></small>
 
 - As a user, I want to be able to *load data* from a Google sheet.
 - As a user, I want to be able to *view data in a table*, for bulk /grouped data. 
@@ -151,7 +151,7 @@
 - As a user, I want to be able to *edit a record* by *deleting the note* in the location.
 - As a user, I want to be able to *edit a record* by *toggling the TODO* in the individual records.
 
-### 2.4 [Future Features](#future-requirements)
+### 2.4 [Future Features](#future-requirements)   <small><sup>✅</sup></small>
 
 In the future, this application could be extended to include, in increasing order of implementation/complexity/challenge:
 
@@ -171,13 +171,13 @@ The application was designed for future development and testing in mind; however
 > |
 ----
 
-## 3.0 [Design](#design)
+## 3.0 [Design](#design)  <small><sup>✅</sup></small>
 
-### 3.1 [Business Logic](#business)
+### 3.1 [Business Logic](#business)  <small><sup>✅</sup></small>
 
 ![](.docs/flowchart-design.png)
 
-#### 3.1.1. Key / Business Logic Guide
+#### 3.1.1. Key / Business Logic Guide  <small><sup>✅</sup></small>
 
 - `ENTER THE REPL/APP`
    - 1: INTENT: connection, via remote access and API authorisation, from API Provider on run() 
@@ -192,16 +192,16 @@ The application was designed for future development and testing in mind; however
   - Automcomplete aids the users's navigation, using **`tab`**, **`space`**
   - Additional `aborted`, `interupt` actions by the user are **`ctl + d`**, **`ctl + c`**, althought the last two may force the application and user to start over; **by design**.
 
-### 3.2 [App Design & Constriants](#app-design-constraints)
+### 3.2 [App Design & Constriants](#app-design-constraints)  <small><sup>✅</sup></small>
 
 > - NOTE: This is a data intensive application, by design, with dense information in a structural layout, as such
 
-#### 3.2.1 [Constraints](#design-constraints)
+#### 3.2.1 [Constraints](#design-constraints)  <small><sup>✅</sup></small>
 
 1. *No to Mobile screens & Usage:*
-- This App needs a wider viewport (terminal window) than 80 cols ot 720px. 
-  - Consequently this means that this excludes standard size and pro size mobiles upto this width (even in mobile landscape)
-  - **Constraint** Does not serve Mobile Users
+   - This App needs a wider viewport (terminal window) than 80 cols ot 720px. 
+     - Consequently this means that this excludes standard size and pro size mobiles upto this width (even in mobile landscape)
+     - **Constraint** Does not serve Mobile Users
 2. *Dimensions:* 
    - Without Zoom or Pinch and Zoom, this measures 1230px x 1128px
    - Consequently this only include Pro size Tablets, 13inch laptops (with thin bezels) and all desktop monitors at standard resolutions of 1080p or higher/denser
@@ -211,7 +211,7 @@ The application was designed for future development and testing in mind; however
 3. *Intent Contraint:*
    - Given the data intensity of data display and accuracy requirements of data input this CLI is never envisioned to be targetted at Mobile users or low end user uses cases.
 
-#### 3.2.2 [App Design](#app-design)
+#### 3.2.2 [App Design](#app-design)  <small><sup>✅</sup></small>
 
 > NOTE: The author modified the defacto terminal window dimensions (80 cols by 24 rows) to suit his Business and Design Use Case
 
@@ -241,11 +241,11 @@ The application was designed for future development and testing in mind; however
 
 For further insights into the code and logic of the app. [See here for Code & Logic Flows](.docs/classes.md)
 
-### 3.3 [Application Context](#app-context)
+### 3.3 [Application Context](#app-context)  <small><sup>✅</sup></small>
 
 > State Diagram, Activity Diagram
 
-#### 3.3.1 [State Diagram](#state-diagram)
+#### 3.3.1 [State Diagram](#state-diagram)  <small><sup>✅</sup></small>
 
 ```mermaid
 stateDiagram
@@ -275,7 +275,7 @@ stateDiagram
 	DisplayData --> [*]
 ```
 
-#### 3.3.2 [Activity Diagram](#activity-diagram)
+#### 3.3.2 [Activity Diagram](#activity-diagram)  <small><sup>✅</sup></small>
 
 ```mermaid
 sequenceDiagram
@@ -294,7 +294,7 @@ sequenceDiagram
 
 
 
-### 3.4 [User Journey](#user-journey)
+### 3.4 [User Journey](#user-journey)  <small><sup>✅</sup></small>
 
 > Flowcharts, Activity Diagram
 
@@ -319,11 +319,11 @@ H --> I[ View Record by \n Comparing Old/New];
 > |
 ----
 
-## 4.0 [Build](#build)
+## 4.0 [Build](#build)  <small><sup>✅</sup></small>
 
-### 4.1 [Environment](#enviornment)
+### 4.1 [Environment](#enviornment)  <small><sup>✅</sup></small>
 
-#### 4.1.1 [Interpreter](#python-interpreter)
+#### 4.1.1 [Interpreter](#python-interpreter)  <small><sup>✅</sup></small>
 
 - Python 3.11.03
     - Local: Installed
@@ -332,11 +332,11 @@ H --> I[ View Record by \n Comparing Old/New];
 - venv
 - Pip
 
-### 4.2 [IDE/CDE](#ide-cde)
+### 4.2 [IDE/CDE](#ide-cde)  <small><sup>✅</sup></small>
 
 - PyCharm (Professional) 2023.03
 
-#### 4.2.1 [Plugins](#plugins)
+#### 4.2.1 [Plugins](#plugins)  <small><sup>✅</sup></small>
 
 - CodeStream
 - Synk
@@ -601,32 +601,26 @@ H --> I[ View Record by \n Comparing Old/New];
 - PyCharm is pythonic focuses IDE specialising in Python.
 - This code style editor allows for consistent and immediate code style and convention alignment. 
 
-![Tabs & Indents](.docs/assets/PyCharmCodeStyle-TabsIndents.png)
-<br>
-```Pycharm > Editor > Code Style: 1: Tabs & Indents ```
-
-![BlankLines](.docs/assets/PyCharmCodeStyle-BlankLines.png)
-<br>
-
-```Pycharm > Editor > Code Style: 2: Blank Lines```
-
-
-![Import](.docs/assets/PyCharmCodeStyle-Import.png)
-<br>
-```Pycharm > Editor > Code Style: 3: Import```
-
-![Other](.docs/assets/PyCharmCodeStyle-OtherAlignment.png)
-<br>
-```Pycharm > Editor > Code Style: 4: Other Alignment```
-
-![Spaces](.docs/assets/PyCharmCodeStyle-Spaces.png) 
-<br>
-```Pycharm > Editor > Code Style: 5: Spaces```
-![Wrapping](.docs/assets/PyCharmCodeStyle-WrappingBraces.png)
+:------| :-------
+![Tabs & Indents](.docs/assets/PyCharmCodeStyle-TabsIndents.png) | ![BlankLines](.docs/assets/PyCharmCodeStyle-BlankLines.png)
 
 <br>
 
-```Pycharm > Editor > Code Style: 6: WrappingBraces```
+```Pycharm > Editor > Code Style: 1: Tabs & Indents | 2: Blank Lines```
+
+:------| :-------
+![Import](.docs/assets/PyCharmCodeStyle-Import.png) | ![Other](.docs/assets/PyCharmCodeStyle-OtherAlignment.png)
+
+<br>
+
+```Pycharm > Editor > Code Style: 3: Import | 4: Other Alignment```
+
+:------| :-------
+![Spaces](.docs/assets/PyCharmCodeStyle-Spaces.png) | ![Wrapping](.docs/assets/PyCharmCodeStyle-WrappingBraces.png)
+
+<br>
+
+```Pycharm > Editor > Code Style: 5: Spaces | 6: WrappingBraces```
 
 ### 5.2 [3rd Party Library Choices](#3party-libraries-choices) <small><sup>✅</sup></small>
 > Document the rationale as to why a particular library/libraries are necessary LO8.1.0 (Merit)<br>
@@ -798,9 +792,25 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 
 > AUTHOR'S NOTE: The author, given more time and scope, would devote resources to developing best in class transport security. However this constraint of time and delivery was an overiding priority and scoping constraint for the size and scale of the assignment and solution.
 
+
+### 5.5 [Code Issues, Bugs and Unexplain](#code-issues)
+
+#### 5.5.1 GitHub Issue Tracking
+
+> Using Code Stream Plugin, GitHub Issues where register as follows
+
+
+| GitHub # | Title | Fixed? | Fixable? | RootCause | URL
+| :--- |:--- |:--- |:--- |:--- 
+| #32  | Connection aborted | Yes | Auto Resolved | Possible Rate Limiting, | https://github.com/iPoetDev/PyCriteria/issues/32
+| #38 | Click.option --axis | Yes | Regresssion was patched| Not KNonw, so simplified approach | https://github.com/iPoetDev/PyCriteria/issues/38
+| #44 | Save/Commit - Not Working | No | Not Sure, Scope Drop Candidate | Three designs, no (over)writing to remote data | https://github.com/iPoetDev/PyCriteria/issues/44
+
 ----
 > |
 ----
+
+
 
 ## 6.0 [Features & Users  Acceptance](#features-users-acceptance)
 

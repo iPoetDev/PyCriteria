@@ -3,7 +3,7 @@
 # ruff: noqa: ANN001, I001
 # noqa: W293 blank line contains whitespace
 # - Without global file level rule, using # noqa: is not possible
-"""Module: Sidecar: App strings values for click commands, and Utilities
+"""Module: Sidecar: App strings values for click commands, and Utilities.
 
 Usage:
 -------------------------
@@ -36,27 +36,24 @@ Standard Libraries
 3rd Paty Imports
 :imports: click, rich, inspect, Prompt
 
-Custom Authored Libraries
-:imports: apptypes.ActionType
 
-:class: AppValues: Static Class App Strings for each
-:class: ActionType:
-:class: ProgramUtilities:
 """
-# Standard Imports
 import dataclasses
 import tracemalloc
 import warnings
+# Standard Imports
+from typing import Literal
 
 # 3rd Paty Imports
 import click
-import pandas as pd
 import rich
 from rich import inspect, print as rprint  # type: ignore
-from rich.prompt import Prompt  # type: ignore
 
 # 0.3 Local Imports
-from apptypes import ActionType
+
+
+# VauleTypes: Literals
+ActionType = Literal["default", "error", "ignore", "always", "module", "once"]
 
 
 @dataclasses.dataclass
@@ -136,7 +133,7 @@ class AppValues:
         help: str = "Load views. Select bulk data to view to Display."
         
         class Selects:
-            """Views Options: Selects: String Settings."
+            """Views Options: Selects: String Settings.".
             
             Click's options parameters: must match the function parameters label
             """
@@ -203,7 +200,7 @@ class AppValues:
         
         @dataclasses.dataclass
         class Note:
-            """Note command and option strings settings"""
+            """Note command and option strings settings."""
             cmd: str = "note"
             help: str = 'Add | Update | Delete a note to record'
             prompt: str = "The Note: Leave blank to delete."
@@ -224,6 +221,7 @@ class AppValues:
             indexhelp: str = "BY ROW: ☑️ Select: 1 to "
             Statuses: list = ["ToDo", "WIP", "Done", "Missed"]
             TOGGLE: str = 'toggle'
+            SELECT: str = 'select'
             
             @dataclasses.dataclass
             class Status:
@@ -254,103 +252,6 @@ class Exit:
     quik: str = "Exit Settings."
 
 
-class Checks:
-    """Checks.
-
-    :meth: isnot_context
-    :meth: has_dataframe
-    :meth: isnot_querytype
-    :meth: is_querycomplete
-    :meth: compare_frames
-    :meth: santitise
-    """
-    
-    def __init__(self):
-        """Initialize."""
-        pass
-    
-    @staticmethod
-    def isnot_context(ctx: click.Context) -> bool:
-        """Tests dataframe context.
-
-        :param ctx: click.Context - Click context
-        :return: bool - True if not context
-        """
-        return not (ctx and isinstance(ctx, click.Context))
-    
-    @staticmethod
-    def has_dataframe(ctx: click.Context) -> bool:
-        """Tests dataframe context.
-
-        Hinted by Sourcery
-        - Lift code into else after jump in control flow,
-        - Replace if statement with if expression,
-        - Swap if/else branches of if expression to remove negation
-
-        Refactored from: Perplexity
-        www.perplexity.ai/searches/a2f9c214-11e8-4f7d-bf67-72bfe08126de?s=c
-
-        :param ctx: click.Context - Click context
-        :return: bool - True if it has a dataframe
-        """
-        return isinstance(ctx, pd.DataFrame) if True else False
-    
-    @staticmethod
-    def isnot_querytype(header: str,
-                        query: str) -> bool:
-        """Tests Search Query.
-
-        :header: str - Header
-        :query: str - Query
-        :return: bool - True if not query
-        """
-        return not isinstance(header, str) or not isinstance(query, str)
-    
-    @staticmethod
-    def is_querycomplete(header: str,
-                         query: str) -> bool:
-        """Tests for Empty Serach.
-
-        :header: str - Header
-        :query: str - Query
-        :return: bool - True if header or query is not empty
-        """
-        return header is not None or query is not None
-    
-    @staticmethod
-    def compare_frames(olddata: pd.DataFrame,
-                       newdata: pd.DataFrame) -> bool:
-        """Compare dataframes.
-
-        :param olddata: pd.DataFrame - Old dataframe
-        :param newdata: pd.DataFrame - New dataframe
-        :return: bool - True if no changes
-        """
-        diff = olddata.compare(newdata,
-                               keep_shape=True,
-                               keep_equal=True)
-        if not diff.empty:
-            click.echo(message="Updated refreshed/rehydrated data")
-            rprint(diff, flush=True)
-            return False
-        
-        click.echo(message="No changes in refreshed/rehydrated data")
-        return True
-    
-    @staticmethod
-    def santitise(s: str) -> str | None:
-        """Sanitise strings.
-
-        :param s: str - String to sanitised
-        :return: str | None - Sanitised string or None
-        """
-        empty: str = ''
-        if s != empty and isinstance(s, str):
-            return s.strip() if s else None
-        click.echo(message="Searching by index only. No keywords.")
-        return None
-
-
 class CliStyles:
     """App Styles."""
     infofg: str = "white"
@@ -365,7 +266,7 @@ class CliStyles:
     warnblk: bool = True
     warnunder: bool = True
     warnrev: bool = True
-    errfg: str = "whit"
+    errfg: str = "white"
     errbg: str = "red"
     errbold: bool = True
     errblk: bool = True
@@ -409,43 +310,6 @@ class ProgramUtils:
         rich.print(f"Memory: {trace}")
         rich.inspect(trace, all=True)
         click.echo(f"Memory: {trace}", err=True)
-    
-    @staticmethod
-    def inspectcmd(func) -> None:
-        """Inspect a command's context."""
-        command: click.Command = click.Command(name=func.__name__)
-        context: click.Context = click.Context(command)
-        c2 = command.context_class
-        if context is None:
-            rich.print("Command: not found a current context.")
-            inspect(command)
-        
-        if c2:
-            rich.inspect("2nd Context:")
-            inspect(c2)
-        
-        rich.print(f"Command: {context.info_name}")
-        inspect(context.parent)
-        inspect(context)
-        inspect(context.command)
-        inspect(context.invoked_subcommand)
-        inspect(context.args)
-        inspect(context.obj)
-    
-    @staticmethod
-    def inspectcontext(ctx) -> None:
-        """Inspect a command's context."""
-        context: click.Context = ctx
-        if context is None:
-            rich.print("Command: not found a current context.")
-        
-        rich.print(f"Command: {context.info_name}")
-        inspect(context.parent)
-        inspect(context)
-        inspect(context.command)
-        inspect(context.invoked_subcommand)
-        inspect(context.args)
-        inspect(context.obj)
     
     @staticmethod
     def warn(action: ActionType = "ignore") -> None:
