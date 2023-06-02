@@ -1,6 +1,5 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
-# ruff: noqa: I001
 # noqa: W293 blank line contains whitespace
 # - Without global file level rule, using # noqa: is not possible
 """Module Exception Status and Graceful recovery.
@@ -35,19 +34,18 @@ LO6.1.1 Implement the use of external Python libraries
       where appropriate to provide the functionality that the project requires.
 -------------------------
 Standard Libraries
-:imports: sys, typing
+:imports: sys
 
 3rd Paty Imports
 :imports: rich
 
 :class: Settings
-:class: TableSettings - Used to load environmental variables from .env file.
-:class: EnvirnomentalVars - Used to load environmental variables from .env file.
+:class: EnvirnomentalVars -
+Used to load environmental variables from .env file.
 """
 
 # 0.1: Standard Library Imports
 import sys
-from typing import NoReturn
 
 from rich import print as rprint
 
@@ -68,31 +66,6 @@ class ManagingExceptions:
     """
     
     @staticmethod
-    def env_notfound_status(notfound: ModuleNotFoundError,
-                            module: str = 'dotenv',
-                            setting: str = ExceptionValues.ENV) -> NoReturn:
-        """Dotenv exception handler.
-        
-        Parameters
-        ----------
-        :param notfound: ModuleNotFoundError: The exception to handle
-        :param module: str: The module name
-        :param setting: str: The ENV filename name
-        
-        Returns:
-        ----------
-        :return: NoReturn
-        """
-        error_context: str = f'{str(notfound)}: {module}'
-        issue_message: str = f'Could not load {setting} file.'
-        guidance_message: str = \
-            'Import python-dotenv to load external \n'
-        guidance_message += f'{setting} or check the ENV file path. '
-        output: str = f'{error_context}: {issue_message} - {guidance_message}'
-        rprint(output)
-        return NoReturn
-    
-    @staticmethod
     def exiting_status(error: Exception, message: str) -> None:
         """Make an exiting exception.
         
@@ -106,6 +79,7 @@ class ManagingExceptions:
             :param error: Exception
             :param message: str
             
+
         Returns:
         ----------
             :return: NoReturn
@@ -133,7 +107,6 @@ class ManagingExceptions:
         # Log the error and print it
         _error_context: str = f'{str(error).title}'
         _output: str = f'{_error_context}: {error}: {message}'
-        # LOGRS.error(_output)
         # Status, Success and Prompt messages
         _status: str = f'{_output}'
         _success: str = 'User input:'
@@ -156,17 +129,14 @@ class ManagingExceptions:
         """Make an exiting exception.
         
         Seek a new credentials' filename from the user by prompting them.
-        
         Parameters
         ----------
         :param credentials: str: Credentials file name
         :param file_type: str: Credentials file's extension is json
         :param message: str: File or Tab
-        
         Returns:
         ----------
         :returns: value_str: str:  Returns a string for a file|tab name
-        
         """
         # 1. Log the error and print it
         _assert_context: str = 'Assert: Credentials File'
@@ -200,14 +170,10 @@ class ManagingExceptions:
         ----------
             :param value_str: string input to validate
             :type: str
-            
-
         Returns:
         ----------
             :return: True if valid else False
             :rtype: bool
-            
-
         Raises:
         ----------
             :raises ValueError: if not string or length is 0

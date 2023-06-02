@@ -1,13 +1,15 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
-# ruff: noqa: F841, ANN101, ANN001, D415, RET505, I001,
+# ruff: noqa: F841, ANN101, ANN001, D415, RET505, I001, ARG004, PLR0913
+# ruff: noqa: D301
 """Module: PyCriteria Command/REPL Terminal app.
 
 Usage: Commands and REPL
 -------------------------
 - Multi-line level nested commands structure.
     - Run - Core/BASE command AND ANCHORED command.
-        - Clear             - SUB COMMAND, nested under Run: to clear REPL/screen.
+        - Clear             - SUB COMMAND, nested under Run:
+                              to clear REPL/screen.
         - Load              - TOP INTENT, nested under Run
             - Views         - SUB COMMAND, nested under Load
                               Switches between sub-views of the data
@@ -101,19 +103,19 @@ from typing import Literal
 import click  # type: ignore
 # 2. 3rd Party
 from click_repl import register_repl  # type: ignore
-from pandas import pandas as pd, DataFrame, Series  # type: ignore
-from rich import inspect as inspector, pretty, print as rprint  # type: ignore
-from rich.console import Console
+from pandas import pandas as pd  # type: ignore
+from rich import inspect as inspector, print as rprint  # type: ignore
+from rich.console import Console  # type: ignore
 from rich.panel import Panel  # type: ignore
-from rich.table import Table  # type: ignore
 
 # 3. Local: Note the controller * intentionally imports all from the module
 from controller import (Controller as Actions, DataController,
                         Display, Results, WebConsole,
-                        configuration, gspread, Record, Inner, Editor, )
+                        configuration, gspread, Record, Editor,
+                        RICHStyler as rstyle, )
 from modelview import (Views, Head, )  # type: ignore
 from sidecar import (AppValues as Val, ProgramUtils as utils,
-                     CliStyles as styles, Checks as Guard, )
+                     CliStyles as styles, )
 
 # Global Modules/Objects
 # 1.1 controller.py
@@ -121,9 +123,6 @@ DataControl: DataController = DataController(Actions.load_wsheet())
 
 Webconsole: WebConsole = WebConsole(configuration.Console.WIDTH,
                                     configuration.Console.HEIGHT)
-Webconsole.terminal = Inner()
-# 1.2 sidecar.py
-pretty.install()
 
 
 class Valid:
@@ -133,26 +132,31 @@ class Valid:
         """Initialize."""
         pass
     
+    # Check
     @staticmethod
-    def index(ctx, param, value) -> int:  # noqa Parameters uses in callbacks
-        """Check if value is in range."""
-        # If None, Raise BadParameter
+    def index(ctx, param, value) -> int:
+        """Check if value is in range.
+        
+        :param ctx: click.Context - Click Context
+        :param param: click.Parameter - Click Parameter
+        :param value: str - String to sanitised
+        :return: int - Index value
+        """
+        
         if value is None:
-            raise click.BadParameter('Try again, '
-                                     'enter an (numerical) value.')
-        # If not an integer, Raise BadParameter
+            raise click.BadParameter(
+                'Try again, enter a numerical value.')
         if not isinstance(value, int):
-            raise click.BadParameter('Index must be an number.')
-        # If not in range, Raise BadParameter, as Index starts at 1
-        if value <= 0 or value > App.get_range:
-            raise click.BadParameter('Index must be '
-                                     f'between 0 and {App.get_range}.')
+            raise click.BadParameter(
+                'Index must be a number.')
+        if not 0 < value <= App.get_range:
+            raise click.BadParameter(
+                f'Index must be between 0 and {App.get_range}.')
         return value
     
     @staticmethod
     def santitise(ctx, param, value) \
-            -> str | None:  # noqa Contexts, Parameters uses in callbacks
-        
+        -> str | None:  # noqa Contexts, Parameters uses in callbacks
         """Sanitise strings: by validating input - empty or not string.
 
         :param ctx: click.Context - Click Context
@@ -172,40 +176,24 @@ class Valid:
         # Return trimmed value if not empty
         return value.strip() if value else empty
     
+    # Check
     @staticmethod
-    def mode(ctx, param, value) \
-            -> str | None:  # noqa Contexts, Parameters uses in callbacks
+    def mode(ctx, param, value) -> str | None:
         """Check the mode."""
-        if isinstance(value, str) and value.lower() is not None:
-            # Enter Add Edit Mode: To insert, create, new inputs to a record.
-            if value.lower() == 'add':
-                click.secho(message="Adding to the record: .......",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Enter Update Edit Mode: To append, update, new inputs to existing.
-            elif value.lower() == 'update':
-                click.secho(message=f"Updating the record: .......",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Enter Delete Edit Mode: To clear, remove existing record's value.
-            elif value.lower() == 'delete':
-                click.secho(message=f"Deleting from the record: .......",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Exit Edit Mode: Automatically exit Editing Mode.
-            else:
-                click.secho(message="Exiting Editing Mode. "
-                                    "Try again.",
-                            fg=styles.invalidfg, bold=styles.invalidbold)
-                return None
+        if value is not None and value.lower() in ['add', 'update', 'delete']:
+            mode = value.lower().capitalize()
+            click.secho(message=f"{mode}ing the record: .......",
+                        fg=styles.infofg, bold=styles.infobold)
+            return value
         else:
             click.secho(message="Exiting Editing Mode. Invalid entry.",
                         fg=styles.invalidfg, bold=styles.invalidbold)
             return None
     
+    # Check
     @staticmethod
     def correctaxis(ctx, param, value) \
-            -> str | None:  # noqa Contexts, Parameters uses in callbacks
+        -> str | None:  # noqa Contexts, Parameters uses in callbacks
         """Check valid choice of axis.
         
         Dimensions: across rows or columns or by index; depends on the Pandas.
@@ -213,12 +201,6 @@ class Valid:
         if isinstance(value, str) and value.lower() is not None:
             # Current feature: Implemented: DataFrames have these dimensions.
             if value.lower() == 'index':
-                return value
-            # Future feature: Not Implemented: DataFrames have these dimensions.
-            elif value.lower() == 'row':
-                return value
-            # Future feature: Not Implemented: DataFrames have these dimensions.
-            elif value.lower() == 'column':
                 return value
             else:
                 click.secho(message="Exiting Editing Mode. "
@@ -232,107 +214,7 @@ class Valid:
                         fg=styles.invalidfg, bold=styles.invalidbold)
             return None
     
-    @staticmethod
-    def selectviews(ctx, param, value) \
-            -> str | None:  # noqa Contexts, Parameters uses in callbacks
-        """Check valid choice of view."""
-        allview, projectview, criteriaview, todoview, referenceview = \
-            Views.Load
-        click.echo(f"\n")
-        if isinstance(value, str) and value.lower() is not None:
-            # Select All View: Display all records in the sheet.
-            if value.lower() == allview.lower():
-                click.secho(message="Displaying Assignment's Criteria"
-                                    f" {value} View: \n",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Select Project View: Display all records in the sheet.
-            elif value.lower() == projectview.lower():
-                click.secho(message="Displaying Assignment's "
-                                    f" {value} View: \n",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Select Criteria View: Display all records in the sheet.
-            elif value.lower() == criteriaview.lower():
-                click.secho(message="Displaying Assignment's "
-                                    f" {value} View: \n",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Select Todo View: Display all records in the sheet.
-            elif value.lower() == todoview.lower():
-                click.secho(message="Displaying Assignment's "
-                                    f" {value} View: \n",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Select Reference View: Display all records in the sheet.
-            elif value.lower() == referenceview.lower():
-                click.secho(message="Displaying Assignment's "
-                                    f" {value} View: \n",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Exit Edit Mode: Automatically exit Editing Mode.
-            else:
-                click.secho(message="Exiting Editing Mode. "
-                                    "No View selected. "
-                                    "Try again.",
-                            fg=styles.invalidfg, bold=styles.invalidbold)
-                return None
-        # Exit Edit Mode: Automatically exit Editing Mode due to invalid entry.
-        else:
-            click.secho(message="Exiting Editing Mode. Invalid entry.",
-                        fg=styles.invalidfg, bold=styles.invalidbold)
-            return None
-    
-    @staticmethod
-    def selecttodo(ctx, param, value) \
-            -> str | None:  # noqa Contexts, Parameters uses in callbacks
-        """Check Valid Todo Views."""
-        allview, simpleview, notesview, dodview, gradeview, reviewview = \
-            Views.Todo
-        click.echo(f"\n")
-        if isinstance(value, str) and value.lower() is not None:
-            # Select All View: Display all records in the sheet.
-            if value.lower() == allview.lower():
-                click.secho(message=f"Displaying Todo's {value} View: \n",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Select Simple View: Display a reduced view of records.
-            elif value.lower() == simpleview.lower():
-                click.secho(message=f"Displaying Todo's {value} View: \n",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Select Notes View: Display a reduced view of records for notes.
-            elif value.lower() == notesview.lower():
-                click.secho(message=f"Displaying Todo's {value} View: \n",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Select Definition of Done View: Display progression of records.
-            elif value.lower() == dodview.lower():
-                click.secho(message=f"Displaying Todo's {value} View: \n",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Select Grades View: Display a grade focused view of records.
-            elif value.lower() == gradeview.lower():
-                click.secho(message=f"Displaying Todo's {value} View: \n",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Select Review View: Display review of the records; a quick review.
-            elif value.lower() == reviewview.lower():
-                click.secho(message=f"Displaying Todo's {value} View: \n",
-                            fg=styles.infofg, bold=styles.infobold)
-                return value
-            # Exit Edit Mode: Automatically exit Editing Mode.
-            else:
-                click.secho(message="Exiting Editing Mode. "
-                                    "No View selected. Try again.",
-                            fg=styles.invalidfg, bold=styles.invalidbold)
-                return None
-        # Exit Edit Mode: Automatically exit Editing Mode due to invalid entry.
-        else:
-            click.secho(message="Exiting Editing Mode. Invalid entry.",
-                        fg=styles.invalidfg, bold=styles.invalidbold)
-            return None
-    
+    # Check
     @staticmethod
     def checktoggle(edits) -> str | None:
         """Check the mode."""
@@ -341,8 +223,10 @@ class Valid:
             if edits.lower() == 'toggle':
                 return edits
             else:
-                click.secho(message="Exiting Editing Mode. Invalid Mode. Try again.",
+                click.secho(message="Exiting Editing Mode. "
+                                    "Invalid Mode. Try again.",
                             fg=styles.invalidfg, bold=styles.invalidbold)
+                return None
         else:
             click.secho(message="Exiting Editing Mode. Try again.",
                         fg=styles.invalidfg, bold=styles.invalidbold)
@@ -351,56 +235,35 @@ class Valid:
     @staticmethod
     def checkstatus(state) -> str | None:
         """Check the status."""
-        if isinstance(state, str):
-            # Add
-            if state.lower() == 'todo':
-                click.echo(message=f"🆕 ToDo Status, {state} 🆕")
-                return state
-            # Update
-            elif state.lower() == 'wip':
-                click.echo(message=f"🆕 ToDo Status, {state} 🆕")
-                return state
-            # Delete
-            elif state.lower() == 'done':
-                click.echo(message=f"🆕 ToDo Status, {state} 🆕")
-                return state
-            elif state.lower() == 'missing':
-                click.echo(message=f"🆕 ToDo Status, {state} 🆕")
-                return state
-            # None, Other
-            else:
-                click.echo(message="Exiting Editing Mode. Try again.")
-                return None
+        if state.lower() in ['todo', 'wip', 'done', 'missing']:
+            click.echo(message=f"🆕 ToDo Status, {state} 🆕")
+            return state
+        else:
+            click.echo(message="Exiting Editing Mode. Try again.")
+            return None
     
     @staticmethod
     def checkmode(edits: str, index: int) -> str | None:
         """Check the mode."""
-        if isinstance(edits, str):
-            # Add
-            if edits.lower() == App.values.Edit.ADD:
-                click.echo(message="🆕 Adding note"
-                                   f", in row {index} 🆕")
-                return edits
-            # Update
-            elif edits.lower() == App.values.Edit.UPDATE:
-                click.echo(message="🔂 Updating a Note"
-                                   f", in row {index}...🔂")
-                return edits
-            # Delete
-            elif edits.lower() == App.values.Edit.DELETE:
-                click.echo(message="🗑️ Deleting a Note"
-                                   f", in row {index}...🗑️")
-                return edits
-            # None, Other
-            else:
-                click.echo(message="Exiting Editing Mode. Try again.")
+        if edits.lower() in [App.values.Edit.ADD,
+                             App.values.Edit.UPDATE,
+                             App.values.Edit.DELETE]:
+            mode = edits.lower().capitalize()
+            click.echo(message=f"🆕 {mode}ing a Note, in row {index} 🆕")
+            return edits
+        else:
+            click.echo(message="Exiting Editing Mode. Try again.")
+            return None
     
     @staticmethod
     def checkcommand(mode: str) \
-            -> str | None:
+        -> str | None:  # noqa # Pep8 E125
         """Check the mode, translate to edit comand tyoe."""
         allowed = {App.values.Edit.ADD,
-                   App.values.Edit.UPDATE, App.values.Edit.DELETE}
+                   App.values.Edit.UPDATE,
+                   App.values.Edit.DELETE,
+                   App.values.Edit.ToDo.TOGGLE}
+        
         if mode in allowed:
             if mode == App.values.Edit.ADD:
                 return App.values.Edit.INSERT
@@ -408,13 +271,16 @@ class Valid:
                 return App.values.Edit.APPEND
             elif mode == App.values.Edit.DELETE:
                 return App.values.Edit.CLEAR
+            elif mode == App.values.Edit.ToDo.TOGGLE:
+                return App.values.Edit.ToDo.SELECT
+            return None
         else:
             return None
 
 
 class Window:
     """Window: Arrange Terminal Layouts, Panels, Cards.
-    
+
     Methods:
     --------------------------------------------
     :method: Window.sendto
@@ -426,7 +292,7 @@ class Window:
     
     """
     
-    def __init__(self):
+    def __init__(self):  # noqa
         """Initialize."""
         pass
     
@@ -441,17 +307,22 @@ class Window:
     
     @staticmethod
     def showrecord(data: pd.Series | pd.DataFrame,
-                   sendtoeditor: bool = False,
+                   sendtolayout: bool = True,
+                   command: str = '',
                    displayon: bool = True,
                    debug: bool = False) -> Record | None:
         """Display Record.
         
         :param data: pd.Series | pd.DataFrame - Individual Record to display
-        :param sendtoeditor: bool - Switch to send to the Editor or not.
+        :param sendtolayout: bool - Switch to send to the Editor or not.
+               App.values.Display.TOLAYOUT = True => Builds formatted layout.
+               App.values.Display.TOTERMINAL = False => Builds simple layout.
+        :param command: str - Command to send to the Editor.
         :param displayon: bool - Switch to display or not.
         :param debug: bool - Switch to debug mode or not.
         :return: Record | None - Individual Record to display or None
         """
+        # Data is not empty
         if data.empty is False:
             # Individual record holds the singular record, handles displays
             # Selecting different calls on the individual record yields
@@ -459,57 +330,123 @@ class Window:
             # Only displays a pd.Series, implicitly.
             # Not designed for results >1, unless part of a loop.
             individual = Record(series=data, source=data)
-            
+            individual.editmode = command
+            # Debug and Inspect
             if debug is True:
                 rprint("Debug Mode: Show Record")
                 inspector(individual)
-            
+            # Display Show Record or Supress
             if displayon:
-                if individual.card(consolecard=Webconsole.console) is not None:
+                # If sendtolayout is True, builds the layout | Not None.
+                if individual.card(consolecard=Webconsole.console,
+                                   sendtoterminal=sendtolayout) is not None:
+                    # Print Panels
                     window.printpanels(record=individual)
                 else:
+                    # Print Simple Card of all values
                     click.echo("Displaying Simple Card")
                     individual.card(consolecard=Webconsole.console)
-            
-            return Window.sendto(individual, sendtoeditor)
+            # Forwards the individual record to the Editor.
+            return Window.sendto(individual, sendtolayout)
+        # Data is empty and exits
+        return None
     
     @staticmethod
-    def printpane(panel: str, printer: Console) -> None:
+    def configpanel(render,  #
+                    pstyle=None,
+                    ht=None,
+                    wd=None,
+                    border=None,
+                    fit: bool = True,
+                    title: str = '',
+                    sub: str = '',
+                    padsize: str = '',
+                    hlight: bool = True) -> Panel:
+        """Configure Panel.
+
+        :return: Panel - Configured Panel
+        """
+        
+        def _pad(size) -> int | tuple[int] | \
+                          tuple[int, int] | \
+                          tuple[int, int, int, int]:  # noqa E128
+            """Pad the image."""
+            sizes = {
+                'small': (0, 1),
+                'medium': (0, 2),
+                'large': (0, 3)
+                }
+            return sizes.get(size, 0)
+        
+        return Panel(
+            renderable=render,
+            title=title,
+            expand=fit,
+            subtitle=sub,
+            width=wd,
+            height=ht,
+            padding=_pad(padsize),
+            title_align='center',  # noqa
+            subtitle_align='center',  # noqa
+            style=pstyle,
+            border_style=border, )
+    
+    @staticmethod
+    def printpane(panel: str, printer: Console, text: str | None = '') -> None:
         """Print Pane.
         
         :param panel: str - Panel to print
         :param printer: Console - Console to print to
+        :param text: str - Text to display
         :return: None
         """
-        if panel == 'bannerfull':
-            pane = Panel(
-                    "======================="
-                    "================="
-                    "Displaying Updated Card"
-                    "========================"
-                    "=================")
+        if panel == 'banner':
+            pane = window.configpanel(
+                render="",
+                title="📝 PyCriteria 📝",
+                sub=f"📝 You are in {text} Mode  📝",
+                padsize='medium',
+                ht=2,
+                pstyle=rstyle.panel(grey=11),
+                border='bright_white')
+            printer.print(pane)
+        elif panel == 'foot' and text is None:
+            pane = window.configpanel(
+                render="",
+                padsize='medium',
+                ht=1,
+                pstyle=rstyle.panel(grey=11),
+                border='bright_white')
             printer.print(pane)
     
     @staticmethod
-    def printpanels(record) -> None:
+    def printpanels(record: Record) -> None:
         """Print Panels.
         
         :param record: Record - Individual Record to display
         :return: None
         """
+        # Record is the data loader for single record.
         if record is not None:
-            window.printpane(panel='bannerfull',
-                             printer=Webconsole.console)
+            # Print: the Banner at top of the Record's Display
+            window.printpane(panel='banner',
+                             printer=Webconsole.console,
+                             text=record.modedisplay())
             # Switch to Rich/Terminal display
-            header = record.header(
+            # Record builds the data views: Header, Card, Footer
+            header = \
+                record.header(
                     consolehead=Webconsole.console,
                     sendtolayout=True,
                     gridfit=True)
-            current = record.editable(
+            current = \
+                record.editable(
                     consoleedit=Webconsole.console,
                     sendtolayout=True)
-            footer = record.footer(
-                    consolefoot=Webconsole.console, sendtolayout=True)
+            footer = \
+                record.footer(
+                    consolefoot=Webconsole.console,
+                    sendtolayout=True)
             # Print: the Panel as a Group of Renderables
             record.panel(consolepane=Webconsole.console,
                          renderable=header,
@@ -517,11 +454,16 @@ class Window:
                          sendtolayout=False)
             record.panel(consolepane=Webconsole.console,
                          renderable=current,
+                         fits=True,
+                         align='center',
                          sendtolayout=False)
             record.panel(consolepane=Webconsole.console,
                          renderable=footer,
                          fits=True,
                          sendtolayout=False)
+            # Print: the Panel as a Group of Renderables
+            window.printpane(panel='foot',
+                             printer=Webconsole.console)
     
     @staticmethod
     def showedited(editeddata: pd.Series | pd.DataFrame,
@@ -537,6 +479,7 @@ class Window:
         """
         if debug:
             rprint(editeddata)
+            return None
         elif editeddata.empty is False:
             individual = Record(source=editeddata)
             if individual.card(consolecard=Webconsole.console) is not None:
@@ -545,6 +488,7 @@ class Window:
                 individual.card(consolecard=Webconsole.console)
             
             return individual if sendtoeditor else None
+        return None
     
     @staticmethod
     def showmodified(editeddata: pd.Series,
@@ -556,7 +500,7 @@ class Window:
         
         :param editeddata: pd.Series - Individual Record to display
         :param editor: Editor - Editor to use
-        :param commandtype: Literal['insert', 'append', 'clear']
+        :param commandtype: str
                 - Command type to use
         :param dataview: Literal['show', 'compare'] - Data view to use
         :param debug: bool - Switch to debug mode or not.
@@ -571,22 +515,19 @@ class Window:
             # State could be if time permits, if a lastmodified field is saved.
             # Is saved to the remote database, but not in the local record.
             # Therefore not in scope for version: 1.0.0.alpha+
-            click.echo(f'Command Type: {commandtype}')
+            
             if editor.editmode == commandtype:
-                click.echo(editor.editmode)
                 if debug is True:
+                    click.echo(f'Command Type: {commandtype}')
+                    click.echo(f'Editor\'s mode: {editor.editmode}')
                     click.echo(message="==========Displaying: "
                                        "Changes=========\n")
                 # 1. Display the Edited record
                 if dataview == 'show':  # show
-                    window.showedited(editeddata=editeddata,
-                                      debug=App.values.NOTRACING)
+                    window.showedited(editeddata=editeddata)
                 elif dataview == 'compare':  # compare
-                    click.echo(f"DataView Outside: {dataview}")
                     window.comparedata(editeddata=editeddata,
-                                       editor=editor,
-                                       debug=App.values.NOTRACING,
-                                       debugdisplay=App.values.NOTRACING)  # noqa
+                                       editor=editor)  # noqa
                 #  [DEBUG]
                 if debug is True:
                     click.echo(message="=== [DEBUG] Saving: "
@@ -601,8 +542,6 @@ class Window:
             click.echo(message="Exiting: Command completed")
         else:
             click.echo(message="No changes made. Bulk edits not supported.")
-        
-        return None
     
     @staticmethod
     def comparedata(editeddata: pd.Series,
@@ -617,15 +556,15 @@ class Window:
         :return: None
         """
         
-        def _setrecordprops(record: Record, editor: Editor) -> None:
+        def _setrecordprops(record: Record, aeditor: Editor) -> None:
             """Set Record Properties.
             
             :param record: Record - Record to use
             :return: None
             """
-            record.editmode = editor.editmode
-            record.modified = editor.lastmodified
-            record.command = editor.command
+            record.editmode = aeditor.editmode
+            record.modified = aeditor.lastmodified
+            record.command = aeditor.command
         
         if debug is True:
             rprint(editeddata)
@@ -635,48 +574,47 @@ class Window:
             # 0. Create the Old and New Records, locallt
             oldrecord: Record = editor.record
             newrecord: Record = Record(series=editor.newresultseries)
-            _setrecordprops(record=newrecord, editor=editor)
+            _setrecordprops(record=newrecord, aeditor=editor)
             # 1. Display the Edited recor
             left = oldrecord.editable(
-                    consoleedit=Webconsole.console,
-                    sendtolayout=App.values.DISPLAYING,
-                    title="Original Record")
+                consoleedit=Webconsole.console,
+                sendtolayout=App.values.DISPLAYING,
+                title="Original Record")
             right = newrecord.editable(
-                    consoleedit=Webconsole.console,
-                    sendtolayout=App.values.DISPLAYING,
-                    title="Updated Record")
+                consoleedit=Webconsole.console,
+                sendtolayout=App.values.DISPLAYING,
+                title="Updated Record")
             # Compare Old with New, else just show the new
             if left is not None or right is not None:
                 window.printpane(panel="bannerfull",
                                  printer=Webconsole.console)
                 header = newrecord.header(
-                        consolehead=Webconsole.console,
-                        sendtolayout=App.values.Display.TOLAYOUT,
-                        gridfit=True,
-                        debug=debugdisplay)
+                    consolehead=Webconsole.console,
+                    sendtolayout=App.values.Display.TOLAYOUT,
+                    gridfit=True,
+                    debug=debugdisplay)
                 sidebyside = newrecord.comparegrid(
-                        container=Webconsole.table,
-                        left=left,
-                        right=right,
-                        sendtolayout=App.values.Display.TOLAYOUT,
-                        fit=True,
-                        debug=App.values.TRACING)
+                    container=Webconsole.table,
+                    left=left,
+                    right=right,
+                    sendtolayout=App.values.Display.TOLAYOUT,
+                    fit=True,
+                    debug=debugdisplay)
                 footer = newrecord.footer(
-                        consolefoot=Webconsole.console,
-                        sendtolayout=App.values.Display.TOLAYOUT,
-                        expand=False,
-                        debug=debugdisplay)
-                
-                newrecord.panel(consolepane=Webconsole.console,
-                                renderable=header,
-                                fits=True,
-                                sendtolayout=
-                                App.values.Display.TOTERMINAL)  # noqa
-                newrecord.panel(consolepane=Webconsole.console,
-                                renderable=sidebyside,
-                                fits=True,
-                                sendtolayout=
-                                App.values.Display.TOTERMINAL)  # noqa
+                    consolefoot=Webconsole.console,
+                    sendtolayout=App.values.Display.TOLAYOUT,
+                    expand=False,
+                    debug=debugdisplay)
+                newrecord.panel(
+                    consolepane=Webconsole.console,
+                    renderable=header,
+                    fits=True,
+                    sendtolayout=App.values.Display.TOTERMINAL)
+                newrecord.panel(
+                    consolepane=Webconsole.console,
+                    renderable=sidebyside,
+                    fits=True,
+                    sendtolayout=App.values.Display.TOTERMINAL)
             else:
                 window.showedited(editeddata=editeddata, debug=debug)
 
@@ -686,6 +624,7 @@ class CriteriaApp:
     
     :property: values: AppValues - App Values
     
+
     Methods:
     :method: get_data - get the remote data, alias for DataController
     :method: display_data -
@@ -703,21 +642,20 @@ class CriteriaApp:
     
     values: Val
     views: Views
-    guard: Guard
     appdata: DataController
     data: pd.DataFrame
     range: int
     editmode: list[str] = ['none', 'add', 'update', 'delete']
     editaction: list[str] = ['insert', 'append', 'clear']
-    CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+    
+    # CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
     
     def __init__(self, applicationdata: DataController) -> None:
         """Initialize."""
         self.values = Val()
         self.views = Views()
-        self.guard = Guard()
         self.appdata = applicationdata
-        self.data = self.appdata.dataframe
+        self.data = applicationdata.dataframe
         self.range = len(self.data)
     
     @staticmethod
@@ -730,6 +668,21 @@ class CriteriaApp:
         dataframe: pd.DataFrame = \
             DataControl.load_dataframe_wsheet(wsheet=wsheet)
         return dataframe
+    
+    def send_data(self, debug: bool = False) -> None:
+        """Send the dataframe to the context.
+        
+        :return: None
+        """
+        wsheet: gspread.Worksheet = Actions.load_wsheet()
+        if self.data.empty is False:
+            
+            if debug is True:
+                rprint(self.data)
+                inspector(self.data)
+            else:
+                DataController.send_dataframe_wsheet(
+                    dataframe=self.data, sheet=wsheet)
     
     @property
     def get_range(self) -> int:
@@ -750,29 +703,32 @@ class CriteriaApp:
         :param dataframe: pd.DataFrame - Dataframe to display
         :param todoview: str - View option
         :param label: str - Label to display
-        :return: None """
+        :return: None
+        """
         
         # Select the view
         def vues(choice: str) -> list[str]:
             """Select the (predefined) view -> Header. Columns
             
             :param choice: str - View option
-            :return: list[str] - Columns """
+            :return: list[str] - Columns
+            """
             #
+            headers: list[str] = []
             if choice.lower() == self.views.All.lower():
-                headers: list[str] = Head.ToDoAllView
+                headers = Head.ToDoAllView
             elif choice.lower() == self.views.Simple.lower():
-                headers: list[str] = Head.ToDoSimpleView
+                headers = Head.ToDoSimpleView
             elif choice.lower() == self.views.Notes.lower():
-                headers: list[str] = Head.ToDoNotesView
+                headers = Head.ToDoNotesView
             elif choice.lower() == self.views.Done.lower():
-                headers: list[str] = Head.ToDoProgressView
+                headers = Head.ToDoProgressView
             elif choice.lower() == self.views.Grade.lower():
-                headers: list[str] = Head.ToDoGradeView
+                headers = Head.ToDoGradeView
             elif choice.lower() == self.views.Review.lower():
-                headers: list[str] = Head.ToDoReviewView
+                headers = Head.ToDoReviewView
             else:
-                headers: list[str] = Head.ProjectView
+                headers = Head.ProjectView
             return headers
         
         # Configure the bulk ouput as Table
@@ -780,14 +736,15 @@ class CriteriaApp:
     
     #
     def command_view(self, dataframe: pd.DataFrame,
-                     viewer: list[str] = None,
+                     viewer: list[str] | None = None,
                      label: str = 'Overview') -> None:
         """Display the dataframe.
 
         :param dataframe: pd.DataFrame - Dataframe to display
         :param viewer: list[str] - List of views to display
         :param label: str - Label to display
-        :return: None """
+        :return: None
+        """
         # Select the view's header
         headers: list[str] = Head.OverviewViews if viewer is None else viewer
         # Configure the bulk ouput as Table
@@ -803,7 +760,8 @@ class CriteriaApp:
         :param data: pd.DataFrame - Dataframe to display
         :param cols: list[str] - List of columns to display
         :param title: str - Title to display
-        :return: None """
+        :return: None
+        """
         # Configure the bulk ouput as Table with headers
         Webconsole.table = Webconsole.configure_table(headers=cols)
         # Display the sub frame dataview
@@ -821,7 +779,8 @@ class CriteriaApp:
 
         :param context: click.Context - Click context
         :param dataframe: pd.DataFrame - Dataframe to update
-        :return: None """
+        :return: None
+        """
         # Update the context
         context.obj = dataframe
         # Update the appdata
@@ -860,8 +819,7 @@ window: Window = Window()
 
 # 0. Run: Base Command: Anchors all Intent and Actions
 # Does not to anything but command achitecture/infrastructure and --help
-@click.group(name=App.values.Run.cmd,
-             context_settings=App.CONTEXT_SETTINGS, short_help='Type: --help')
+@click.group(name=App.values.Run.cmd, short_help='Type: --help')
 @click.pass_context
 def run(ctx: click.Context) -> None:  # noqa
     """Level: Run. Type: about to learn to use this CLI.
@@ -874,7 +832,8 @@ def run(ctx: click.Context) -> None:  # noqa
 
 # 0.1 Run: Base Command: Clear
 # Clears the REPL using click.clear()
-@run.command("clear", help="Cmd: Clear the screen", short_help="Cmd: Clear the screen")
+@run.command("clear", help="Cmd: Clear the screen",
+             short_help="Cmd: Clear the screen")
 @click.pass_context
 def clear(ctx: click.Context) -> None:  # noqa
     """Clear the screen."""
@@ -920,54 +879,55 @@ def load(ctx: click.Context) -> None:  # noqa
     :return: None: Produces stdout --help text
     """
     click.secho(
-            message="====================LOADING MODE=======================\n",
-            fg='magenta', bg='white', bold=True)
+        message="====================LOADING MODE=======================\n",
+        fg='magenta', bg='white', bold=True)
     click.secho(
-            message="========Load & Show All/Bulk Records (Table)===========\n",
-            fg='magenta', bold=True)
+        message="========Load & Show All/Bulk Records (Table)===========\n",
+        fg='magenta', bold=True)
     click.secho(
-            message="==========Select Views: Show Selected Tasks============\n",
-            fg='magenta', bold=True)
+        message="==========Select Views: Show Selected Tasks============\n",
+        fg='magenta', bold=True)
     click.secho(
-            message="Entering loading & reading mode for all records.",
-            fg='magenta', bg='white', bold=True)
+        message="Entering loading & reading mode for all records.",
+        fg='magenta', bg='white', bold=True)
     click.secho(
-            message="Steps: \n"
-                    "  1. Enter an load mode:                               \n"
-                    "  2. Select Todo or Views task/action:                 \n"
-                    "  3. For Todo: -= Tasks Zone for the Project           \n"
-                    "     3.1 Choose All: Complete list an overview.        \n"
-                    "     3.2 Choose Simple: A simple list of Todo.         \n"
-                    "     3.3 Choose Notes: A list of Notes.                \n"
-                    "     3.4 Choose Notes: A Todos that are Done.          \n"
-                    "     3.5 Choose Grade: A Todos that are by Grade.      \n"
-                    "     3.5 Choose Review...........................      \n"
-                    "     ............................................      \n"
-                    "  4. For Views: -=Review the Assignement & Criterias=- \n"
-                    "     4.1 Choose Overview: Complete list an overview.   \n"
-                    "     4.2 Choose Project: A view of projects. data.     \n"
-                    "     4.3 Choose Criteria: A view of criteria.          \n"
-                    "     4.4 Choose ToDos: A view of ToDos.                \n"
-                    "     4.5 Choose References: An index of references.    \n"
-                    "  5. Exits mode automatically.                         \n",
-            fg='magenta', bold=styles.infobold, underline=True)
+        message="Steps: \n"
+                "  1. Enter an load mode:                               \n"
+                "  2. Select Todo or Views task/action:                 \n"
+                "  3. For Todo: -= Tasks Zone for the Project           \n"
+                "     3.1 Choose All: Complete list an overview.        \n"
+                "     3.2 Choose Simple: A simple list of Todo.         \n"
+                "     3.3 Choose Notes: A list of Notes.                \n"
+                "     3.4 Choose Notes: A Todos that are Done.          \n"
+                "     3.5 Choose Grade: A Todos that are by Grade.      \n"
+                "     3.5 Choose Review...........................      \n"
+                "     ............................................      \n"
+                "  4. For Views: -=Review the Assignement & Criterias=- \n"
+                "     4.1 Choose Overview: Complete list an overview.   \n"
+                "     4.2 Choose Project: A view of projects. data.     \n"
+                "     4.3 Choose Criteria: A view of criteria.          \n"
+                "     4.4 Choose ToDos: A view of ToDos.                \n"
+                "     4.5 Choose References: An index of references.    \n"
+                "  5. Exits mode automatically.                         \n",
+        fg='magenta', bold=styles.infobold, underline=True)
     click.secho(
-            message="Prompts are available for each input. Hit: 'Enter'")
+        message="Prompts are available for each input. Hit: 'Enter'")
     App.update_appdata(context=ctx, dataframe=App.get_data())
     click.secho(
-            message="Working data is now ... rehydrated.",
-            blink=True)
+        message="Working data is now ... rehydrated.",
+        blink=True)
     click.secho(
-            message=f"You have rows 1 to {App.get_range} to work with",
-            bold=styles.infobold)
+        message=f"You have rows 1 to {App.get_range} to work with",
+        bold=styles.infobold)
 
 
 # 2.1 Load Data: ToDo (Sub) Views
 # Uses App.values.x.x(.x) String values for configuration.
+# noinspection PyUnusedFunction
 @load.command(App.values.Todo.cmd,
               help=App.values.Todo.help, short_help='Load Mode: Todos Views')
 @click.pass_context
-@click.option(f'-selects', 'selects',
+@click.option('-selects', 'selects',
               type=click.Choice(choices=App.views.Todo,
                                 case_sensitive=App.values.case),
               default=App.values.Todo.Selects.default,
@@ -986,7 +946,7 @@ def todo(ctx, selects: str) -> None:
     dataframe: pd.DataFrame = App.get_data()
     
     # Guard Clause Checks Choice
-    def checkchoice(choice: str) -> str:
+    def checkchoice(choice: str) -> str | None:
         """Guard Clause."""
         if choice is not None and isinstance(choice, str):
             return choice
@@ -997,6 +957,7 @@ def todo(ctx, selects: str) -> None:
                                 "Choices: All, Simple, Done, Grade, Review",
                         fg=styles.invalidfg,
                         bold=styles.invalidbold)  # noqa
+            return None
     
     # Display
     try:
@@ -1010,8 +971,10 @@ def todo(ctx, selects: str) -> None:
 
 # 2.2 Load Data: Views (Sub) Views - These are assignments levels views
 # Uses App.values.x.x(.x) String values for configuration.
+# noinspection PyUnusedFunction
 @load.command(App.values.Views.cmd,
-              help=App.values.Views.help, short_help='Load Mode: Selects views')
+              help=App.values.Views.help,
+              short_help='Load Mode: Selects views')
 @click.option('-selects', 'selects',
               type=click.Choice(choices=App.views.Load,
                                 case_sensitive=App.values.case),
@@ -1032,7 +995,7 @@ def views(ctx, selects) -> None:
     dataframe: pd.DataFrame = App.get_data()
     
     # Guard Clause Checks Choice
-    def checks(choice: str) -> str:
+    def checks(choice: str) -> str | None:
         """Guard Clause for View Choice
         
         :param choice: str: Choice
@@ -1048,6 +1011,7 @@ def views(ctx, selects) -> None:
                                 "ToDo, Reference",
                         fg=styles.invalidfg,
                         bg=styles.invalidbg)  # noqa
+            return None
     
     # Select the General Views
     def chooseviews(data: pd.DataFrame, choice: str) -> None:
@@ -1055,7 +1019,8 @@ def views(ctx, selects) -> None:
         
         :param data: pd.DataFrame: Dataframe
         :param choice: str: Choice
-        :return: None: Produces stdout"""
+        :return: None: Produces stdout
+        """
         if checks(choice) == App.views.Overviews:
             App.command_view(dataframe=data,
                              viewer=Head.OverviewViews,
@@ -1120,16 +1085,15 @@ def find(ctx: click.Context) -> None:  # noqa
     :param ctx: click.Context
     :return: None: Produces stdout --help text
     """
-    
     click.secho(
-            message="=====================FINDING MODE======================\n",
-            fg='cyan', bg='white', bold=True)
+        message="=====================FINDING MODE======================\n",
+        fg='cyan', bg='white', bold=True)
     click.secho(
-            message="===========Locate & Show Individual Records============\n",
-            fg='cyan', bold=True)
+        message="===========Locate & Show Individual Records============\n",
+        fg='cyan', bold=True)
     click.secho(
-            message="Entering finding & reading mode for records.",
-            fg='cyan', bg='white', bold=True)
+        message="Entering finding & reading mode for records.",
+        fg='cyan', bg='white', bold=True)
     click.secho(message="Steps: \n"
                         "  1. Enter an find mode:                           \n"
                         "  2. Find a record:                                \n"
@@ -1137,40 +1101,40 @@ def find(ctx: click.Context) -> None:  # noqa
                         "     Knowing a index/position is required.         \n"
                         "     Use Load -> ToDo or Load -> Views to id a row \n"
                         "  4. View an individual record, in a card format   \n"
-                        "  5. Exits automatically.                          \n",
+                        "  5. Exits automatically.                         \n",
                 fg='cyan', bold=styles.infobold, underline=True)
     click.secho(
-            message="Prompts are available for each input.")
+        message="Prompts are available for each input.")
     App.update_appdata(context=ctx, dataframe=App.get_data())
     click.secho(
-            message="Working data is now ... rehydrated.",
-            blink=True)
-    click.secho(
-            message=f"You have rows 1 to {App.get_range} to work with",
-            bold=styles.infobold)
+        message="Working data is now ... rehydrated.",
+        blink=True)
+    click.secho(message=f"You have rows 1 to {App.get_range} "
+                        "to work with", bold=styles.infobold)
 
 
 # 3.1 Find: Locate: Index locations of an individual record
-@find.group(name=App.values.Find.Locate.cmd, short_help='Find: Locate a record')
+# Only one of these options is required,
+# & search focus by index is the only feature.
+# Future maintainability: for expanding search focuses: column, row.
+# noinspection PyUnusedFunction
+@find.command(name='locate')
 @click.option('--index', 'index',
               type=click.IntRange(
-                      min=1,
-                      max=App.get_range,
-                      clamp=App.values.Find.Index.clamp),
+                  min=1,
+                  max=App.get_range,
+                  clamp=App.values.Find.Index.clamp),
               callback=Valid.index,
-              help=f'{App.values.Find.Index.help}{App.get_range}: ',
-              prompt=f'{App.values.Find.Index.help}{App.get_range}: ')
-# Only one of these options is required, & search focus by index is the only feature.
-# Future maintainability: for expanding search focuses: column, row.
-@click.option('-a', '--axis', 'axis',
+              help=f'By Row 1 to {App.get_range}: ',
+              prompt='Enter an Index: ')
+@click.option('--axis', 'axis',
               type=click.Choice(choices=['index'],
                                 case_sensitive=False),
               default='index',
-              prompt=True,
-              required=True)
+              prompt=True)
 @click.pass_context
 def locate(ctx: click.Context, index: int,
-           axis: str = Literal['index']) -> None:
+           axis: str) -> None:
     """Locate: a row: by index or searches term via index, column or row.
     
     \f
@@ -1179,7 +1143,6 @@ def locate(ctx: click.Context, index: int,
     :param axis: str: The axis to search in: Default: index
     :return: None: Display as stdout or stderr
     """
-    debugOFF: bool = False  # noqa
     # Get the dataframe
     dataframe: pd.DataFrame = App.get_data()
     # If the axis is index, -a, --axis, then search the index
@@ -1188,10 +1151,9 @@ def locate(ctx: click.Context, index: int,
         resultframe = \
             Results.getrowdata(data=dataframe,
                                ix=index)
+        
         # Check if the result is a single record
         if Record.checksingle(resultframe):
-            # Debugging Flags
-            debugON: bool = True  # noqa
             # Individual record holds the singular record, handles displays
             # Selecting different calls on the individual record yields
             # different displays/outputs.
@@ -1200,7 +1162,8 @@ def locate(ctx: click.Context, index: int,
             
             # Shows a result
             window.showrecord(data=resultframe,
-                              debug=debugON)
+                              sendtolayout=App.values.Display.TOLAYOUT,
+                              debug=App.values.NOTRACING)
         else:
             click.secho(message="The result is not a single record",
                         fg=styles.warnfg,
@@ -1250,12 +1213,12 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
     :return: None: Display as stdout --help or when subcommands is called
     """
     click.secho(
-            message="===================EDITING MODE========================\n",
-            fg='blue', bold=True)
+        message="===================EDITING MODE========================\n",
+        fg='blue', bold=True)
     click.secho(
-            message="=====Find, Show & Edit, Save Individual Reccords=======\n",
-            fg='blue', bold=True)
-    click.secho(message="Entering editing mode for notes, todos, etc.         ",
+        message="=====Find, Show & Edit, Save Individual Reccords=======\n",
+        fg='blue', bold=True)
+    click.secho(message="Entering editing mode for notes, todos, etc.      ",
                 fg='blue', bg='white', bold=True)
     click.secho(message="Steps: \n"
                         "  1. Enter an edit mode:                           \n"
@@ -1265,9 +1228,9 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
                         "     Use Load -> ToDo or Load -> Views to id a row \n"
                         "  4. Edit -> Notes by: add, update, delete or .....\n"
                         "  4. Edit -> Progress by: toggle: "
-                        "ToDo, WIP, Done, Missed                            \n"
-                        "  5. Save changes,                                 \n"
-                        "  6. Exits automatically.                          \n",
+                        "ToDo, WIP, Done, Missed                           \n"
+                        "  5. Save changes,                                \n"
+                        "  6. Exits automatically.                         \n",
                 fg='blue', bold=styles.infobold,
                 underline=True)
     click.secho(message="Prompts & Confirms used for a step by step process.")
@@ -1279,13 +1242,14 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
 
 # 4.1 Edit: CRUD Ops: Read, Create Update, Delete:
 # A Individual Record's Notes
+# noinspection PyUnusedFunction
 @edit.command(App.values.Edit.Note.cmd, short_help='Edit: Modify a note')
 @click.pass_context
 # Edit Mode: add, update, delete
 @click.option('--mode', 'mode',
-              type=click.Choice(App.editmode,
-                                case_sensitive=
-                                App.values.Edit.Note.Mode.case),
+              type=click.Choice(
+                  choices=App.editmode,
+                  case_sensitive=App.values.Edit.Note.Mode.case),
               help=App.values.Edit.Note.Mode.help,
               callback=Valid.mode,
               prompt=App.values.Edit.Note.Mode.prompt,
@@ -1293,21 +1257,21 @@ def edit(ctx: click.Context) -> None:  # noqa: ANN101
 # Edit Mode: Row recorď to edit
 @click.option('--index', 'index',
               type=click.IntRange(
-                      min=App.values.Find.Index.min,
-                      max=App.get_range,
-                      clamp=App.values.Find.Index.clamp),
+                  min=App.values.Find.Index.min,
+                  max=App.get_range,
+                  clamp=App.values.Find.Index.clamp),
               callback=Valid.index,
               help=f'{App.values.Find.Index.help}{App.get_range}',
               prompt=f'BY ROW: ☑️ Select: 1 to {App.get_range}')
 # Edit Mode: Note to link/append/clear to Row recorď on edit
 @click.option('--note', 'note', type=str,
               help=App.values.Edit.Note.help,
-              # callback=Valid.santitise,  # Callback: Input Validation: santitise
               prompt=App.values.Edit.Note.prompt)
 # Edit Mode: Axis, or searchg focus, to locate record on.
 @click.option('-a', '--axis', 'axis',
-              type=click.Choice(choices=['index'],
-                                case_sensitive=False),
+              type=click.Choice(
+                  choices=['index'],
+                  case_sensitive=False),
               default='index',
               prompt=True,
               required=True)
@@ -1334,7 +1298,6 @@ def notepad(ctx,
     :return: None: Display as stdout or stderr
     """
     # Debugging Flags
-    debugON = True  # noqa
     # Rehydrtate dataframe from remote
     dataframe: pd.DataFrame = App.get_data()
     
@@ -1350,21 +1313,22 @@ def notepad(ctx,
             # - Display the found result and - send to the editor
             editing = \
                 window.showrecord(data=resultframe,
-                                  sendtoeditor=App.values.FORWARDING,
+                                  sendtolayout=App.values.FORWARDING,
                                   displayon=App.values.HIDING,
                                   debug=App.values.NOTRACING)  # noqa
             # - Send the result to the editor
             if editing is not None:
                 editor = Editor(
-                        currentrecord=editing,
-                        sourceframe=resultframe,
-                        debug=App.values.NOTRACING)
+                    currentrecord=editing,
+                    sourceframe=resultframe,
+                    debug=App.values.NOTRACING)
                 editor.command = f'Edit: > Note in {mode} mode'
                 # - Edit note field of the record
                 if index is not None:
-                    click.secho(message="=====================================",
-                                bg='white',
-                                bold=True)
+                    click.secho(
+                        message="=====================================",
+                        bg='white',
+                        bold=True)
                     click.secho(message="Enter: edited mode: Notes",
                                 blink=True)
                     # Edit Mode for Notes:
@@ -1408,20 +1372,22 @@ def notepad(ctx,
 
 # 4.1 Edit: CRUD Ops: Read, Create Update, Delete:
 # A Individual Record's ToDo Status
-@edit.command(App.values.Edit.ToDo.cmd, short_help='Edit: Toggle progress\' statuses')
+# noinspection PyUnusedFunction
+@edit.command(App.values.Edit.ToDo.cmd,
+              short_help='Edit: Toggle progress\' statuses')
 @click.pass_context
 @click.option('--index', 'index',
               type=click.IntRange(
-                      min=App.values.Find.Index.min,
-                      max=App.get_range,
-                      clamp=App.values.Find.Index.clamp),
+                  min=App.values.Find.Index.min,
+                  max=App.get_range,
+                  clamp=App.values.Find.Index.clamp),
               callback=Valid.index,
               help=f'{App.values.Edit.ToDo.indexhelp}{App.get_range}: ',
               prompt=f'{App.values.Edit.ToDo.indexhelp}{App.get_range}: ')
 @click.option('-status', 'status',
-              type=click.Choice(choices=App.values.Edit.ToDo.Statuses,
-                                case_sensitive=
-                                App.values.Edit.ToDo.Status.case),
+              type=click.Choice(
+                  choices=App.values.Edit.ToDo.Statuses,
+                  case_sensitive=App.values.Edit.ToDo.Status.case),
               help=App.values.Edit.ToDo.Status.help,
               prompt=App.values.Edit.ToDo.Status.prompt,
               required=App.values.Edit.ToDo.Status.required)
@@ -1434,14 +1400,13 @@ def notepad(ctx,
 def progress(ctx: click.Context,
              index: int,
              status: str = Literal['Todo', 'WIP', 'Done', 'Missed'],
-             axis: str = Literal['index', 'column', 'row']):
-    """
-    Edit a ToDo Status, on Progress column., by index.
-    
-    
+             axis: str = Literal['index', 'column', 'row']) -> None:
+    """Edit a ToDo Status, on Progress column., by index.
+
     \f
     Progress and ToDo as reference names are related, with ToDo as an alias.
-    
+    Parameters:
+    ----------
     :param ctx: click.Context: The click context
     :param index: int: The index of the record to edit
     :param status: str: The status of the ToDo: Todo, WIP, Done, Missed
@@ -1450,7 +1415,7 @@ def progress(ctx: click.Context,
     """
     # Debugging Flags
     dataframe: pd.DataFrame = App.get_data()
-    
+    editmode = App.values.Edit.ToDo.SELECT
     # Check the index search focus (i.e. dimenson). Default: index
     # Only one dimension, i.e axis, is implemented: index,
     # Others are column, row: Future implementation.
@@ -1461,7 +1426,7 @@ def progress(ctx: click.Context,
                                          single=App.values.SINGLE,
                                          debug=App.values.NOTRACING)
         if Record.checksingle(resultframe) \
-                and Valid.checkstatus(status) is not None:
+            and Valid.checkstatus(status) is not None:  # noqa # Pep8 E125
             # - Display the found result and - send to the editor
             editing = \
                 window.showrecord(data=resultframe,
@@ -1471,23 +1436,25 @@ def progress(ctx: click.Context,
             # - Send the result to the editor
             if editing is not None:
                 editor = Editor(
-                        currentrecord=editing,
-                        sourceframe=resultframe,
-                        debug=App.values.NOTRACING)
-                
+                    currentrecord=editing,
+                    sourceframe=resultframe,
+                    debug=App.values.NOTRACING)
+                editor.command = f'Edit: > Progress in {editmode} mode'
                 # - Edit note field of the record
                 if index is not None:
-                    click.secho(message="=================1====================",
-                                bg='white',
-                                bold=True)
+                    click.secho(
+                        message="=================1====================",
+                        bg='white',
+                        bold=True)
                     click.secho(message="Enter: edited mode: ToDo & Progress",
                                 blink=True)
                     # Edit Mode for Todos & Progress:
                     # Action/Tasks: Toggle/Progress Status:
-                    # Todo, WIP, Done, Missed Valid.checktoggle(edits=mode)
-                    # Moved the chckcing status lower to here, instead of Option
+                    # Todo, WIP, Done, Missed  #noqa
+                    # Moved the chckcing status lower to here,
+                    # instead of Option
                     # Due to issues with callbacks and the REPL features
-                    editor.editprogress(edits=App.values.Edit.ToDo.TOGGLE,
+                    editor.editprogress(edits=editmode,
                                         index=index,
                                         choicepad=Valid.checkstatus(status),
                                         debug=App.values.TRACING)
@@ -1502,7 +1469,7 @@ def progress(ctx: click.Context,
                             blink=True)
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
-                                    commandtype='insert',
+                                    commandtype=editmode,
                                     dataview='compare',
                                     debug=App.values.NOTRACING)
                 # - Update the local app data
@@ -1526,97 +1493,103 @@ def progress(ctx: click.Context,
 
 # Click Command repl is run from this function
 # See https://www.perplexity.ai/search/085c28b9-d6e8-4ea2-8234-783d7f1a054c?s=c
+# This function is 3rd party code, and is not my own.
+# See README.md for more information
+# This is a core architectural entry point of the application level REPL
 register_repl(run)
 
 if __name__ == "__main__":
     utils.warn()
     # Opening Introduction
     click.echo(
-            message="PyCriteria: A simple CLI for managing"
-                    " Code Institute's criteria\n"
-                    "==================================="
-                    "==============================\n"
-                    "\n"
-                    "GETTING STARTED\n"
-                    "Type --help to get started\n"
-                    "Hold ctrl + d to exit \n"
-                    "Hold ctrl + c to abort \n"
-                    "Tab completion is available\n"
-                    "\n"
-                    "======================================"
-                    "===========================\n"
-                    "\n"
-                    "CLI COMMANDS / REPL\n"
-                    "1: BASE: run (app.py). INFO only.\n"
-                    "2: INTENT: (load, find, add, update, "
-                    "delete). INFO only.\n"
-                    
-                    "3: ACTION: per INTENT the actionable "
-                    "sub-commands with options\n"
-                    "4: OPTIONS: per ACTION the options "
-                    "to perform the action\n"
-                    "NB: Each command can have multiple options\n"
-                    "\n"
-                    "========================================"
-                    "=========================\n"
-                    "\n"
-                    "CLI DATA: REMOTE & LOCAL\n"
-                    "DATA: The data remotely pulled from "
-                    "Google Sheets (the remote).\n"
-                    "NB: Each command rehydrates/refreshes "
-                    "local data from the remote.\n"
-                    "  - This rehydration pattern is more"
-                    " expensive per command.\n"
-                    "  - It does ensure most recent data "
-                    "is pulled from the remote.\n"
-                    "  - An app local copy is stored globally,"
-                    " and updated per command.\n"
-                    "  - A scoped copy is used per command "
-                    "as active data.\n"
-                    "\n"
-                    "========================================="
-                    "========================\n"
-                    "\n"
-                    "CLI ENVIRONMENT & MAKING MISTAKES\n"
-                    "This CLI runs within its own sub "
-                    "shell/enviornment/REPL.\n"
-                    " - 🚧 As such it is tollerant to user "
-                    "input and user errors. 🚧\n"
-                    " - There will be commands input errors,"
-                    " as with any cli app.\n"
-                    " - These types of errors are part of "
-                    "the cli environment/repl.\n"
-                    " - Just try the command again, and "
-                    "enter in the correct input.\n"
-                    "\n"
-                    "======================================"
-                    "===========================\n"
-                    "\n"
-                    "CLI COMMANDS & OPTIONS\n"
-                    "CLI uses multi-level command structure, "
-                    "similar to 'aws cli'.\n"
-                    " - This means that you can type a ACTION "
-                    "command and EITHER: \n"
-                    " a) then hit enter to enter a prompts "
-                    "sequence, to enter values.\n"
-                    " OR \n"
-                    " b) at a ACTION enter using -o or "
-                    "--option then a value/input\n"
-                    "    - e.g. '-o' with single hyphen "
-                    "is same as '--option'.\n"
-                    " NB: 'o' or 'option' is for illustrative "
-                    "purposes only\n"
-                    "\n"
-                    "========================================"
-                    "=========================\n"
-                    "QUICK START\n"
-                    "\n"
-                    "Get started by typing: either --help or "
-                    "load, find, edit"
-                    "\n"
-                    "Use 'tab' when typing in command's first"
-                    " letters for autocomplete\n"
-                    "\n"
-                    "Then press 'space' to show the "
-                    "subcommands sub-menus\n")  # noqa
+        message="PyCriteria: A simple CLI for managing"
+                " Code Institute's criteria\n"
+                "==================================="
+                "==============================\n"
+                "\n"
+                "GETTING STARTED\n"
+                "Type --help to get started\n"
+                "Hold ctrl + d to exit \n"
+                "Hold ctrl + c to abort \n"
+                "Tab completion is available\n"
+                "\n"
+                "======================================"
+                "===========================\n"
+                "\n"
+                "CLI COMMANDS / REPL\n"
+                "1: BASE: run (app.py). INFO only.\n"
+                "2: INTENT: (load, find, add, update, "
+                "delete). INFO only.\n"
+                "3: ACTION: per INTENT the actionable "
+                "sub-commands with options\n"
+                "4: OPTIONS: per ACTION the options "
+                "to perform the action\n"
+                "NB: Each command can have multiple options\n"
+                "\n"
+                "========================================"
+                "=========================\n"
+                "\n"
+                "CLI DATA: REMOTE & LOCAL\n"
+                "DATA: The data remotely pulled from "
+                "Google Sheets (the remote).\n"
+                "NB: Each command rehydrates/refreshes "
+                "local data from the remote.\n"
+                "  - This rehydration pattern is more"
+                " expensive per command.\n"
+                "  - It does ensure most recent data "
+                "is pulled from the remote.\n"
+                "  - An app local copy is stored globally,"
+                " and updated per command.\n"
+                "  - A scoped copy is used per command "
+                "as active data.\n"
+                "\n"
+                "========================================="
+                "========================\n"
+                "\n"
+                "CLI ENVIRONMENT & MAKING MISTAKES\n"
+                "This CLI runs within its own sub "
+                "shell/enviornment/REPL.\n"
+                " - 🚧 As such it is tollerant to user "
+                "input and user errors. 🚧\n"
+                " - There will be commands input errors,"
+                " as with any cli app.\n"
+                " - These types of errors are part of "
+                "the cli environment/repl.\n"
+                " - Just try the command again, and "
+                "enter in the correct input.\n"
+                "\n"
+                "======================================"
+                "===========================\n"
+                "\n"
+                "CLI COMMANDS & OPTIONS\n"
+                "CLI uses multi-level command structure, "
+                "similar to 'aws cli'.\n"
+                " - This means that you can type a ACTION "
+                "command and EITHER: \n"
+                " a) then hit enter to enter a prompts "
+                "sequence, to enter values.\n"
+                " OR \n"
+                " b) at a ACTION enter using -o or "
+                "--option then a value/input\n"
+                "    - e.g. '-o' with single hyphen "
+                "is same as '--option'.\n"
+                " NB: 'o' or 'option' is for illustrative "
+                "purposes only\n"
+                "\n"
+                "========================================"
+                "=========================\n"
+                "QUICK START\n"
+                "\n"
+                "Get started by typing: either --help or "
+                "load, find, edit"
+                "\n"
+                "Use 'tab' when typing in command's first"
+                " letters for autocomplete\n"
+                "\n"
+                "Then press 'space' to show the "
+                "subcommands sub-menus\n")  # noqa
     run()
+
+# End of App Module
+# Ruff Checked, Pep6CI Checked - All Passing
+# Timestamp: 2022-06-02T18:35, copywrite (c) 2022-2025, Charles J Fowler

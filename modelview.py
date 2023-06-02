@@ -1,15 +1,16 @@
 #!/user/bin/env python3
 # pylint: disable=trailing-whitespace
 # ruff: noqa: ANN101, I001, ARG002
+# noqa: W291, W293
 """Module: Model & View for the Terminal App."""
 
 
 class Views:
     """Views.
 
-        :property: View.Load
-        :property: View.Todo
-        """
+    :property: View.Load
+    :property: View.Todo
+    """
     # Views
     Overviews: str = "Overviews"
     Project: str = "Project"
@@ -33,7 +34,7 @@ class Views:
     SearchAxes: list[str] = ["index", "row", "column"]
     LocateAxis: list[str] = ["index"]
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
         pass
 
@@ -120,7 +121,8 @@ class Headers:
     ReferenceView: list[str] = [c.Position, c.Reference, c.Related]
     ViewFilter: list[str] = ["Overview", "Criteria",
                              "Project", "ToDo", "References"]
-    ToDoChoices: list[str] = ["All", "Simple", "Notes", "Progress", "Grade", "Review"]
+    ToDoChoices: list[str] = ["All", "Simple", "Notes",
+                              "Progress", "Grade", "Review"]
     HeadersChoices: list[str] = ["Position", "Tier", "Performance",
                                  "Criteria", "Progress", "Notes"]
     
@@ -129,6 +131,11 @@ class Headers:
         self.c = labels
 
 
+# This is the only object to be imported by controller.py
+
+
 Head: Headers = Headers(labels=ColumnSchema())
 
-# Path: modelview.py
+# End of Mode/View for the Terminal App.
+# Ruff Checked, Pep6CI Checked - Some Passing
+# Timestamp: 2022-06-02T18:45, copywrite (c) 2022-2025, Charles J Fowler
