@@ -193,14 +193,13 @@ class Valid:
             return None
     
     @staticmethod
-    def checkcommand(mode: str) \
-        -> str | None:  # noqa # Pep8 E125
+    def checkcommand(mode: str) -> str | None:    # noqa # Pep8 E125
         """Check the mode, translate to edit comand tyoe."""
         allowed = {App.values.Edit.ADD,
                    App.values.Edit.UPDATE,
                    App.values.Edit.DELETE,
                    App.values.Edit.ToDo.TOGGLE}
-        
+
         if mode in allowed:
             if mode == App.values.Edit.ADD:
                 return App.values.Edit.INSERT
@@ -210,14 +209,12 @@ class Valid:
                 return App.values.Edit.CLEAR
             elif mode == App.values.Edit.ToDo.TOGGLE:
                 return App.values.Edit.ToDo.SELECT
-            return None
-        else:
-            return None
+        return None
     
     @staticmethod
     def isinrange(index) -> bool:
         """Check if index is in range."""
-        return True if 1 <= index <= App.get_range else False
+        return 1 <= index <= App.get_range
 
 
 class Window:
@@ -274,12 +271,10 @@ class Window:
             individual = Record(series=data, source=data)
             individual.editmode = command
             # Debug and Inspect
-            if debug is True:
+            if debug:
                 rprint("Debug Mode: Show Record")
                 inspector(individual)
-            # Display Show Record or Supress
             if displayon:
-                # If sendtolayout is True, builds the layout | Not None.
                 if individual.card(consolecard=Webconsole.console,
                                    sendtoterminal=sendtolayout) is not None:
                     # Print Panels
@@ -865,21 +860,20 @@ def todo(ctx, selects: str) -> None:
     """
     # Get Data
     dataframe: pd.DataFrame = App.get_data()
-    
+
     # Guard Clause Checks Choice
     def checkchoice(choice: str) -> str | None:
         """Guard Clause."""
         if choice is not None and isinstance(choice, str):
             return choice
-        else:
-            click.secho(message="Your selected option is not possible.\n "
-                                "Try the commanď with one of these options: \n"
-                                "Help: --help\n"
-                                "Choices: All, Simple, Done, Grade, Review",
-                        fg=styles.invalidfg,
-                        bold=styles.invalidbold)  # noqa
-            return None
-    
+        click.secho(message="Your selected option is not possible.\n "
+                            "Try the commanď with one of these options: \n"
+                            "Help: --help\n"
+                            "Choices: All, Simple, Done, Grade, Review",
+                    fg=styles.invalidfg,
+                    bold=styles.invalidbold)  # noqa
+        return None
+
     # Display
     try:
         App.command_todo(dataframe=dataframe,
@@ -914,7 +908,7 @@ def views(ctx, selects) -> None:
     """
     # Get Data
     dataframe: pd.DataFrame = App.get_data()
-    
+
     # Guard Clause Checks Choice
     def checks(choice: str) -> str | None:
         """Guard Clause for View Choice
@@ -924,16 +918,15 @@ def views(ctx, selects) -> None:
         """
         if choice is not None and isinstance(choice, str):
             return choice
-        else:
-            click.secho(message="Your selected option is not possible.\n "
-                                "Try the commanď with one of these options: \n"
-                                "Help: --help\n"
-                                "Choices: All, Project, Criteria, "
-                                "ToDo, Reference",
-                        fg=styles.invalidfg,
-                        bg=styles.invalidbg)  # noqa
-            return None
-    
+        click.secho(message="Your selected option is not possible.\n "
+                            "Try the commanď with one of these options: \n"
+                            "Help: --help\n"
+                            "Choices: All, Project, Criteria, "
+                            "ToDo, Reference",
+                    fg=styles.invalidfg,
+                    bg=styles.invalidbg)  # noqa
+        return None
+
     # Select the General Views
     def chooseviews(data: pd.DataFrame, choice: str) -> None:
         """Select the General Views.
@@ -967,7 +960,7 @@ def views(ctx, selects) -> None:
                                 f"for the chosen option: {selects}",
                         fg=styles.warnfg,
                         bold=styles.warnbg)
-    
+
     # Display The View Choice
     chooseviews(data=dataframe, choice=selects)
     # Update Global Data
