@@ -2042,12 +2042,8 @@ class Editor:
         
         for record in records:
             if record['Position'] == series['Position']:
-                rich.inspect(row)
                 if series['Position'] == row + 1 \
                     and record['Position'] == row + 1:  # noqa
-                    recordindex = int(record['Position'])
-                    rich.inspect(record['Position'])
-                    rich.inspect(int(series['Position']))
                     # Update the row with the values from the series
                     values = [series[key]
                               for key in series.keys() if key in record.keys()]
@@ -2055,7 +2051,7 @@ class Editor:
                     if debug is True:
                         rich.inspect(values)
                         
-                        sheet.insert_row(values, recordindex)
+                        sheet.insert_row(values, record['Position'])
     
     @staticmethod
     def integrate(single: pd.DataFrame,
