@@ -213,6 +213,11 @@ class Valid:
             return None
         else:
             return None
+    
+    @staticmethod
+    def isinrange(index) -> bool:
+        """Check if index is in range."""
+        return True if 1 <= index <= App.get_range else False
 
 
 class Window:
@@ -1064,14 +1069,23 @@ def locate(ctx: click.Context, index: int,
     :param axis: str: The axis to search in: Default: index
     :return: None: Display as stdout or stderr
     """
+    validindex = 1
+    if not Valid.isinrange(index):
+        click.secho(message="Index out of range",
+                    fg=styles.warnfg,
+                    bold=styles.warnbg)
+        return
+    else:
+        validindex = index
+    
     # Get the dataframe
     dataframe: pd.DataFrame = App.get_data()
     # If the axis is index, -a, --axis, then search the index
-    if axis.lower() == 'index':
+    if axis.lower() == 'index' and Valid.isinrange(index):
         # Get the result source
         resultframe = \
             Results.getrowdata(data=dataframe,
-                               ix=index)
+                               ix=validindex)
         
         # Check if the result is a single record
         if Record.checksingle(resultframe):
@@ -1090,10 +1104,11 @@ def locate(ctx: click.Context, index: int,
                         fg=styles.warnfg,
                         bold=styles.warnbold)  # noqa
     else:
-        click.secho(message="Command did not run. Axes not implemented",
-                    err=styles.toerror,
-                    fg=styles.errfg,
-                    bold=styles.errbold)  # noqa
+        click.secho(message="Try again, and use: \n"
+                            "-i/--index and a number value between"
+                            f" 1 and {App.get_range}\n"
+                            "and axes: index",
+                    fg='bright_yellow', bold=True)
     # Update appdata data
     App.update_appdata(context=ctx, dataframe=dataframe)
 
@@ -1222,13 +1237,22 @@ def notepad(ctx,
     # Rehydrtate dataframe from remote
     dataframe: pd.DataFrame = App.get_data()
     
+    validindex = 1
+    if not Valid.isinrange(index):
+        click.secho(message="Row does not exit. Try again",
+                    fg=styles.warnfg,
+                    bold=styles.warnbg)
+        return
+    else:
+        validindex = index
     # - Check the index search focus (i.e. dimenson). Default: index
     # Only one dimension, i.e axis, is implemented: index,
     # Others are column, row: Future implementation.
-    if axis.lower() == App.values.SEARCHFOCUS and note:
+    if axis.lower() == App.values.SEARCHFOCUS and note \
+        and Valid.isinrange(index):
         # - Get the record
         resultframe = Results.getrowdata(data=dataframe,
-                                         ix=index,
+                                         ix=validindex,
                                          debug=App.values.NOTRACING)
         if Record.checksingle(resultframe) and note is not None:
             # - Display the found result and - send to the editor
@@ -1248,7 +1272,7 @@ def notepad(ctx,
                     is not None else ''
                 editor.editdisplay = f'Edit: > Note in {mode} mode'
                 # - Edit note field of the record
-                if index is not None:
+                if index is not None and Valid.isinrange(index):
                     click.secho(
                         message="=====================================",
                         bg='white',
@@ -1258,8 +1282,8 @@ def notepad(ctx,
                     # Edit Mode for Notes:
                     # Action/Tasks: Add/Insert, Update/Append, Delete/Clear
                     editor.editnote(edits=Valid.checkmode(edits=mode,
-                                                          index=index),
-                                    index=index,
+                                                          index=validindex),
+                                    index=validindex,
                                     notepad=note,
                                     debug=App.values.NOTRACING)
                 else:
@@ -1290,7 +1314,8 @@ def notepad(ctx,
         click.secho(message="Try again, and use: \n"
                             "-m/--mode and select edit action: "
                             "add, update, delete\n"
-                            "-i/--index and a number value\n"
+                            "-i/--index and a number value between"
+                            f" 1 and {App.get_range}\n"
                             "and axes: index",
                     fg='bright_yellow', bold=True)
 
@@ -1341,13 +1366,23 @@ def progress(ctx: click.Context,
     # Debugging Flags
     dataframe: pd.DataFrame = App.get_data()
     editmode = App.values.Edit.ToDo.SELECT
+    
+    validindex = 1
+    if not Valid.isinrange(index):
+        click.secho(message="Row does not exit. Try again",
+                    fg=styles.warnfg,
+                    bold=styles.warnbg)
+        return
+    else:
+        validindex = index
     # Check the index search focus (i.e. dimenson). Default: index
     # Only one dimension, i.e axis, is implemented: index,
     # Others are column, row: Future implementation.
-    if axis.lower() == App.values.SEARCHFOCUS and status:
+    if axis.lower() == App.values.SEARCHFOCUS and status \
+        and Valid.isinrange(index):
         # - Get the record
         resultframe = Results.getrowdata(data=dataframe,
-                                         ix=index,
+                                         ix=validindex,
                                          single=App.values.SINGLE,
                                          debug=App.values.NOTRACING)
         if Record.checksingle(resultframe) \
@@ -1370,7 +1405,7 @@ def progress(ctx: click.Context,
                 editor.editdisplay = f'Edit: > Progress in report mode'
                 editor.command = Valid.checkcommand(mode='select')
                 # - Edit note field of the record
-                if index is not None:
+                if index is not None and Valid.isinrange(index):
                     click.secho(
                         message="=================1====================",
                         bg='white',
@@ -1384,7 +1419,7 @@ def progress(ctx: click.Context,
                     # instead of Option
                     # Due to issues with callbacks and the REPL features
                     editor.editprogress(edits=editmode,
-                                        index=index,
+                                        index=validindex,
                                         choicepad=Valid.checkstatus(status),
                                         debug=App.values.NOTRACING)
                 else:
@@ -1416,7 +1451,8 @@ def progress(ctx: click.Context,
         click.secho(message="Try again, and use: \n"
                             "-m/--mode and select edit action: "
                             "add, update, delete\n"
-                            "-i/--index and a number value\n"
+                            "-i/--index and a number value between"
+                            f" 1 and {App.get_range}\n"
                             "and axes: index",
                     fg='bright_yellow', bold=True)
 

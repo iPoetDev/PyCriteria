@@ -115,6 +115,8 @@
 
 #### 2.3.3 [Data Requirements](#user-requirements)   <small><sup>✅</sup></small>
 
+To [wiew the Dataset: see here](.docs/dataset.md) 
+
 - The data model comes from the very own project criteria for the Code Institute assignments.
 - A version of the data, which is available at CI's own github pages site: https://code-institute-org.github.io/5P-Assessments-Handbook/portfolio3-prelims.html
 - Having had prior experience with breaking down the data model, the author did a manual extraction and transformed the source into a 14 columns (fields) by 70 row spreadsheet format.
@@ -561,9 +563,9 @@ H --> I[ View Record by \n Comparing Old/New];
 > - i.e. For neurally diverse developers, like the author, the use of underscores can be a cognitive load and a barrier to entry, and he prefers to use all lowercase conventions or simple wording for naming. I.e. for variable naming, this is the case.
 > - So instead many cases, the author has not followed all the pythonic naming conventions, which are traditions with good intentions and intent; 
 > - These conventions not always useful for intermediate aware developers who have coded before.<br>
-> - Lets not 'bikeshed' these conventions.
+> - Lets not 'bikeshed' these conventions, the author has his neuraldiverse constraints and preferences.
 
->NOTE: Be advised the author would adhere to follow conventions & naming styles by mutual agreement, when working in a team environment, for consistency, alignment, and team maintainability. 
+> <ins>**NOTE**</ins>: Be advised the author would adhere to follow conventions & naming styles by mutual agreement, when working in a team environment, for consistency, alignment, and team maintainability. 
 > The author is working for himself in ths project and has the autonomy to choose.
 
 #### 5.1.2 [Docstrings](#docstrings) <small><sup>✅</sup></small>
@@ -572,9 +574,9 @@ H --> I[ View Record by \n Comparing Old/New];
 
 > The author primarily uses the Sphinx Docstring Docstring format
 
-- It is the one most likely to be autocompleted by TabNine/Github's' Co-Pilot. These tools, along with the Pycharm inspector, helped with the autocompletion of the documentation.
+- It is the one most likely to be `TAB` completed by TabNine/Github's' Co-Pilot. These tools, along with the Pycharm inspector, helped with the autocompletion of the documentation.
 
-#### 5.1.3 [TypeHints and Typing](#typehints)
+#### 5.1.3 [TypeHints and Typing](#typehints) <small><sup>✅</sup></small>
 
 - The author is an explicitly typed coder and uses, as a coding style, explicit type hints and typing in his code. 
 - PyCharm is configurable and is used to supply the type hints in the IDE.
@@ -793,9 +795,9 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 > AUTHOR'S NOTE: The author, given more time and scope, would devote resources to developing best in class transport security. However this constraint of time and delivery was an overiding priority and scoping constraint for the size and scale of the assignment and solution.
 
 
-### 5.5 [Code Issues, Bugs and Unexplain](#code-issues)
+### 5.5 [Code Issues, Bugs and Unexplained Implementation](#code-issues) <small><sup>✅</sup></small>
 
-#### 5.5.1 GitHub Issue Tracking
+#### 5.5.1 [GitHub Issue Tracking](#github-issue-tracking) <small><sup>✅</sup></small>
 
 > Using Code Stream Plugin, GitHub Issues where register as follows
 
@@ -806,72 +808,106 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 | #38 | Click.option --axis | Yes | Regresssion was patched| Not KNonw, so simplified approach | https://github.com/iPoetDev/PyCriteria/issues/38
 | #44 | Save/Commit - Not Working | No | Not Sure, Scope Drop Candidate | Three designs, no (over)writing to remote data | https://github.com/iPoetDev/PyCriteria/issues/44
 
+For issue #32, it is important not to exceed HTTP Error Code 429 else the Remote Host will abort the connection.
+
 ----
 > |
 ----
-
-
 
 ## 6.0 [Features & Users  Acceptance](#features-users-acceptance)
 
 ### 6.1 [Features](#features)
 
-> - As a user, I want to be able to load data from a Google sheet.
-> - As a user, I want to be able to view data in a table and individual card format.
-> - As a user, I want to be able to find/locate a record by row identifier.
-> - As a user, I want to be able to edit a record by adding a note to the location.
-> - As a user, I want to be able to edit a record by updating the note in the location.
-> - As a user, I want to be able to edit a record by deleting the note in the location.
-> - As a user, I want to be able to edit a record by toggling the TODO in the individual records.
-> - As a user, I want to be able to save/commit the modified data to a Google sheet.
+'USx.x' = User Story + ID Sequence. Sub ids are .x, but only whole features are User Story Tested
 
-#### 6.1.1 [User Stories Testing](#user_stories_testing)
+> - US1:   ✅ As a user, I want to be able to load data from a Google sheet.
+> - US2:   ✅ As a user, I want to be able navigate the CLI with easy options, commands , access to help and using the keyword initutitivly .
+> - US2.1: ✅ As a user, I want to be able navigate the CLI with using the keyword initutitivly.
+> - US2.2: ✅ As a user, I want to be able navigate the CLI with access to Help, for the CLI, command and options
+> - US3:   ✅ As a user, I want to be able to view data in a table and individual card format.
+> - US3.1: ✅ As a user, I want to be able to view data in a table based on TODO set of sub views.
+> - US3.2: ✅ As a user, I want to be able to view data in a table based on Assignment/Project Meta Data set of sub views.
+> - US4.1: ✅ As a user, I want to be able to find/locate a record by row identifier 
+> - US4.2: ✅ As a user, I want to be able to find/locate a record by row identifier and display/read in a card format. 
+> - US5.1.1: ✅ As a user, I want to be able to edit a record by adding a note to the location.
+> - US5.1.2: ✅ As a user, I want to be able to edit a record by updating the note in the location.
+> - US5.1.3: ✅ As a user, I want to be able to edit a record by deleting the note in the location.
+> - US5.2.1: ✅ As a user, I want to be able to edit a record by toggling and selecting the TODO in the individual records.
+> - US5.2.2: ✅ As a user, I want to be able to see the progression of the Definition of Done by a matrix of truthy states by selecting the TODO/Progress field.
 
-> - As a user, I want to be able to load data from a Google sheet.
-    >
+Outcome: Changes are stateless and temporary, the remote datasource is not reflecting the data being sent. 
 
-- The author has tested this by loading data from a Google sheet.
+> - US6.0  🚫 As a user, I want to be able to save/commit the modified data to a Google sheet.
+> - US6.1: 🚫 As a user, I want to be save my edits on a per edit action to the remote and 
+> - US6.2: 🚫 As a user I want to see the commit changes into a stateful data source the next time I load my data. 
+#### 6.1.1 [User Stories Testing](#user_stories_testing) <small><sup>✅</sup></small>
 
-> - The data is automatically loaded upon submission application startup.#
->    - I can validate that is the data by running the load command
->    - The two dimensions arrays of a relica of a spreadsheet is loaded into the terminal window.
+> - <ins>**US 1.0: As a user, I want to be able to load data from a Google sheet.**</ins>
+    
 
-> - As a user, I want to be able to view data in a table in a browser view window.
-    >
+    - The author has tested this by loading data from a Google sheet.
+      - The data is automatically loaded upon submission application startup.
+      - As a user, the author can validate that is the data by running the load command
+      - The two dimensions arrays of a relica of a spreadsheet is loaded into the terminal window.
+> > <ins>**USER ACCEPTED: YES ✅**</ins>.
+---
+> - <ins>**US 2.0: I want to be able navigate the CLI with easy options, commands , access to help and using the keyword initutitivly .**</ins>
+    
 
-- The author has tested this by viewing data in a table and alternative views.
+    - The author has tested this by using `tab`, `space` and `enter` effectively to navigate between commands and options.
+    - The author has tested this by accessing help at every level, using --help or just by `enter` at the LOAD, FIND, EDIT intents, plus on each time a ACTION is called.
+    - The author has tested this by accessing help for each and every command and option.
+> > <ins>**USER ACCEPTED: YES ✅**</ins>.
 
-> - I can take a look at the todo commands and select which TODO view of the grid data I want to see
->    - I can take a look at other view of the of the data in the Views command by choosing which slide of the view I
-       > want to data I wwant to see.
->    - As the terminal window is not large enough to display the data, I can use the view options see smaller sets
-       > of column data in smaller display.
+---
+> - <ins>**US3.0 As a user, I want to be able to view data in a table in a browser view window.**</ins>
 
-> - As a user, I want to be able to find/locate a record by row identifier.
-    >
+    - The author has tested this by viewing data in a table and alternative views.
+      - As a user, the author can take a look at the todo commands and select which TODO view of the grid data that as a user, the author could choose to to see. The user does this by selecting a select value.  
+      - As a user, the author can take a look at other view of the of the data in the Views command by choosing which slice of the view a user wants to view of the Assignment/Project data. The user does this by selecting a select value.
+      - As the terminal window is not large enough to display the data, as a user, the author can use the view options see smaller setsof column data in smaller display.
+> > <ins>**USER ACCEPTED: YES ✅**</ins>.
+---
+> - <ins>**US4.0: FINDING MODE: As a user, I want to be able to find/locate a record by row identifier.**</ins>
 
-- The author has tested this by finding/locating a record by row identifier.
 
->     - I can use the find command to find a record by row identifier, though I must know the row identifier.
->     - Future features will include a search function to find a record by search term/keyword.
->     - Once I found a record by row identifier, I view the record details by card/panels
+    - The author has tested this by finding/locating a record by row identifier.
+      - As a user, the author can use the find command to find a record by row identifier, though the user must know the row identifier. (This could be found from the Load command)
+      - Future features will include a search function to find a record by search term/keyword.
+      - Once I found a record by row identifier, I view the record details by card/panels view of a laidout card/panels view, but limited by the web terminal's dimensions. 
+> > <ins>**USER ACCEPTED: YES ✅**</ins>.
+---
+> - <ins>**US5.0 EDITING MODE: US5.0 As a user, I want to be able to edit a record by modifying a record to the location.**</ins><br>
+> > <ins>**USER ACCEPTED: YES ✅**</ins>.
+---
 
-        > view of a well designed card/panels view, but limited by the terminal
+> - <ins>**US5.1 EDITING NOTES: As a user, I want to be able to edit a record's NOTE by modifying a note in said location.**</ins><br>
 
->     - As a user, I want to be able to edit a record by adding a note to the location.
->     - The author has tested this by editing a record by adding a note to the location.
+        - As a user, the author has tested this by editing a record by modifying a note, under the add mode, to the location.
+        - As a user, the author wants to be able to edit a record by modifying a note, under the update mode, to the location.
+        - As a user, the author wants to be able to edit a record by modifying a note, under the delete mode, to the location.
+> > <ins>**USER ACCEPTED: YES ✅**</ins>.
+---
+> - <ins>**US5.2 EDITING PROGRESS: As a user, I want to be able to edit(select) a record's PROGRES/TODO static by selecting new status in said location.**</ins><br>
+      
+      - As a user, the author wants to be able to edit a record by deleting the note in the location.
+      - The author has tested this by editing a record by selecting the new status in the location.
+> > <ins>**USER ACCEPTED: YES ✅**</ins>.
 
-> - As a user, I want to be able to edit a record by updating the note in the location.
-    > - The author has tested this by editing a record by updating the note in the location.
->- As a user, I want to be able to edit a record by deleting the note in the location.
-> - The author has tested this by editing a record by deleting the note in the location.
->- ~~As a user, I want to be able to edit a record by toggling the TODO in the individual records.~~
-> - The author has tested this by editing a record by toggling the TODO in the individual records.
+> - <ins>**US6.0 SAVE/COMMIT TO REMOTE:  As a user, I want  I want to be save my edits on a per edit action to the remote AND **</ins><br>
+      
+      - As a user, the author wants to be able to SAVE his changes.
+      - The author has tried testing this by saving to a remote, and while he can see some writing, the data is malformed or the data is never writen.
+> > <ins>**USER ACCEPTED: NO 🚫**</ins>.
+
+**FOR UAT Results** See the screenshots below.
+
+---
 
 ### 6.2 [Screenshots](#Screenshots)
 
-- Terminal Dimensions are 1226 pxiels wide
-- Suitable for Tablets Landscape, Laptops and Desktops
+- Terminal Dimensions are 1223 pxiels wide
+- **Only** Suitable for Premium Tablets, standard Tablet's Landscape, Laptops and Desktops
 - Not suitable for Mobile by default. 
 
 ![](.docs/assets/WebApp-OnInit.png)<br>
@@ -920,8 +956,8 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 `Screenshot 5: Quick Start & Autocomplete of Commands and Options`
 
 - After all that introduction text, a quick refresher start guide to get the user going.
-- This also shows the *autocomplete features* of the REPL for `options` under the `--option` and their short inline help text.
-  - `space` starts the drop down menu for autocomplete for each of the `Intents`, `Actions`, and inline `Options`
+- This also shows the *`TAB` complete features* of the REPL for `options` under the `--option` and their short inline help text.
+  - `space` starts the drop down menu for `TAB` complete for each of the `Intents`, `Actions`, and inline `Options`
   - Start typing the display item's name/label/prefix first letter.
   - `tab` completes the started displayed item, starting with the first letter/symbol of the command or option.
   - `enter`after the `Action` enters into a prompt sequence for value entry
@@ -930,9 +966,9 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 
 ---
 0
-#### 6.2.2 [Autocomplete & Navigation](#feature-autocomplete) <small><sup>✅</sup></small>
+#### 6.2.2 [Autocomplete & Navigation](#feature-`TAB` complete) <small><sup>✅</sup></small>
 
-> - Inherent in the design of the REPL, from [Click's Contibs](https://click.palletsprojects.com/en/8.1.x/contrib/) experiemental [R&G GitHub](https://github.com/click-contrib/), generated by the library [click_repl](https://github.com/click-contrib/click-repl), is the ability to use autocomplete.<br>
+> - Inherent in the design of the REPL, from [Click's Contibs](https://click.palletsprojects.com/en/8.1.x/contrib/) experiemental [R&G GitHub](https://github.com/click-contrib/), generated by the library [click_repl](https://github.com/click-contrib/click-repl), is the ability to use `TAB` complete.<br>
 > > - *It was an automagic suprise, undocumented, feature that the author leveraged in his design.*
 > - Combined in a nested command structure: *Base* > *Intent* > *Action*, it builds an automagic menu structure with a visual artefact of a selectable (Up & down menu).
 
@@ -943,12 +979,12 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 > Common: Clear commands are common to many cli, useful for when the user wants to start over from the previous context or just reset the `stdout` or `stderr` stream display.
 
 ![](.docs/assets/WebApp-Clear1.png)<br>
-`Screendshot 6.1: Clear command in autocomplete drop down selection`
+`Screendshot 6.1: Clear command in `TAB` complete drop down selection`
 
 ![](.docs/assets/WebApp-Clear2.png)<br>
 `Screendshot 6.2: Clear command after clearing the screen`
 
-- Shows before and after of command selection, and hitting `space` to popup the `autocomplete menu`
+- Shows before and after of command selection, and hitting `space` to popup the ``TAB` complete menu`
 
 ---
 
@@ -979,7 +1015,7 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 `Screenshot 7.3: Load Todo's prompt value entry: All i.e. the default view`
 
 ![](.docs/assets/WebApp-LoadTodo3.png)<br>
-`Screenshot 7.4: Load Todo's single line flag value entry, with auto complete`
+`Screenshot 7.4: Load Todo's single line flag value entry, with `TAB` complete`
 
 - Loading Mode `All` subview dataset for reference.
 - <ins>Input & Output for 7.3: *Prompted Value Entry*</ins>:
@@ -1004,13 +1040,42 @@ GitHub CodeQL | XTerm Addons by Cloudflare | Untrusted source | Inclusion of fun
 
 ### 6.2.5 [Finding | Find Mode](#feature-finding-mode)
 
+
+![](.docs/assets/WebApp-FindLocate1.png)<br>
+`Screenshot 7.5: Find Locate's dual line flag value entry, with `TAB` complete`
+
+![](.docs/assets/WebApp-FindLocate2.png)<br>
+`Screenshot 7.6: Find Locate's more styled record result, with `TAB` complete`
+
+- Find Mode
+- <ins>Input & Output for 7.35: *Prompted Value Entry*</ins>:
+  1. `load` `todo` + user hits `enter`.
+  2. Prompt: enter row 1 - 70  + user hits `enter`
+  3. Prompt: Hit enter to select default axis: 'index'
+  4. User is not allowed to enter a non listed value
+  5. If so, a Click.command level's soft error, not program traceback, shows that an invalid value was used.
+  6. User trys again at the command ready prompt.
+
 - 
 
 ### 6.2.6 [Editing | Edit Mode](#feature-editing-mode)
 
-- 
+- Edit Mode has two commands, Note and Progress
+- Note has 3 modes: Add, Update, Delete
+- Progress has an implicit mode, Toggle, not visible
 
-### 6.3 [User Acceptance](#user_acceptance_testing)
+![](.docs/assets/WebApp-EditNotes.png)<br>
+`Screenshot 7.5: Edit Note tripple line flag value entry,, with `TAB` complete`
+
+![](.docs/assets/WebApp-EditProgress.png)<br>
+`Screenshot 7.5: Edit Progress tripple line flag value entry, with `TAB` complete`
+
+![](.docs/assets/WebApp-EditDisplay.png)<br>
+`Screenshot 7.5: Edit Modes less styled record result, with `TAB` complete` **
+
+> NOTE: The edit record card is more functional that formated, so there is a visual bug due to time.
+
+### 6.3 [User Acceptance](#user_acceptance_testing) <small><sup>✅</sup></small>
 
 #### 6.3.1 [Participants and Controls](#feature-actor-controls) <small><sup>✅</sup></small>
 
@@ -1026,19 +1091,19 @@ User | User for the CLI who interfaces/uses the commands/subcommands
 #### 6.3.1.2 [Controls](#feature-controls) <small><sup>✅</sup></small>
 
 - The user is presented with a application level custom prompt (i.e. the *main prompt*) in an *application level REPL* environment. 
-- The **main prompt** is configured to autocomplete the users input and ...
-  - Each command/sub command is autopopulated in the auto complete, by the line/function in app.py: `register_repl(run)` which is `from click_repl import register_repl` library.
+- The **main prompt** is configured to `TAB` complete the users input and ...
+  - Each command/sub command is autopopulated in the `TAB` complete, by the line/function in app.py: `register_repl(run)` which is `from click_repl import register_repl` library.
   - **Command Controls**:
     - **`tab`** - completes the users typing of the auto populated command per level
-    - **`space`** - function testing has found that hiting space bar after an autocomplete is the safest trigger to the next level of autocomplete
-    - **Up, down arrows** help the user navigate the autocomplete sub menu choices in the terminal window.
+    - **`space`** - function testing has found that hiting space bar after an `TAB` complete is the safest trigger to the next level of `TAB` complete
+    - **Up, down arrows** help the user navigate the `TAB` complete sub menu choices in the terminal window.
 - The main prompt matches all the commands of the all from the 2nd level (the INTENT) commands (i.e inert parent containers), and subseqently, 3rd level (the ACTION) sub commands. 
 - Each **sub command** has configured *options*, that either take in *flagged option/value* pairs as input or *prompted option/value* pairs as input (hitting enter each time). 
   1. For <ins>single line `option/value`</ins>, or *`flagged option/value`*: 
      - Each options follows 1 of 2 formats: 
        1. `-o <value>`, which is a a shortcut variant of ...  
        2.  `--option  <value>`, where option is the name of the option linked to the subcommand. 
-    - Each option either takes in a value or the autocomplete if the user does not hit enter and stays on a command line, then hits enter.
+    - Each option either takes in a value or the `TAB` complete if the user does not hit enter and stays on a command line, then hits enter.
   2.  For <ins>prompted option/value pairs</ins>, like the above:
       - Once the user presses enter after selecting a sub command, and if configured, the command enters a sub-prompt
       - Each option is then listed in sequence, awaiting the user inputed value
@@ -1052,28 +1117,28 @@ User | User for the CLI who interfaces/uses the commands/subcommands
 
 #### 6.3.2 [Feature Acceptance Testing](#feature-testing) 
 
-|    Epic | User Story |                            Feature |                                                                                         Actions | Actor(s)        | Effects or Absence of Side Effects                                                 | Outcome                                                            | Acceptance, Date |
-| ------: | :--------- | ---------------------------------: | ----------------------------------------------------------------------------------------------: | :-------------- | :--------------------------------------------------------------------------------- | :----------------------------------------------------------------- | :--------------- |
-| 1. Init | 1.1/1.1.1  |                  Connect to remote |                                                             Automated, On Program Run/init/main | CLI/Google      | No Authetentication Error, Silent                                                  | Authorised                                                         |                  |
-| 1. Init | 1.1.2      |                         Fetch Data |                                                             Automated, On Program Run/init/main | CLI/Google      | No Connection Error, Silent                                                        | File access, data loaded                                           |                  |
-| 1. Init | 1.3        |          Load to CLI/Local Dataset |                                                             Automated, On Program Run/init/main | CLI             | Silent, no visual feedback expected, no errors                                     | Main prompt blinking                                               |                  |
-|  2. Cmd | 2.1        |                   CLI autocomplete |      Autocomplete, auto populate command labels, as a selectable, and key input driven CLI menu | REPL/User       | Display CLI commands as only accepted choices                                      | List available commmands                                           |                  |
-|  2. Cmd | 2.2        |                           CLI Help |                              Options to display help text for each command and option with ease | CLI/REPL/User   | Display builtin help for the command's option                                      | List short descriptions                                            |                  |
-|  2. Cmd | 2.2.1      |                    Commands --help |                                          Runs at BASE level, on star, or when User types --help | CLI/User        | Display builtin help for the linked, nested commands                               | List short descriptions                                            |                  |
-|  2. Cmd | 2.2.1      |                   Per options help | When a user is typing an option, the autocomplete <br> may show the `help text` for that option | REPL/User       | Display builtin help for the command's option                                      | List short descriptions                                            |                  |
-| 3. Load | 3.1        |        Intent: Load  & "Load Mode" | Loads, and affirms connectivity, the bulk of the data in whole table or selected views of table | User, CLI       | Display a total bulk or filtered view (table) of data                              | `Nothing to do`, bar `--help` and the sub commands help text       |                  |
-| 3. Load | 3.2        |        Command/Action: Load > ToDo |                                              User selects a the TODO subcommand, and/or options | User            | Display a filtered view (table) of Todo                                            | Displays a filtered subset of columns related to TODO-ing tasks    |                  |
-| 3. Load | 3.3        |       Command/Action: Load > Views |                                      User selects a the VIEW subcommand, and or display options | User            | Display a filtered view (table) other Views                                        | Displays a filtered subset of columns of predefIned VIEWS          |                  |
-| 4. Find | 4.1        |         Intent: Find & "Find Mode" |                                  User uses a FIND INTENT/ACTION pair to find individual records | User            | Display a located individual record(s0) by index etc                               | `Nothing to do`, bar `--help` and the sub commands help text       |                  |
-| 4. Find | 4.2        |      Command/Action: Find > Locate |                                          User locates a record and it is display in card format | User            | Display a individual record as a card view/layout                                  | After a prompted set of values, displays a indvividual record card |                  |
-| 4. Find | 4.2.1      |  Command/Action: Locate > By Index |      User locates a record by a known record ident/numerical value, in the range of the dataset | User            | Display a individual record as a card view/layout                                  | Displays a individual record card, when a location id is known     |                  |
-| 5. Edit | 5.1        |         Intent: Edit & "Edit Mode" |                                                 User uses Edit INTENT/ACTION to enter edit mode | User            | Enters an edit mode, uses locate, displays/compares record, saves record to remote | `Nothing to do`, bar `--help` and the sub commands help text       |                  |
-| 5. Edit | 5.1.1      |          "Edit Mode" & Find/Locate |                                        Edit Mode reuses Locate (4.2,4.2.1) for each EDIT ACTION | CLI             | Locates an individual record(s) by index, displays the found/current/wanted record | Locates, silently, and builds the a record to be edited            |                  |
-| 5. Edit | 5.2.1      |    Command/Action: Edit > Add Note |                                                      User selects Add Note to insert a new note | User            | Locates a note, inserts new value, compares old/new, saves (54) changes            | On locating, displays a current and edited record, with value      |                  |
-| 5. Edit | 5.2.2      | Command/Action: Edit > Update Note |                                           User selects Add Note to append more to existing note | User            | Locates a note, appends value, compares old/new, saves (5.4) changes               | On locating, displays a current and edited record, with value      |                  |
-| 5. Edit | 5.2.3      | Command/Action: Edit > Delete Note |                                          User selects Add Note to clear all of an existing note | User            | Locates a note, clears value, compares old/new, saves (5.4) changes                | On locating, displays a current and edited record, with value      |                  |
-| 5. Edit | 5.3        | Command/Action: Edit > Toggle Todo |                    User selects a choice (Todo, WIP, Done) to toggle teh field's PROGRESS state | User            | Locates a note, toggles value, compares old/new, saves (5.4) changes               | On locating, displays a current and edited record, with value      |                  |
-| 5. Edit | 5.4        | SharedFunction: Edit > Save Change |           Edit Mode/Shared, commits saved changed to remote, in common with Add, Update, Delete | User/CLI/Google | User confirmation, data transforms and opens connection to update remote datatset  | Finally, the user is asked to confirm saving the record to remote  |                  |
+|    Epic | User Story |                            Feature |                                                                                           Actions | Actor(s)        | Effects or Absence of Side Effects                                                 | Outcome                                                            | Acceptance, Date |
+| ------: | :--------- | ---------------------------------: | ------------------------------------------------------------------------------------------------: | :-------------- | :--------------------------------------------------------------------------------- | :----------------------------------------------------------------- | :--------------- |
+| 1. Init | 1.1/1.1.1  |                  Connect to remote |                                                               Automated, On Program Run/init/main | CLI/Google      | No Authetentication Error, Silent                                                  | Authorised                                                         | May 2nd 2023     |
+| 1. Init | 1.1.2      |                         Fetch Data |                                                               Automated, On Program Run/init/main | CLI/Google      | No Connection Error, Silent                                                        | File access, data loaded                                           | May 2nd 2023     |
+| 1. Init | 1.3        |          Load to CLI/Local Dataset |                                                               Automated, On Program Run/init/main | CLI             | Silent, no visual feedback expected, no errors                                     | Main prompt blinking                                               | June 2nd 2023    |
+|  2. Cmd | 2.1        |                 CLI `TAB` complete |        Autocomplete, auto populate command labels, as a selectable, and key input driven CLI menu | REPL/User       | Display CLI commands as only accepted choices                                      | List available commmands                                           | June 2nd 2023    |
+|  2. Cmd | 2.2        |                           CLI Help |                                Options to display help text for each command and option with ease | CLI/REPL/User   | Display builtin help for the command's option                                      | List short descriptions                                            | June 2nd 2023    |
+|  2. Cmd | 2.2.1      |                    Commands --help |                                            Runs at BASE level, on star, or when User types --help | CLI/User        | Display builtin help for the linked, nested commands                               | List short descriptions                                            | June 2nd 2023    |
+|  2. Cmd | 2.2.1      |                   Per options help | When a user is typing an option, the `TAB` complete <br> may show the `help text` for that option | REPL/User       | Display builtin help for the command's option                                      | List short descriptions                                            | June 2nd 2023    |
+| 3. Load | 3.0.1      |        Intent: Load  & "Load Mode" |   Loads, and affirms connectivity, the bulk of the data in whole table or selected views of table | User, CLI       | Display a total bulk or filtered view (table) of data                              | `Nothing to do`, bar `--help` and the sub commands help text       | June 2nd 2023    |
+| 3. Load | 3.1        |        Command/Action: Load > ToDo |                                                User selects a the TODO subcommand, and/or options | User            | Display a filtered view (table) of Todo                                            | Displays a filtered subset of columns related to TODO-ing tasks    | June 2nd 2023    |
+| 3. Load | 3.2        |       Command/Action: Load > Views |                                        User selects a the VIEW subcommand, and or display options | User            | Display a filtered view (table) other Views                                        | Displays a filtered subset of columns of predefIned VIEWS          | June 2nd 2023    |
+| 4. Find | 4..01      |         Intent: Find & "Find Mode" |                                    User uses a FIND INTENT/ACTION pair to find individual records | User            | Display a located individual record(s0) by index etc                               | `Nothing to do`, bar `--help` and the sub commands help text       | June 2nd 2023    |
+| 4. Find | 4.1        |      Command/Action: Find > Locate |                                            User locates a record and it is display in card format | User            | Display a individual record as a card view/layout                                  | After a prompted set of values, displays a indvividual record card | June 2nd 2023    |
+| 4. Find | 4.2        |  Command/Action: Locate > By Index |        User locates a record by a known record ident/numerical value, in the range of the dataset | User            | Display a individual record as a card view/layout                                  | Displays a individual record card, when a location id is known     | June 2nd 2023    |
+| 5. Edit | 5.0.1      |         Intent: Edit & "Edit Mode" |                                                   User uses Edit INTENT/ACTION to enter edit mode | User            | Enters an edit mode, uses locate, displays/compares record, saves record to remote | `Nothing to do`, bar `--help` and the sub commands help text       | June 2nd 2023    |
+| 5. Edit | 5.1.1      |          "Edit Mode" & Find/Locate |                                          Edit Mode reuses Locate (4.2,4.2.1) for each EDIT ACTION | CLI             | Locates an individual record(s) by index, displays the found/current/wanted record | Locates, silently, and builds the a record to be edited            | June 2nd 2023    |
+| 5. Edit | 5.1.1      |    Command/Action: Edit > Add Note |                                                        User selects Add Note to insert a new note | User            | Locates a note, inserts new value, compares old/new, saves (54) changes            | On locating, displays a current and edited record, with value      | June 2nd 2023    |
+| 5. Edit | 5.1.2      | Command/Action: Edit > Update Note |                                             User selects Add Note to append more to existing note | User            | Locates a note, appends value, compares old/new, saves (5.4) changes               | On locating, displays a current and edited record, with value      | June 2nd 2023    |
+| 5. Edit | 5.1.3      | Command/Action: Edit > Delete Note |                                            User selects Add Note to clear all of an existing note | User            | Locates a note, clears value, compares old/new, saves (5.4) changes                | On locating, displays a current and edited record, with value      | June 2nd 2023    |
+| 5. Edit | 5.2        | Command/Action: Edit > Toggle Todo |                      User selects a choice (Todo, WIP, Done) to toggle teh field's PROGRESS state | User            | Locates a note, toggles value, compares old/new, saves (5.4) changes               | On locating, displays a current and edited record, with value      | June 2nd 2023    |
+| 5. Edit | 6.0        | SharedFunction: Edit > Save Change |             Edit Mode/Shared, commits saved changed to remote, in common with Add, Update, Delete | User/CLI/Google | User confirmation, data transforms and opens connection to update remote datatset  | Finally, the user is asked to confirm saving the record to remote  | No Acceptance    |
 
 ----
 > |
@@ -1089,20 +1154,26 @@ User | User for the CLI who interfaces/uses the commands/subcommands
 
 > Code Institute very own autopep8 validator: https://pep8ci.herokuapp.com/
 
-File* |   Date   |                                     Why no fix                                      |        Issue        | Code  |           State           | Links
------:|:--------:|:----------------------------------------------------------------------------:|:-------------------:|:-----:|:-------------------------:|:-----
-All | OnGoing  |                                      2                                       | trailing-whitespace | C0303 |         disabled          | Non Critical
-app.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  | Passing <br/>with ignored | _
-controller.py | 23-05-05| Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  | Passing <br/>with ignored | _
-apptypes.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  |          Passing          | _
-commands.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  | Passing <br/>with ignored | _
-exceptions.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  |       Passing <br/>with ignored       | _
-settings.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  |       Passing <br/>with ignored        |_
-sidecar.py | 23-05-05 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml |     blank line <br/>contains whitespace    | W293  |     Passing <br/>with ignored        | -
+|         File* |   Date   |                                  Why no fix                                  |                Issue                | Code |           State           | Opinion                         | Links |
+| ------------: | :------: | :--------------------------------------------------------------------------: | :---------------------------------: | :--: | :-----------------------: | :------------------------------ | :---- |
+|        app.py | 23-06-02 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml | blank line <br/>contains whitespace | W293 | Passing <br/>with ignored | W293 Not significant, Invisible | _     |
+| controller.py | 23-06-02 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml | blank line <br/>contains whitespace | W293 | Passing <br/>with ignored | W293 Not significant, Invisible | _     |
+|   commands.py | 23-06-02 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml | blank line <br/>contains whitespace | W293 | Passing <br/>with ignored | W293 Not significant, Invisible | _     |
+| exceptions.py | 23-06-02 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml | blank line <br/>contains whitespace | W293 | Passing <br/>with ignored | W293 Not significant, Invisible | _     |
+|  modelview.py | 23-06-02 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml | blank line <br/>contains whitespace | W293 | Passing <br/>with ignored | W293 Not significant, Invisible | _     |
+|   settings.py | 23-06-02 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml | blank line <br/>contains whitespace | W293 | Passing <br/>with ignored | W293 Not significant, Invisible | _     |
+|    sidecar.py | 23-06-02 | Non Critical, typically lines between functions</br> Fixed in pyproject.toml | blank line <br/>contains whitespace | W293 | Passing <br/>with ignored | W293 Not significant, Invisible | -     |
+
+- W293 Using Pycharm, attempts where made, but due to invisible single characters, these prooved resistant to removal. Not worth the effort/input.
 
 ### 7.2.2 [Code Quality](#quality) <small><sup>✅</sup></small>
 
+- RUFF : Passing except PLR0915 Too many statements (52 > 50) in Connections.py
+- PyCharmr
+
 #### 7.2.1.1 [Ruff](#lint-ruff) 
+
+**STATUS**
 
 > See `.pyproject.toml` for configuration and evaluation of configuration.
 
@@ -1173,14 +1244,6 @@ sidecar.py | 23-05-05 | Non Critical, typically lines between functions</br> Fix
 > Integrated into PyCharm, so this is the defacto problem matcher for the IDE.
 > Disabled: `pylint: disable=` in the code base hint at non-critical or intentional code hot spots
 
-*File* |   Date   |       LN       |        Issue        | Code  |  State   | Note
------:|:--------:|:--------------:|:-------------------:|:-----:|:--------:|:-----
-All | OnGoing  |       2        | trailing-whitespace | C0303 | disabled | Non Critical
-controller.py | 23-05-05 | 90,104,228,234 |  unnecessary-pass   | C0114 | disabled | Temporary
-settings.py | 23-05-05 |     26-42      |    invalid-name     | C0103 | disabled | Using custom convention <br> Using upper case to flag program variables<br> Setting CONSTANTS
-settings.py | 23-05-05 |     19,49      |    too-few-public-methods     | R0903 | disabled | Setting Classes
-settings.py | 23-05-05 |     19,49      |    too-many-instance-attributes     | R0902 | disabled | Setting Classes
-connection.py | 23-05-05 |     26-36      |    invalid-name     | C0103  | disabled | as per settings.py, CONSTANTS
 
 #### 7.2.1.3 [MyPy](#lint-mypy)
 
@@ -1193,9 +1256,9 @@ Date |  Status
 > Integrated into PyCharm, by 3rd Party Plugin:
 > Invoke: ``dmypy run -- --check-untyped-defs --follow-imports=error --exclude /venv/ .``
 
-File |   Date    | LN | Issue | Fix   |  State  | Note
------------------:|:---------:|:--:|:-----:|:-----:|:-------:|:---
-`settings.pg` | 23-05-05  | 1 | assignment | changed type assign | Passing | --
+|          File |   Date   | LN |   Issue    |         Fix         |  State  | Note |
+| ------------: | :------: | :: | :--------: | :-----------------: | :-----: | :--- |
+| `settings.pg` | 23-05-05 | 1  | assignment | changed type assign | Passing | --   |
 
 ### 7.3 [Code Integration](#code-integration) <small><sup>✅</sup></small>
 
