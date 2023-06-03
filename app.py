@@ -544,11 +544,6 @@ class Window:
                     sendtolayout=App.values.Display.TOLAYOUT,
                     fit=True,
                     debug=debugdisplay)
-                footer = newrecord.footer(
-                    consolefoot=Webconsole.console,
-                    sendtolayout=App.values.Display.TOLAYOUT,
-                    expand=False,
-                    debug=debugdisplay)
                 newrecord.panel(
                     consolepane=Webconsole.console,
                     renderable=header,
@@ -1249,7 +1244,7 @@ def notepad(ctx,
     # Only one dimension, i.e axis, is implemented: index,
     # Others are column, row: Future implementation.
     if axis.lower() == App.values.SEARCHFOCUS and note \
-        and Valid.isinrange(index):
+        and Valid.isinrange(index):  # noqa # Pep8 E125
         # - Get the record
         resultframe = Results.getrowdata(data=dataframe,
                                          ix=validindex,
@@ -1379,7 +1374,7 @@ def progress(ctx: click.Context,
     # Only one dimension, i.e axis, is implemented: index,
     # Others are column, row: Future implementation.
     if axis.lower() == App.values.SEARCHFOCUS and status \
-        and Valid.isinrange(index):
+        and Valid.isinrange(index):  # noqa # Pep8 E125
         # - Get the record
         resultframe = Results.getrowdata(data=dataframe,
                                          ix=validindex,
@@ -1402,7 +1397,7 @@ def progress(ctx: click.Context,
                 editor.editmode = editmode if \
                     Valid.checkmode(edits='toggle', index=index) \
                     is not None else ''
-                editor.editdisplay = f'Edit: > Progress in report mode'
+                editor.editdisplay = 'Edit: > Progress in report mode'
                 editor.command = Valid.checkcommand(mode='select')
                 # - Edit note field of the record
                 if index is not None and Valid.isinrange(index):
