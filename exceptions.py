@@ -47,7 +47,7 @@ Used to load environmental variables from .env file.
 # 0.1: Standard Library Imports
 import sys
 
-from rich import print as rprint
+from rich import print as rprint  # type : ignore
 
 
 class ExceptionValues:

@@ -45,8 +45,8 @@ import warnings
 from typing import Literal
 
 # 3rd Paty Imports
-import click
-import rich
+import click  # type : ignore
+import rich  # type : ignore
 from rich import inspect, print as rprint  # type: ignore
 
 # 0.3 Local Imports
@@ -241,15 +241,14 @@ class AppValues:
             intro: str = "Close the remote connection."
             help: str = "Close Settings."
             quik: str = "Close Settings."
-
-
-@dataclasses.dataclass
-class Exit:
-    """Exit Settings."""
-    cmd: str = "exit"
-    intro: str = "Exit the terminal (and close the connection)."
-    help: str = "Exit Settings."
-    quik: str = "Exit Settings."
+    
+    @dataclasses.dataclass
+    class Exit:
+        """Exit Settings."""
+        cmd: str = "exit"
+        intro: str = "Exit the terminal (and close the connection)."
+        help: str = "Exit Settings."
+        quik: str = "Exit Settings."
 
 
 class CliStyles:

@@ -154,28 +154,6 @@ class Valid:
                 f'Index must be between 0 and {App.get_range}.')
         return value
     
-    @staticmethod
-    def santitise(ctx, param, value) \
-        -> str | None:  # noqa Contexts, Parameters uses in callbacks
-        """Sanitise strings: by validating input - empty or not string.
-
-        :param ctx: click.Context - Click Context
-        :param param: click.Parameter - Click Parameter
-        :param value: str - String to sanitised
-        :return: str | None - Sanitised string or None
-        """
-        empty: str = ''
-        # Check if value is empty or not a string
-        if value == empty or not isinstance(value, str):
-            click.secho(message="Exiting Editing Mode. "
-                                "Must be a text or string. "
-                                "Try again.",
-                        fg=styles.invalidfg,
-                        bold=styles.invalidbold)
-            return None
-        # Return trimmed value if not empty
-        return value.strip() if value else empty
-    
     # Check
     @staticmethod
     def mode(ctx, param, value) -> str | None:
@@ -187,48 +165,6 @@ class Valid:
             return value
         else:
             click.secho(message="Exiting Editing Mode. Invalid entry.",
-                        fg=styles.invalidfg, bold=styles.invalidbold)
-            return None
-    
-    # Check
-    @staticmethod
-    def correctaxis(ctx, param, value) \
-        -> str | None:  # noqa Contexts, Parameters uses in callbacks
-        """Check valid choice of axis.
-        
-        Dimensions: across rows or columns or by index; depends on the Pandas.
-        """
-        if isinstance(value, str) and value.lower() is not None:
-            # Current feature: Implemented: DataFrames have these dimensions.
-            if value.lower() == 'index':
-                return value
-            else:
-                click.secho(message="Exiting Editing Mode. "
-                                    "Wrong axis. "
-                                    "Try again.",
-                            fg=styles.invalidfg, bold=styles.invalidbold)
-                return None
-        # Exit Edit Mode: Automatically exit Editing Mode due to invalid entry.
-        else:
-            click.secho(message="Exiting Editing Mode. Invalid entry.",
-                        fg=styles.invalidfg, bold=styles.invalidbold)
-            return None
-    
-    # Check
-    @staticmethod
-    def checktoggle(edits) -> str | None:
-        """Check the mode."""
-        if isinstance(edits, str):
-            # Add
-            if edits.lower() == 'toggle':
-                return edits
-            else:
-                click.secho(message="Exiting Editing Mode. "
-                                    "Invalid Mode. Try again.",
-                            fg=styles.invalidfg, bold=styles.invalidbold)
-                return None
-        else:
-            click.secho(message="Exiting Editing Mode. Try again.",
                         fg=styles.invalidfg, bold=styles.invalidbold)
             return None
     
@@ -448,15 +384,18 @@ class Window:
                     consolefoot=Webconsole.console,
                     sendtolayout=True)
             # Print: the Panel as a Group of Renderables
+            # noinspection PyArgumentEqualDefault
             record.panel(consolepane=Webconsole.console,
                          renderable=header,
                          fits=True,
                          sendtolayout=False)
+            # noinspection PyArgumentEqualDefault
             record.panel(consolepane=Webconsole.console,
                          renderable=current,
                          fits=True,
                          align='center',
                          sendtolayout=False)
+            # noinspection PyArgumentEqualDefault
             record.panel(consolepane=Webconsole.console,
                          renderable=footer,
                          fits=True,
@@ -478,9 +417,10 @@ class Window:
         :return: Record | None - Individual Record to display or None
         """
         if debug:
-            rprint(editeddata)
+            inspector(editeddata)
             return None
-        elif editeddata.empty is False:
+        
+        if editeddata.empty is False:
             individual = Record(source=editeddata)
             if individual.card(consolecard=Webconsole.console) is not None:
                 window.printpanels(record=individual)
@@ -516,10 +456,10 @@ class Window:
             # Is saved to the remote database, but not in the local record.
             # Therefore not in scope for version: 1.0.0.alpha+
             
-            if editor.editmode == commandtype:
+            if editor.command == commandtype:
                 if debug is True:
-                    click.echo(f'Command Type: {commandtype}')
-                    click.echo(f'Editor\'s mode: {editor.editmode}')
+                    click.echo(f'Command Type: {editor.command}')
+                    click.echo(f'Edit Type: {editor.editmode}')
                     click.echo(message="==========Displaying: "
                                        "Changes=========\n")
                 # 1. Display the Edited record
@@ -527,17 +467,15 @@ class Window:
                     window.showedited(editeddata=editeddata)
                 elif dataview == 'compare':  # compare
                     window.comparedata(editeddata=editeddata,
-                                       editor=editor)  # noqa
+                                       editor=editor,
+                                       debugdisplay=False)  # noqa
                 #  [DEBUG]
                 if debug is True:
                     click.echo(message="=== [DEBUG] Saving: "
                                        "changes made [DEBUG]==\n")
                     click.echo(f" Modified: {editor.lastmodified} ")
             else:
-                click.echo(message="No changes made. See above.")
-            #
-            if debug is True:
-                click.echo(message="=====================================")
+                click.echo(message="No changes made. Check last command?")
             # Switch confirmation on a command's type
             click.echo(message="Exiting: Command completed")
         else:
@@ -567,7 +505,6 @@ class Window:
             record.command = aeditor.command
         
         if debug is True:
-            rprint(editeddata)
             inspector(editeddata)
         
         if editeddata.empty is False and editor.ismodified:
@@ -646,9 +583,6 @@ class CriteriaApp:
     data: pd.DataFrame
     range: int
     editmode: list[str] = ['none', 'add', 'update', 'delete']
-    editaction: list[str] = ['insert', 'append', 'clear']
-    
-    # CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
     
     def __init__(self, applicationdata: DataController) -> None:
         """Initialize."""
@@ -668,21 +602,6 @@ class CriteriaApp:
         dataframe: pd.DataFrame = \
             DataControl.load_dataframe_wsheet(wsheet=wsheet)
         return dataframe
-    
-    def send_data(self, debug: bool = False) -> None:
-        """Send the dataframe to the context.
-        
-        :return: None
-        """
-        wsheet: gspread.Worksheet = Actions.load_wsheet()
-        if self.data.empty is False:
-            
-            if debug is True:
-                rprint(self.data)
-                inspector(self.data)
-            else:
-                DataController.send_dataframe_wsheet(
-                    dataframe=self.data, sheet=wsheet)
     
     @property
     def get_range(self) -> int:
@@ -1322,7 +1241,10 @@ def notepad(ctx,
                     currentrecord=editing,
                     sourceframe=resultframe,
                     debug=App.values.NOTRACING)
-                editor.command = f'Edit: > Note in {mode} mode'
+                editor.editmode = mode if \
+                    Valid.checkmode(edits=mode, index=index) \
+                    is not None else ''
+                editor.editdisplay = f'Edit: > Note in {mode} mode'
                 # - Edit note field of the record
                 if index is not None:
                     click.secho(
@@ -1346,6 +1268,7 @@ def notepad(ctx,
                             bg='white', bold=True)
                 click.secho(message="Loading: edited record",
                             blink=True)
+                editor.command = Valid.checkcommand(mode)
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
                                     commandtype=Valid.checkcommand(mode),
@@ -1430,7 +1353,7 @@ def progress(ctx: click.Context,
             # - Display the found result and - send to the editor
             editing = \
                 window.showrecord(data=resultframe,
-                                  sendtoeditor=App.values.FORWARDING,
+                                  sendtolayout=App.values.FORWARDING,
                                   displayon=App.values.HIDING,
                                   debug=App.values.NOTRACING)  # noqa
             # - Send the result to the editor
@@ -1457,7 +1380,7 @@ def progress(ctx: click.Context,
                     editor.editprogress(edits=editmode,
                                         index=index,
                                         choicepad=Valid.checkstatus(status),
-                                        debug=App.values.TRACING)
+                                        debug=App.values.NOTRACING)
                 else:
                     click.secho(message="No changes made")
                     click.secho(message="Exiting: editing mode."

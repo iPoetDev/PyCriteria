@@ -1,0 +1,71 @@
+Position,Tier,TierPrefix,TieirDepth,DoD,Performance,CriteriaGroup,CriteriaTopic,CriteriaRef,Criteria,Progress,Notes,LinkedRef
+1,Outcome,LO,1,Planned,Pass,LO1,Program Design,1.0.0,LO1: Implement a given algorithm as a computer program,TODO,,1.1.0;1.1.1;1.1.2
+2,Criterion,LC,2,Planned,Pass,LO1,Program Design,1.1.0,LO1.1: Write Python code with no significant issues.,TODO,,1.0.0;1.1.1;1.1.2
+3,Criterion,LC,2,,Pass,LO2,Program Design,1.1.1,LO1.1: Write Python code that passes through a linter (eg PEP8)with no significant issues.,TODO,,1.0.0;1.1.0;1.1.1
+4,Criterion,LC,2,Planned,Pass,LO1,Program Design,1.2.0,LO1.2: Ensure all intended functionality works as per the critical project objectives,TODO,,
+5,Criterion,LC,2,Planned,Pass,LO1,Program Design;Code Style Standards,1.3.0,"LO1.3: Write code that meets minimum standards for readability (comments, indentation, consistent and meaningful naming conventions).",TODO,,
+6,Criterion,LC,3,Planned,Pass,LO1,Program Design;Code Style Standards,1.3.1,LO1.3.1 Code minimum standards for comments,TODO,,
+7,Criterion,LC,3,Planned,Pass,LO1,Program Design;Code Style Standards,1.3.2,LO1.3.2 Code minimum standards for indentation,TODO,,
+8,Criterion,LC,3,Planned,Pass,LO1,Program Design;Quality Standards,1.3.3,LO1.3.3 Code minimum standards for naming conventions that are consistent/meaningful,TODO,,
+9,Outcome,LO,1,Planned,Pass,LO2,Program Build,2.0.0,LO2: Adapted and combine algorithms to solve a given problem,TODO,,
+10,Criterion,LC,2,Planned,Pass,LO2,Program Build; Data Validation,2.1.0,LO2.1: Write code that handles empty or invalid input data,TODO,,
+11,Criterion,LC,3,Planned,Pass,LO2,Program Build; Data Validation,2.1.1,LO2.1.1: Write code that handles empty input data,TODO,,
+12,Criterion,LC,3,Planned,Pass,LO2,Program Build; Data Validation,2.1.2,LO2.1.2: Write code that handles invalid input data,TODO,,
+13,Criterion,LC,2,Planned,Pass,LO2,Program Build; Code Attribution,2.2.0,LO2.2: Clearly separate and identify code written for the application and the code from external sources (e.g. libraries or tutorials),TODO,,
+14,Criterion,LC,3,Planned,Pass,LO2,Program Build; Code Attribution,2.2.1,LO2.2.1: Clearly separate code written for the application,TODO,,
+15,Criterion,LC,3,Planned,Pass,LO2,Program Build; Code Attribution,2.2.2,LO2.2.2: Clearly identify code written for the application,TODO,,
+16,Criterion,LC,3,Planned,Pass,LO2,Program Build; Code Attribution,2.2.3,LO2.2.3: Clearly separate code from external sources,TODO,,
+17,Criterion,LC,3,Planned,Pass,LO2,Program Build; Code Attribution,2.2.4,LO2.2.4: Clearly identify code from external sources,TODO,,
+18,Criterion,LC,2,Planned,Pass,LO2,Program Build; Code Organisation,2.3.0,LO2.3: Ensure a consistent flow of logic and data with well-defined granular functions,TODO,,2.3.1;2.3.2;2.3.3
+19,Criterion,LC,3,Planned,Pass,LO2,Program Build; Code Organisation,2.3.1,LO2.3.1: Ensure a consistent flow of logic with well-defined granular functions,TODO,,2.3.0;2.3.2;2.3.3
+20,Criterion,LC,3,Planned,Pass,LO2,Program Build; Code Organisation,2.3.2,LO2.3.2: Ensure a consistent flow of data with well defined granular functions,TODO,,2.3.0;2.3.1;2.3.3
+21,Outcome,LO,1,Planned,Pass,LO3,Programming Constructs,3.0.0,"LO3: Adequately use standard programming constructs: repetition, selection, functions, composition, modules, aggregated data (arrays, lists, etc.)",TODO,,3.1.6;3.1.7
+22,Criterion,LC,2,Planned,Pass,LO3,Programming Constructs; Syntax,3.1.0,"LO3.1: Implement standard programming constructs such as flow control, iteration, selection, functions, object-oriented programming and data structures - as appropriate - to achieve the project goals.",TODO,,3.1.6;3.1.7
+23,Criterion,LC,3,Planned,Pass,LO3,Programming Constructs; Syntax,3.1.1,LO3.1.1: Implement standard programming constructs  such a flow control,TODO,,3.1.6;3.1.7
+24,Criterion,LC,3,Planned,Pass,LO3,Programming Constructs; Syntax,3.1.2,LO3.1.2: Implement standard programming constructs  such a iteration,TODO,,3.1.6;3.1.7
+25,Criterion,LC,3,Planned,Pass,LO3,Programming Constructs; Syntax,3.1.3,LO3.1.3: Implement standard programming constructs  such a selection functions,TODO,,3.1.6;3.1.7
+26,Criterion,LC,3,Planned,Pass,LO3,Programming Constructs; Syntax,3.1.4,LO3.1.4: Implement standard programming constructs  such a object orientated programming,TODO,,3.1.6;3.1.7
+27,Criterion,LC,3,Planned,Pass,LO3,Programming Constructs; Syntax,3.1.5,LO3.1.5: Implement standard programming constructs  such a data structures,TODO,,3.1.6;3.1.7
+28,Criterion,LC,2,Planned,Pass,LO3,Programming Constructs; Error Control,3.2.0,LO3.2: Implement exception / error handling to optimise the user experience,TODO,,
+29,Outcome,,1,Planned,Pass,LO4,Documentation,4.0.0,LO4: Explain what a given program does,TODO,,
+30,Criterion,LC,2,Planned,Pass,LO4,Documentation;Style Standards,4.1.0,"LO4.1: Use consistent and effective markdown formatting that is well-structured, easy to follow, and has few grammatical errors when writing a README file.",TODO,Sample Data to clear,
+31,Criterion,LC,3,Planned,Pass,LO4,Documentation;Style Standards,4.1.1,LO4.1.1 Use formating that is well-structured,TODO,,
+32,Criterion,LC,3,Planned,Pass,LO4,Documentation;Style Standards,4.1.2,LO4.1.2 Use formating that is easy to follow,TODO,,
+33,Criterion,LC,3,Planned,Pass,LO4,Documentation;Style Standards,4.1.3,LO4.1.3 Has few grammatical errors when writing a README file,TODO,,
+34,Criterion,LC,2,Planned,Pass,LO4,Documentation;Requirements,4.2.0,LO4.2: Write a readme.md file in English for the Python application that explains its purpose and the value that it provides to its users.,TODO,,
+35,Criterion,LC,3,Planned,Pass,LO4,Documentation;Requirements,4.2.1,LO4.2.1 A readme that explains it's purpose,TODO,,
+36,Criterion,LC,3,Planned,Pass,LO4,Documentation;Requirements,4.2.2,LO4.2.2 A readme that explainst it value that it provides to its users,TODO,,
+37,Outcome,LO,1,Planned,Pass,LO5,Issue Handling,5.0.0,LO5: Identify and repair coding errors in a program,TODO,,
+38,Criterion,LC,2,Planned,Pass,LO5,Issue Handling,5.1.0,LO5.1 Implement basic manual testing procedures for code validation,TODO,,
+39,Outcome,,1,Planned,Pass,LO6,Library Software,6.0.0,"LO6: Use library software for building a graphical user interface, or command-line interface, or web application, or mathematical software",TODO,,2.2.0;6.1.0;6.1.1;6.1.2
+40,Criterion,LC,2,Planned,Pass,LO6,Library Software,6.1.0,LO6.1 Implement the use of external Python libraries ,TODO,,2.2.0; 6.0.0;6.1.1;6.1.2
+41,Criterion,LC,2,Planned,Pass,LO6,Library Software,6.1.1,LO6.1 Implement the use of external Python libraries where appropriate to provide the functionality that the project requires.,TODO,,2.2.0; 6.0.0;6.1.0;6.1.2
+42,Outcome,LO,1,Planned,Pass,LO7,Domain Architecture,7.0.0,"LO7: Implement a data model, application features, and business logic to manage, query, and manipulate data to meet given needs in a particular real work domain",TODO,,
+43,Outcome,LO,3,Planned,Pass,LO8,Domain Architecture,7.0.1,LO7.0.1: Implement a data model that meets the given needs of a real work domain,TODO,,
+44,Outcome,LO,3,Planned,Pass,LO9,Domain Architecture,7.0.2,LO7.0.2: Implement application features that meets the given needs of a real work domain,TODO,,
+45,Outcome,LO,3,Planned,Pass,LO10,Domain Architecture,7.0.3,LO7.0.2: Implement business logic that meets the given needs of a real work domain,TODO,,
+46,Outcome,LO,3,Planned,Pass,LO11,Domain Architecture,7.0.4,"LO7.04 Implement architecture to transform data (manag, query, maniplulate) to meet given needs in a particular real work domain",TODO,,
+47,Criterion,LC,2,Planned,Pass,LO7,Domain Architecture,7.1.0,LO7.1 Implement a working data model that supports the intended project functionality,TODO,,
+48,Criterion,LC,2,Planned,Pass,LO7,Domain Architecture,7.2.0,LO7.2 Write code that queries and manipulates data to meet the identifies vital project needs ,TODO,,
+49,Outcome,LC,1,Planned,Pass,LO8,Version Control Systems,8.0.0,LO8: Demonstrate and document the development process through a version control system such as GitHub,TODO,,
+50,Criterion,LC,2,Planned,Pass,LO8,Version Control Systems,8.1.0,LO8.1 Use Git & GitHub for version control of the web application up to deployment.,TODO,,
+51,Outcome,LO,1,Planned,Pass,LO9,Cloud Based Deployments,9.0.0,LO9: Deploy a command-line application to a cloud-based platform,TODO,,
+52,Criterion,LC,2,Planned,Pass,LO9,Cloud Based Deployments,9.1.0,LO9.1 Deploy a final version  of the Python Essentials application code to a cloud based platform,TODO,,
+53,Criterion,LC,2,Planned,Pass,LO9,Cloud Based Deployments,9.2.0,LO9.2 Ensure that the deployed application is free of commented out code,TODO,,
+54,Criterion,LC,3,Planned,Merit,LO1,Program Design,1.1.2,LO1.1 Translate the intended logic into efficient code,TODO,,1.0.0;1.1.0;1.1.1
+55,Criterion,LC,3,Planned,Merit,LO2,Program Build; Data Validation,2.3.3,LO2.1: Ensure a consistent flow of logic and data with well defined granular functions,TODO,,2.3.0;2.3.1;2.3.2
+56,Criterion,LC,3,Planned,Merit,LO3,Programming Constructs; Syntax,3.1.6,LO3.1: Demonstrate a clear understanding of programming fundamental constructs. and their relationships,TODO,,3.1.0
+57,Criterion,LC,3,Planned,Merit,LO3,Programming Constructs; Syntax,3.1.7,LO3.2: Implement OOP if appropriate to the project needs.,TODO,,3.1.0
+58,Criterion,LC,3,Planned,Merit,LO4,Documentation;Requirements,4.1.4,LO4.1: Document the work undertaken to plan this project’s logic through flow charts or diagrams,TODO,,4.0.0;4.1.0
+59,Criterion,LC,3,Planned,Merit,LO5,Issue Handling;Document,5.1.1,LO5.1: Document validation error-based fixes implemented and identify and explain any unsolved validation errors.,TODO,,1.1.0;1.1.1;5.1.2
+60,Criterion,LC,3,Planned,Merit,LO5,Issue Handling;Document,5.1.2,LO5.2: Document the implementation of manual testing for code validation(using PEP Validators).,TODO,,1.1.0;1.1.1;4.2.0;5.1.1
+61,Criterion,LC,3,Planned,Merit,LO6,Library Software;Program Build; Code Attribution; ,6.1.2,LO6.1 Separate and identify code written for the application and code from external sources (e.g. libraries or tutorials),TODO,,2.2.0; 6.0.0;6.1.0;6.1.1
+62,Criterion,LC,3,Planned,Merit,LO7,Domain Architecture,7.1.1,LO7.1 Efficiently implement the intended functionality as per the key project goals,TODO,,7.0.0;7.1.0
+63,Criterion,LC,2,Planned,Merit,LO9,Version Control Systems,8.5.0,LO8.1 Document the rationale as to why a particular library/libraries are necessary for the implementation of the project.,TODO,,4.2.0
+64,Criterion,LC,2,Planned,Merit,LO8,Version Control Systems,8.2.0,"LO8.2: Commit often for each feature/fix, ensuring that commits are small, well-defined and have clear, descriptive messages.",TODO,,8.0.0
+65,Criterion,LC,2,Planned,Merit,LO8,Version Control Systems,8.3.0,"LO8.3: Demonstrate, through screenshots, what the project outcomes are and how they have been met.",TODO,,4.2.0
+66,Criterion,LC,2,Planned,Merit,LO8,Version Control Systems,8.4.0,"LO8.4: Present a clear rationale for the development of the project in the README, demonstrating that it has a clear, well-defined purpose addressing the critical goals of the application for a particular target audience (or multiple related audiences).",TODO,,4.2.0;4.2.1;4.2.2;8.0.0
+67,Criterion,LC,3,Planned,Merit,LO9,Version Control Systems,8.4.1,LO8.4.1: Present a clear rationale for the development of the project in the README,TODO,,4.2.0;4.2.1;4.2.2;8.0.0
+68,Criterion,LC,3,Planned,Merit,LO10,Version Control Systems,8.4.2,"LO8.4.2: Demonstrating that it has a clear, well-defined purpose",TODO,,4.2.0;4.2.1;4.2.2;8.0.0
+69,Criterion,LC,3,Planned,Merit,LO11,Version Control Systems,8.4.3,LO8.4.4: A purpose addressing the critical goals of the application for a particular target audience (or multiple related audiences).,TODO,,4.2.0;4.2.1;4.2.2;8.0.0
+70,Criterion,LC,2,Planned,Merit,LO9,Version Control Systems,9.3.0,LO9.1: Document the deployment procedure in a section in the README file.,TODO,,4.0.0;8.0.0

@@ -58,7 +58,6 @@ from rich import print as rprint  # type: ignore
 @dataclasses.dataclass
 class Settings:
     """Settings."""
-    # Disable (C0103)
     # plylint: disable=C0301
     ENCODE: str = 'UTF-8'
     # Data String/Int Resources
