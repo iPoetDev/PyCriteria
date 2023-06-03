@@ -183,9 +183,10 @@ class Valid:
         """Check the mode."""
         if edits.lower() in [App.values.Edit.ADD,
                              App.values.Edit.UPDATE,
-                             App.values.Edit.DELETE]:
+                             App.values.Edit.DELETE,
+                             'toggle']:
             mode = edits.lower().capitalize()
-            click.echo(message=f"🆕 {mode}ing a Note, in row {index} 🆕")
+            click.echo(message=f"🆕 {mode}ing a Record, in row {index} 🆕")
             return edits
         else:
             click.echo(message="Exiting Editing Mode. Try again.")
@@ -456,10 +457,11 @@ class Window:
             # Is saved to the remote database, but not in the local record.
             # Therefore not in scope for version: 1.0.0.alpha+
             
+            click.echo(f'Command Type: {editor.command}')
+            click.echo(f'Edit Type: {editor.editmode}')
             if editor.command == commandtype:
                 if debug is True:
-                    click.echo(f'Command Type: {editor.command}')
-                    click.echo(f'Edit Type: {editor.editmode}')
+                    
                     click.echo(message="==========Displaying: "
                                        "Changes=========\n")
                 # 1. Display the Edited record
@@ -1362,7 +1364,11 @@ def progress(ctx: click.Context,
                     currentrecord=editing,
                     sourceframe=resultframe,
                     debug=App.values.NOTRACING)
-                editor.command = f'Edit: > Progress in {editmode} mode'
+                editor.editmode = editmode if \
+                    Valid.checkmode(edits='toggle', index=index) \
+                    is not None else ''
+                editor.editdisplay = f'Edit: > Progress in report mode'
+                editor.command = Valid.checkcommand(mode='select')
                 # - Edit note field of the record
                 if index is not None:
                     click.secho(
@@ -1390,6 +1396,7 @@ def progress(ctx: click.Context,
                             bg='white', bold=True)
                 click.secho(message="Loading: edited record",
                             blink=True)
+                editor.command = 'select'
                 window.showmodified(editeddata=editor.newresultseries,
                                     editor=editor,
                                     commandtype=editmode,
