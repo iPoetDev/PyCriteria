@@ -203,13 +203,10 @@ class AppValues:
             """Note command and option strings settings."""
             cmd: str = "note"
             help: str = 'Add | Update | Delete a note to record'
-            prompt: str = "The Note: Leave blank to delete."
-            required: bool = True
+            prompt: str = "The Note: Press `spacebar` in delete mode."
             
             class Mode:
                 """Edit mode options strings settings."""
-                opt: str = "-m"
-                param: str = "mode"
                 case: bool = False
                 help: str = "Select the edit mood: add, update, delete"
                 prompt: str = "Choose: add, update, delete: "
@@ -233,22 +230,6 @@ class AppValues:
                 help: str = "Select the status: complete, incomplete"
                 prompt: str = "Update project status: Todo, WIP, Done, Missed: "
                 required: bool = True
-        
-        @dataclasses.dataclass
-        class Close:
-            """Close Settings."""
-            cmd: str = "close"
-            intro: str = "Close the remote connection."
-            help: str = "Close Settings."
-            quik: str = "Close Settings."
-    
-    @dataclasses.dataclass
-    class Exit:
-        """Exit Settings."""
-        cmd: str = "exit"
-        intro: str = "Exit the terminal (and close the connection)."
-        help: str = "Exit Settings."
-        quik: str = "Exit Settings."
 
 
 class CliStyles:
