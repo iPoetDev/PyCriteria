@@ -71,7 +71,7 @@ Global Variables:,
 # 0.1 Standard Library Imports
 import datetime
 import typing
-from typing import NoReturn, Type, Literal
+from typing import NoReturn, Literal
 
 #
 # 0.2.1 Third Party Modules: Compleete
@@ -413,84 +413,10 @@ class WebConsole:
         
         configure_columns(headings=headers)
         return consoletable
-    
-    @staticmethod
-    def set_datatable(dataframe: pd.DataFrame | pd.Series) -> rich.table.Table:
-        """Sets the table per dataframe.
-        
-        :param dataframe: Pandas DataFrame or Series object.
-        :return: rich.table.Table
-        """
-        if isinstance(dataframe, pd.DataFrame):
-            headers: list[str] = dataframe.columns.tolist()
-        elif isinstance(dataframe, pd.Series):
-            headers: list[str] = dataframe.index.tolist()
-        else:
-            raise ValueError("Bad Parameter: Pandas DataFrame"
-                             " or Series object.")
-        
-        consoletable: Table = WebConsole.configure_table(headers=headers)
-        return consoletable
 
 
 class Display:
     """Displays the data."""
-    ColumnResultType: Type[tuple] = tuple[str, str, pd.DataFrame]
-    ItemSelectType: Type[tuple] = tuple[str, str, pd.DataFrame]
-    LineNoSelectType: Type[tuple] = tuple[int, pd.DataFrame]
-    ColumnSelectType: Type[tuple] = tuple[str, pd.DataFrame]
-    SearchColumnQueryType: Type[tuple] = tuple[str, str, pd.DataFrame]
-    
-    ViewType: str = \
-        typing.Literal["table", "column", "list", "frame", "pager",
-        "tablepage", "columnpage", "listpage", "framepage"]  # noqa
-    
-    @staticmethod
-    def display_data(dataframe: pd.DataFrame,
-                     consoleholder,  # noqa: ANN001
-                     consoletable: Table,
-                     title: str = "PyCriteria") -> None:  # noqa: ANN001
-        """Display Data: Wrapper for Any Display.
-        
-        :param dataframe: Pandas DataFrame
-        :param consoleholder: Rich Console
-        :param consoletable: Rich Console Table
-        :param title: Title of the table
-        :return: None | NoReturn:
-        """
-        # consoleholder.set_table(consoleholder, dataframe=dataframe)
-        Display.display_frame(dataframe=dataframe,
-                              consoleholder=consoleholder,
-                              consoletable=consoletable,
-                              headerview=Headers.HeadersChoices,
-                              title=title)
-    
-    @staticmethod
-    def display_frame(dataframe: pd.DataFrame,
-                      consoleholder: Console,
-                      consoletable: Table,
-                      headerview: list[str] | str,
-                      title: str = "PyCriteria") -> None | NoReturn:
-        """Displays the data in a table.
-        
-        :param dataframe: Pandas DataFrame
-        :param consoleholder: Rich Console
-        :param consoletable: Rich Console Table
-        :param headerview: List of headers
-        :param title: Title of the table
-        :return: None | NoReturn:
-        """
-        headers: list = headerview if \
-            isinstance(headerview, list) else [headerview]
-        consoletable.title = title
-        
-        filteredcolumns: pd.DataFrame = \
-            dataframe.loc[:, dataframe.columns.isin(values=headers)]  # noqa
-        # for column in headerview:
-        for _index, row in filteredcolumns.iterrows():
-            consoletable.add_row(*[str(row[column])
-                                   for column in headers])
-        consoleholder.print(consoletable)
     
     # The following is an AI Refactor from orginal authored code
     # https://www.perplexity.ai/search/c8250a15-6f8c-4180-b277-349f9ccf83c8?s=c
@@ -531,27 +457,6 @@ class Results:
     def __init__(self):
         """Initialize."""
         pass
-    
-    @staticmethod
-    def search(frame: pd.DataFrame,
-               searchterm: str,
-               exact: bool = False) -> pd.DataFrame | None:
-        """Search across all columns for the searches team.
-
-        :param frame: pd.DataFrame - Dataframe to search
-        :param searchterm: str - Search term
-        :param exact: bool - Exact match
-        :return: pd.DataFrame - Search result
-        """
-        # Search by text
-        if searchterm is None or isinstance(searchterm, str):
-            return None
-        # Search across all columns for the searches text/str value
-        mask = frame.apply(lambda column: column.astype(str).
-                           str.contains(searchterm))
-        #
-        return frame.loc[mask.all(axis=1)] if exact \
-            else frame.loc[mask.any(axis=1)]
     
     @staticmethod
     def index(frame: pd.DataFrame,
@@ -961,30 +866,6 @@ class Record:
                              printer=consolepane,
                              switch=sendtolayout)
     
-    def display(self, consoledisplay: Console,
-                sizing: tuple[int, int] = None,
-                record=None, sendtolayout: bool = False) \
-        -> Panel | None:  # noqa ANN001
-        """Displays the record as a table, card."""
-        # Checks the external record, self record
-        if record is not None:
-            card: Table | None = record.card(consolecard=consoledisplay)
-        else:
-            card: Table | None = self.card(consolecard=consoledisplay)
-        # Exluced Printed card deets
-        if card is None:
-            click.echo(message="__")
-            return None
-        # Get a panel
-        panel: Panel | None = \
-            self.panel(consolepane=consoledisplay,
-                       renderable=card,
-                       card=sizing)  # noqa
-        # Switches the flow: returns | print| to stdout
-        return Record.switch(panel,
-                             printer=consoledisplay,
-                             switch=sendtolayout)
-    
     def boxed(self, table, style: int = 1) -> Table:  # noqa
         """Sets the table box style.
         
@@ -1062,7 +943,6 @@ class Record:
                  title: str = 'Current Data',
                  debug: bool = False) -> Table | None:  # noqa
         """Displays the record: Use it for Current | Modified Records."""
-        webconsole: Console = consoleedit  # noqa
         
         def config(fit: bool) -> Table:
             """Displays the record as a cardinal."""
@@ -1278,8 +1158,9 @@ class Editor:
     :property command: The current command.
     """
     
-    record: Record = None
+    record: Record
     oldresultseries: pd.Series | None = None
+    # noinspection PyUnusedName
     newsresultseries: pd.Series | None = None
     oldresultframe: pd.DataFrame | None = None
     newresultframe: pd.DataFrame | None = None
@@ -1288,13 +1169,14 @@ class Editor:
     lastmodified: str | None = None
     modified: Record | None = None
     lasteditmode: str
+    editdisplay: str = ''
     ADDMODE: str = 'add'
     UPDATEMODE: str = 'update'
     DELETEMODE: str = 'delete'
     SELECTMODE: str = 'select'
     INSERTEDIT: str = 'insert'
     APPENDEDIT: str = 'append'
-    REPLACEEDIT: str = 'replace'
+    
     CLEAREDIT: str = 'clear'
     SELECTEDIT: str = 'select'
     lastcommand: str | None = None
@@ -1363,6 +1245,8 @@ class Editor:
         
         method = notemethods.get(edits, None)
         if method is not None:
+            # Call the dictionary method - Interesting,
+            # has same parameters, single name
             method(notes=notepad, location=index, debug=debug)
             self.editmode = edits
         else:
@@ -1432,6 +1316,7 @@ class Editor:
         :param debug: The debug flag for the function.
         :return: None
         """
+        click.echo(message=f"Editing Note {self.editmode} {location} ", err=True)
         # Guard conditions, 2nd layer of santisation,
         if notes is not None and isinstance(notes, str):
             # PROMPT USE, as an exmaple, for user by PerplexityAI
@@ -1475,6 +1360,7 @@ class Editor:
                 # https://www.perplexity.ai/search/a8d503cb-8aec-489a-8cf5-7f3e5b573cb7?s=c
                 # Set the edit mode explicitly to insert
                 self.editmode = self.INSERTEDIT
+                click.echo(message=f"Editing Note {self.editmode} {location} ", err=True)
                 # User confirmation to add the note, step by step
                 if click.confirm("Please confirm to "
                                  f"add/{self.editmode} your note"):
@@ -1504,7 +1390,7 @@ class Editor:
                 # If user does not want to add/amend the note, then exit
                 else:
                     click.echo("Exiting editing mode")
-                    return
+            
             # Check if the target location data (series) is not empty for Notes
             elif click.confirm(
                 text="You are adding a note to an exitsing note. \n"
@@ -1521,7 +1407,6 @@ class Editor:
             else:
                 # User does not want to add a note to an existing note
                 click.echo("Exit editing mode")
-                return
     
     def updatingnotes(self, notes: str,
                       location: int | None = None,
@@ -1585,7 +1470,6 @@ class Editor:
                 else:
                     click.echo("Exiting editing mode:"
                                f" Update {self.editmode}")
-                    return
     
     def deletingnotes(self,
                       notes: str,
@@ -1634,7 +1518,6 @@ class Editor:
                 else:
                     click.echo(f"Exiting editing mode: "
                                f"Delete: {self.editmode}")
-                    return
     
     # Check if the editing series needs to be type annotated or left magic
     def modifynotes(self,
@@ -1726,11 +1609,14 @@ class Editor:
             # To be implemented
             if click.confirm("Do you want to save "
                              "the updated DataFrame?"):
+                # NOT USER ACCEPTED, FUNCTIONAL CODE & ERROR FREE
+                # Inject:Row of a single record has NO ERROR
+                # Used the NewResultsSeries to Inject the Modified values
+                # but the values are not reflected in the remote dataset.
                 self.save(self.newresultframe,
                           series=self.newresultseries,
                           index=location,
-                          action='s3',
-                          debug=False)  # noqa
+                          action='inject:row')  # noqa
             else:
                 click.echo("Exit editing mode")
                 return
@@ -1893,51 +1779,9 @@ class Editor:
                 else:
                     click.echo("Exiting editing mode:"
                                f" Status: {self.editmode} for Progress")
-                    return
+        
         else:
             return
-    
-    @staticmethod
-    def updatingdod(progress: str, series: pd.Series) -> pd.Series | None:
-        """Update the DoD based on the progress.
-
-        The Progress status field controlls the progression of
-        the Defintion of Done Fields via a matrix of truthy states
-
-        :param progress: str: The progress status to be updated.
-               Relies on outer scope access.
-               for the editingseries variable.
-        :param series: pd.Series: The series to be updated.
-        :return: None
-        """
-        # Use of PerplexityAI to reformulate updatedod for efficiency
-        # Also based on ruff checks . => controller.py:2057:22:
-        # SIM114 Combine `if` branches using logical `or` operator
-        # https://www.perplexity.ai/search/8cdbda60-51fe-46cb-b205-f39386c9fff0?s=c
-        # Using dicts over multiple if statements for efficiency
-        
-        click.echo("Current Item' Project Status :"
-                   f" {series[ColumnSchema.Progress]}")
-        # Statically State machine for updating the DoD reporting:
-        reporting = {
-            'todo': 'Planned',
-            'wip': 'In Progress',
-            'done': 'Completed',
-            'missed': 'Unfinished'
-            }
-        
-        new_dod = reporting.get(progress.lower(), None)
-        if new_dod is None:
-            click.secho(message="Progress and Project reporting not updated")
-            return None
-        
-        if series[ColumnSchema.DoD] == 'Unfinished' \
-            and new_dod == 'Unfinished':  # noqa # Pep8 E125
-            return series
-        
-        series[ColumnSchema.DoD] = new_dod
-        click.secho(message="Progress & Definition of Done reporting updated")
-        return series
     
     # Refactor: controller.py:1976:9: PLR0915 Too many statements (51 > 50)
     # Check if the editing series needs to be type annotated or left magic
@@ -2024,11 +1868,11 @@ class Editor:
                                     "reporting not updated")
                 return
             if dod == 'Planned' and newdod == 'Unfinished':
-                pass
+                editingseries[ColumnSchema.DoD] = newdod
             elif dod == 'In Progress' and newdod == 'Unfinished':
                 editingseries[ColumnSchema.DoD] = 'Unfinished'
             elif dod == 'Unfinished' and newdod == 'Unfinished':
-                pass
+                editingseries[ColumnSchema.DoD] = newdod
             else:
                 editingseries[ColumnSchema.DoD] = newdod
             click.echo("Progress updated")
@@ -2109,13 +1953,14 @@ class Editor:
             # To be implemented
             if click.confirm("Do you want to save "
                              "the updated DataFrame?"):
-                # Save the updated DataFrame to the remote source. NOT WORKING
+                # NOT USER ACCEPTED, FUNCTIONAL CODE & ERROR FREE
+                # Inject:Row of a single record has NO ERROR
+                # Used the NewResultsSeries to Inject the Modified values
+                # but the values are not reflected in the remote dataset.
                 self.save(self.newresultframe,
                           series=self.newresultseries,
                           index=location,
-                          action='s3',
-                          debug=True)
-            else:
+                          action='inject:row')
                 click.echo("Exit editing mode")
                 return
         
@@ -2161,19 +2006,15 @@ class Editor:
                 # s1 = Use integratedframe &
                 # Tried gspread_dataframe & set_with_dataframe => set_remote
                 # This is not commment out code, it is an annotation
-                if action == 's1' and debug is False:
+                if action == 'overwrite:bulk' and debug is False:
                     set_remote(worksheet=sheet,
                                dataframe=saving,
                                allow_formulas=False)
-                # 5. SAVE ATTEMPT 2: Commit the updated DataFrame to remote
-                # Use the integratedframe as a overwrit: sheet.update
-                # Using https://docs.gspread.org/en/latest/user-guide.html#using-gspread-with-pandas  # noqa # E501 #
-                # -# Pep8
                 
                 # 6. SAVE ATTEMPT 3: Inject the updated series into the remote
                 # source, via the series row and index parameters.
                 # BY matching on the Position column, primary key
-                elif action == 's3' and debug is True:
+                elif action == 'inject:row' and debug is True:
                     self.injection(series=series,
                                    sheet=sheet,
                                    row=index,
@@ -2181,7 +2022,6 @@ class Editor:
         else:
             click.echo("Exit editing mode. "
                        "No Changed saved to remote")
-            return
     
     # This code was adapted from the PerplexityAI as a generated code
     # https://www.perplexity.ai/search/33fb1a34-54aa-49d4-84aa-45b5d846eba8?s=c
@@ -2200,22 +2040,22 @@ class Editor:
         """
         records = sheet.get_all_records()
         
-        row_id = None
         for record in records:
             if record['Position'] == series['Position']:
-                row_id = int(record[row])
-                break
-        rich.inspect(row_id)
-        # Update the row with the values from the series
-        if row_id is not None:
-            values = [series[key]
-                      for key in series]
-            
-            if debug is True:
-                rich.inspect(values)
-            
-            if debug is False:
-                sheet.update(str(row_id), values)
+                rich.inspect(row)
+                if series['Position'] == row + 1 \
+                    and record['Position'] == row + 1:  # noqa
+                    recordindex = int(record['Position'])
+                    rich.inspect(record['Position'])
+                    rich.inspect(int(series['Position']))
+                    # Update the row with the values from the series
+                    values = [series[key]
+                              for key in series.keys() if key in record.keys()]
+                    
+                    if debug is True:
+                        rich.inspect(values)
+                        
+                        sheet.insert_row(values, recordindex)
     
     @staticmethod
     def integrate(single: pd.DataFrame,
@@ -2236,12 +2076,6 @@ class Editor:
         return pd.concat([source.iloc[:index],
                           single,
                           source.iloc[index:]]).reset_index(drop=reset)
-    
-    @staticmethod
-    def convertto(lt):
-        """Converts the list of lists to a list of strings without nan vals."""
-        return [[str(element) for element in sublist
-                 if str(element) != 'nan'] for sublist in lt]
     
     @staticmethod
     def insert(record: Record,
@@ -2344,36 +2178,6 @@ class Editor:
         # If neither, return the original DataFrame, with no changes
         click.secho("Nothing changed", fg="bright_yellow", err=True)
         return record.sourceframe
-    
-    @staticmethod
-    def clear(record: Record, column: str | None = None,
-              index: int | None = None,
-              cleared: bool = True) -> pd.DataFrame:
-        """Clears by column, using the Record."""
-        _noned = None
-        updatedframe = record.sourceframe.copy()
-        if click.confirm(text="Do you want to clear the notes?. \n"
-                              "Importantly clears all notes"):
-            value = '' if cleared else _noned
-            if index is None and column is not None:
-                updatedframe.loc[record.series.name, column] = value
-            elif isinstance(index, int) and column is not None:
-                if isinstance(record.series.name, int):
-                    if index == record.series.name:
-                        updatedframe.iloc[index, column] = value
-                    else:
-                        updatedframe.iloc[index - 1, column] = value
-                else:
-                    click.echo(message="Series.name is not an int", err=True)
-                    updatedframe.iloc[index, column] = value
-            else:
-                click.echo("Nothing inserted")
-        else:
-            click.echo("Nothing cleared")
-            click.echo("Exiting editing mode")
-        
-        # Note: If no changes were made, then a copy of original is returned
-        return updatedframe
     
     # Editor Utilities
     @staticmethod

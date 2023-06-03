@@ -62,3 +62,4 @@ ruff.log
 /.vscode/settings.json
 # Old Code for Reference
 clilogging.py
+*-unused.txt
